@@ -21,7 +21,7 @@ from syned.util.json_tools import load_from_json_file, load_from_json_url
 
 class OWElectronBeam(GenericElement):
 
-    name = "Electron Beam"
+    # name = "Electron Beam"
 
     syned_file_name = Setting("Select *.json file")
 

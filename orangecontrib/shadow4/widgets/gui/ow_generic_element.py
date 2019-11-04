@@ -9,11 +9,11 @@ from oasys.widgets import gui as oasysgui
 # from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
 # from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
-
+from orangecontrib.shadow4.util.python_script import PythonScript
 
 class GenericElement(AutomaticElement):
 
-    name = "Generic Element"
+    # name = "Generic Element"
 
     IMAGE_WIDTH = 860
     IMAGE_HEIGHT = 545
@@ -28,8 +28,9 @@ class GenericElement(AutomaticElement):
         super().__init__(show_automatic_box)
 
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
+
+        #Plot Tab
         plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots")
-        out_tab = oasysgui.createTabPage(self.main_tabs, "Output")
 
         view_box = oasysgui.widgetBox(plot_tab, "Plotting Style", addSpace=False, orientation="horizontal")
         view_box_1 = oasysgui.widgetBox(view_box, "", addSpace=False, orientation="vertical", width=350)
@@ -38,6 +39,25 @@ class GenericElement(AutomaticElement):
                                             labelWidth=220,
                                             items=["Detailed Plot", "Preview", "None"],
                                             callback=self.set_PlotQuality, sendSelectedValue=False, orientation="horizontal")
+
+
+        # Optput Tab
+        out_tab = oasysgui.createTabPage(self.main_tabs, "Output")
+
+        # script tab
+        script_tab = oasysgui.createTabPage(self.main_tabs, "Script")
+        self.xoppy_script = PythonScript()
+        self.xoppy_script.code_area.setFixedHeight(400)
+
+        script_box = gui.widgetBox(script_tab, "Python script", addSpace=True, orientation="horizontal")
+        script_box.layout().addWidget(self.xoppy_script)
+
+
+
+
+
+
+
         self.tab = []
         self.tabs = oasysgui.tabWidget(plot_tab)
 

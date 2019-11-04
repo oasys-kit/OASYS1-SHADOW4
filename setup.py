@@ -99,7 +99,7 @@ PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
 
 
 PACKAGE_DATA = {
-    "":["icons/*.png", "icons/*.jpg"],
+    "orangecontrib.shadow4.widgets.sources":["icons/*.png", "icons/*.jpg"],
     # "orangecontrib.comsyl.widgets.applications":["icons/*.png", "icons/*.jpg"],
     # "orangecontrib.comsyl.widgets.tools":["icons/*.png", "icons/*.jpg"],
     }

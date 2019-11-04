@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QApplication
 
 class AutomaticElement(widget.OWWidget):
 
-    name = "Automatic Element"
+    # name = "Automatic Element"
 
 
     is_weird_shadow_bug_fixed = False
