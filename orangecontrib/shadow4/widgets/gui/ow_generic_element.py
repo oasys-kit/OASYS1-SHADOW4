@@ -1,4 +1,5 @@
 import sys
+import numpy
 
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
@@ -10,6 +11,11 @@ from oasys.widgets import gui as oasysgui
 # from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
 from orangecontrib.shadow4.util.python_script import PythonScript
+
+
+from orangecontrib.shadow.util.shadow_util import ShadowPlot, ShadowCongruence
+
+
 
 class GenericElement(AutomaticElement):
 
@@ -51,10 +57,6 @@ class GenericElement(AutomaticElement):
 
         script_box = gui.widgetBox(script_tab, "Python script", addSpace=True, orientation="horizontal")
         script_box.layout().addWidget(self.xoppy_script)
-
-
-
-
 
 
 
@@ -143,138 +145,110 @@ class GenericElement(AutomaticElement):
         return ["X,Z", "X',Z'", "X,X'", "Z,Z'", "Energy"]
 
 
-    #
-    # def plot_xy(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, xum="", yum="", is_footprint=False):
-    #     if self.plot_canvas[plot_canvas_index] is None:
-    #         self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedPlotWidget()
-    #         self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
-    #     self.plot_canvas[plot_canvas_index].plot_xy(beam_out._beam, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
-    #
-    #     self.progressBarSet(progressBarValue)
-    #
-    # def plot_xy_fast(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, is_footprint=False):
-    #     if self.plot_canvas[plot_canvas_index] is None:
-    #         self.plot_canvas[plot_canvas_index] = oasysgui.plotWindow(roi=False, control=False, position=True)
-    #         self.plot_canvas[plot_canvas_index].setDefaultPlotLines(False)
-    #         self.plot_canvas[plot_canvas_index].setActiveCurveColor(color='blue')
-    #
-    #         self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
-    #
-    #     ShadowPlot.plotxy_preview(self.plot_canvas[plot_canvas_index], beam_out._beam, var_x, var_y, nolost=1, title=title, xtitle=xtitle, ytitle=ytitle, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
-    #
-    #     self.progressBarSet(progressBarValue)
-    #
-    # def plot_histo(self, beam_out, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle, xum=""):
-    #     if self.plot_canvas[plot_canvas_index] is None:
-    #         self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedHistoWidget()
-    #         self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
-    #
-    #     self.plot_canvas[plot_canvas_index].plot_histo(beam_out._beam, var, 1, None, 23, title, xtitle, ytitle, xum=xum, conv=self.workspace_units_to_cm)
-    #
-    #     self.progressBarSet(progressBarValue)
-    #
-    # def plot_histo_fast(self, beam_out, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle):
-    #     if self.plot_canvas[plot_canvas_index] is None:
-    #         self.plot_canvas[plot_canvas_index] = oasysgui.plotWindow(roi=False, control=False, position=True)
-    #         self.plot_canvas[plot_canvas_index].setDefaultPlotLines(True)
-    #         self.plot_canvas[plot_canvas_index].setActiveCurveColor(color='blue')
-    #
-    #         self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
-    #
-    #     ShadowPlot.plot_histo_preview(self.plot_canvas[plot_canvas_index], beam_out._beam, var, 1, 23, title, xtitle, ytitle, conv=self.workspace_units_to_cm)
-    #
-    #     self.progressBarSet(progressBarValue)
-    #
-    # def plot_results(self, beam_out, footprint_beam=None, progressBarValue=80):
-    #     if not self.view_type == 2:
-    #         if ShadowCongruence.checkEmptyBeam(beam_out):
-    #             if ShadowCongruence.checkGoodBeam(beam_out):
-    #                 self.view_type_combo.setEnabled(False)
-    #
-    #                 ShadowPlot.set_conversion_active(self.getConversionActive())
-    #
-    #                 if self.isFootprintEnabled() and footprint_beam is None:
-    #                         footprint_beam = ShadowBeam()
-    #                         if beam_out._oe_number < 10:
-    #                             footprint_beam.loadFromFile(file_name="mirr.0" + str(beam_out._oe_number))
-    #                         else:
-    #                             footprint_beam.loadFromFile(file_name="mirr." + str(beam_out._oe_number))
-    #
-    #                 variables = self.getVariablestoPlot()
-    #                 titles = self.getTitles()
-    #                 xtitles = self.getXTitles()
-    #                 ytitles = self.getYTitles()
-    #                 xums = self.getXUM()
-    #                 yums = self.getYUM()
-    #
-    #                 try:
-    #                     if self.view_type == 1:
-    #                         self.plot_xy_fast(beam_out, progressBarValue + 4,  variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0])
-    #                         self.plot_xy_fast(beam_out, progressBarValue + 8,  variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
-    #                         self.plot_xy_fast(beam_out, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
-    #                         self.plot_xy_fast(beam_out, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
-    #                         self.plot_histo_fast(beam_out, progressBarValue + 20, variables[4],                  plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
-    #
-    #                         if self.isFootprintEnabled():
-    #                             self.plot_xy_fast(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [" + self.workspace_units_label +"]", ytitle="X [" + self.workspace_units_label +"]", is_footprint=True)
-    #
-    #
-    #                     elif self.view_type == 0:
-    #                         self.plot_xy(beam_out, progressBarValue + 4,  variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0], xum=xums[0], yum=yums[0])
-    #                         self.plot_xy(beam_out, progressBarValue + 8,  variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
-    #                         self.plot_xy(beam_out, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
-    #                         self.plot_xy(beam_out, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
-    #                         self.plot_histo(beam_out, progressBarValue + 20, variables[4],                  plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4] )
-    #
-    #                         if self.isFootprintEnabled():
-    #                             self.plot_xy(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [" + self.workspace_units_label +"]", ytitle="X [" + self.workspace_units_label +"]",
-    #                                          xum=("Y [" + self.workspace_units_label +"]"), yum=("X [" + self.workspace_units_label +"]"), is_footprint=True)
-    #
-    #                 except Exception as e:
-    #                     self.view_type_combo.setEnabled(True)
-    #
-    #                     raise Exception("Data not plottable: No good rays or bad content\nexception: " + str(e))
-    #
-    #                 self.view_type_combo.setEnabled(True)
-    #             else:
-    #                 raise Exception("Beam with no good rays")
-    #         else:
-    #             raise Exception("Empty Beam")
-    #
-    #     self.plotted_beam = beam_out
-    #
-    # def writeStdOut(self, text):
-    #     cursor = self.shadow_output.textCursor()
-    #     cursor.movePosition(QtGui.QTextCursor.End)
-    #     cursor.insertText(text)
-    #     self.shadow_output.setTextCursor(cursor)
-    #     self.shadow_output.ensureCursorVisible()
-    #
-    # def onReceivingInput(self):
-    #     self.initializeTabs()
-    #
-    # def deserialize(self, shadow_file):
-    #     pass
-    #
-    # def getVariablestoPlot(self):
-    #     return [[1, 3], [4, 6], [1, 4], [3, 6], 11]
-    #
+
 
     #
-    # def getXTitles(self):
-    #     return [r'X [$\mu$m]', "X' [$\mu$rad]", r'X [$\mu$m]', r'Z [$\mu$m]', "Energy [eV]"]
+    # plots copied from shadowOui
     #
-    # def getYTitles(self):
-    #     return [r'Z [$\mu$m]', "Z' [$\mu$rad]", "X' [$\mu$rad]", "Z' [$\mu$rad]", "Number of Rays"]
-    #
-    # def getXUM(self):
-    #     return ["X [" + u"\u03BC" + "m]", "X' [" + u"\u03BC" + "rad]", "X [" + u"\u03BC" + "m]", "Z [" + u"\u03BC" + "m]", "[eV]"]
-    #
-    # def getYUM(self):
-    #     return ["Z [" + u"\u03BC" + "m]", "Z' [" + u"\u03BC" + "rad]", "X' [" + u"\u03BC" + "rad]", "Z' [" + u"\u03BC" + "rad]", None]
-    #
-    # def getConversionActive(self):
-    #     return True
+
+    def plot_xy(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, xum="", yum="", is_footprint=False):
+        if self.plot_canvas[plot_canvas_index] is None:
+            self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedPlotWidget()
+            self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
+        self.plot_canvas[plot_canvas_index].plot_xy(beam_out._beam, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
+
+        self.progressBarSet(progressBarValue)
+
+    def plot_xy_fast(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, is_footprint=False):
+        if self.plot_canvas[plot_canvas_index] is None:
+            self.plot_canvas[plot_canvas_index] = oasysgui.plotWindow(roi=False, control=False, position=True)
+            self.plot_canvas[plot_canvas_index].setDefaultPlotLines(False)
+            self.plot_canvas[plot_canvas_index].setActiveCurveColor(color='blue')
+
+            self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
+
+        ShadowPlot.plotxy_preview(self.plot_canvas[plot_canvas_index], beam_out._beam, var_x, var_y, nolost=1, title=title, xtitle=xtitle, ytitle=ytitle, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
+
+        self.progressBarSet(progressBarValue)
+
+    def plot_histo(self, beam_out, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle, xum=""):
+        if self.plot_canvas[plot_canvas_index] is None:
+            self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedHistoWidget()
+            self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
+
+        self.plot_canvas[plot_canvas_index].plot_histo(beam_out._beam, var, 1, None, 23, title, xtitle, ytitle, xum=xum, conv=self.workspace_units_to_cm)
+
+        self.progressBarSet(progressBarValue)
+
+    def plot_histo_fast(self, beam_out, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle):
+        if self.plot_canvas[plot_canvas_index] is None:
+            self.plot_canvas[plot_canvas_index] = oasysgui.plotWindow(roi=False, control=False, position=True)
+            self.plot_canvas[plot_canvas_index].setDefaultPlotLines(True)
+            self.plot_canvas[plot_canvas_index].setActiveCurveColor(color='blue')
+
+            self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
+
+        ShadowPlot.plot_histo_preview(self.plot_canvas[plot_canvas_index], beam_out._beam, var, 1, 23, title, xtitle, ytitle, conv=self.workspace_units_to_cm)
+
+        self.progressBarSet(progressBarValue)
+
+    def plot_results(self, beam_out, footprint_beam=None, progressBarValue=80):
+        if not self.view_type == 2:
+            if ShadowCongruence.checkEmptyBeam(beam_out):
+                if ShadowCongruence.checkGoodBeam(beam_out):
+                    self.view_type_combo.setEnabled(False)
+
+                    ShadowPlot.set_conversion_active(self.getConversionActive())
+
+                    if self.isFootprintEnabled() and footprint_beam is None:
+                            footprint_beam = ShadowBeam()
+                            if beam_out._oe_number < 10:
+                                footprint_beam.loadFromFile(file_name="mirr.0" + str(beam_out._oe_number))
+                            else:
+                                footprint_beam.loadFromFile(file_name="mirr." + str(beam_out._oe_number))
+
+                    variables = self.getVariablestoPlot()
+                    titles = self.getTitles()
+                    xtitles = self.getXTitles()
+                    ytitles = self.getYTitles()
+                    xums = self.getXUM()
+                    yums = self.getYUM()
+
+                    try:
+                        if self.view_type == 1:
+                            self.plot_xy_fast(beam_out, progressBarValue + 4,  variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0])
+                            self.plot_xy_fast(beam_out, progressBarValue + 8,  variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
+                            self.plot_xy_fast(beam_out, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
+                            self.plot_xy_fast(beam_out, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
+                            self.plot_histo_fast(beam_out, progressBarValue + 20, variables[4],                  plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
+
+                            if self.isFootprintEnabled():
+                                self.plot_xy_fast(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [" + self.workspace_units_label +"]", ytitle="X [" + self.workspace_units_label +"]", is_footprint=True)
+
+
+                        elif self.view_type == 0:
+                            self.plot_xy(beam_out, progressBarValue + 4,  variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0], xum=xums[0], yum=yums[0])
+                            self.plot_xy(beam_out, progressBarValue + 8,  variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
+                            self.plot_xy(beam_out, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
+                            self.plot_xy(beam_out, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
+                            self.plot_histo(beam_out, progressBarValue + 20, variables[4],                  plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4] )
+
+                            if self.isFootprintEnabled():
+                                self.plot_xy(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [" + self.workspace_units_label +"]", ytitle="X [" + self.workspace_units_label +"]",
+                                             xum=("Y [" + self.workspace_units_label +"]"), yum=("X [" + self.workspace_units_label +"]"), is_footprint=True)
+
+                    except Exception as e:
+                        self.view_type_combo.setEnabled(True)
+
+                        raise Exception("Data not plottable: No good rays or bad content\nexception: " + str(e))
+
+                    self.view_type_combo.setEnabled(True)
+                else:
+                    raise Exception("Beam with no good rays")
+            else:
+                raise Exception("Empty Beam")
+
+        self.plotted_beam = beam_out
 
 if __name__ == "__main__":
     a = QApplication(sys.argv)
