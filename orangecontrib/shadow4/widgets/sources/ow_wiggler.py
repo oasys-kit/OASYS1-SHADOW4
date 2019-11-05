@@ -13,8 +13,9 @@ from oasys.widgets import gui as oasysgui
 from orangewidget import gui as orangegui
 from orangewidget.settings import Setting
 
-from syned.storage_ring.electron_beam import ElectronBeam
+# from syned.storage_ring.electron_beam import ElectronBeam
 from shadow4.syned.magnetic_structure_1D_field import MagneticStructure1DField
+from syned.storage_ring.magnetic_structures.wiggler import Wiggler
 
 from shadow4.sources.wiggler.source_wiggler import SourceWiggler
 from shadow4.compatibility.beam3 import Beam3
@@ -41,14 +42,13 @@ class OWWiggler(OWElectronBeam):
                 "id":"beam"}]
 
 
-    type_combo = Setting(0)
+    magnetic_field_source = Setting(0)
     number_of_periods = Setting(1)
     k_value = Setting(10.0)
     id_period = Setting(0.010)
-    file_with_b_vs_y = Setting("/home/manuel/Oasys/BM_multi7.b")
+    file_with_b_vs_y = Setting("/Users/srio/Oasys/BM_multi7.b")
     file_with_harmonics = Setting("tmp.h")
 
-    use_emittances_combo = Setting(0)
     shift_x_flag = Setting(4)
     shift_x_value =Setting(0.0)
 
@@ -74,7 +74,7 @@ class OWWiggler(OWElectronBeam):
         # wiggler parameters box
         left_box_3 = oasysgui.widgetBox(tab_wiggler, "Wiggler Parameters", addSpace=False, orientation="vertical", height=200)
 
-        orangegui.comboBox(left_box_3, self, "type_combo", label="Type", items=["conventional/sinusoidal", "B from file (y [m], Bz [T])", "B from harmonics"], callback=self.set_visibility, labelWidth=220, orientation="horizontal")
+        orangegui.comboBox(left_box_3, self, "magnetic_field_source", label="Type", items=["conventional/sinusoidal", "B from file (y [m], Bz [T])", "B from harmonics"], callback=self.set_visibility, labelWidth=220, orientation="horizontal")
 
         oasysgui.lineEdit(left_box_3, self, "number_of_periods", "Number of Periods", labelWidth=260, tooltip="Number of Periods", valueType=int, orientation="horizontal")
 
@@ -103,10 +103,8 @@ class OWWiggler(OWElectronBeam):
 
 
         # Electron Box
-        left_box_10 = oasysgui.widgetBox(tab_wiggler, "Electron Beam", addSpace=False, orientation="vertical", height=200)
+        left_box_10 = oasysgui.widgetBox(tab_wiggler, "Electron Initial Condition", addSpace=False, orientation="vertical", height=200)
 
-        orangegui.comboBox(left_box_10, self, "use_emittances_combo", label="Use Emittances?", items=["No", "Yes"],
-                           callback=self.set_visibility, labelWidth=260, orientation="horizontal")
 
         orangegui.comboBox(left_box_10, self, "shift_betax_flag", label="Shift Transversal Velocity", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_ShiftBetaXFlag, labelWidth=260, orientation="horizontal")
         self.shift_betax_value_box = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
@@ -192,9 +190,9 @@ class OWWiggler(OWElectronBeam):
         pass
 
     def set_visibility(self):
-        self.conventional_sinusoidal_box.setVisible(self.type_combo == 0)
-        self.b_from_file_box.setVisible(self.type_combo == 1)
-        self.b_from_harmonics_box.setVisible(self.type_combo == 2)
+        self.conventional_sinusoidal_box.setVisible(self.magnetic_field_source == 0)
+        self.b_from_file_box.setVisible(self.magnetic_field_source == 1)
+        self.b_from_harmonics_box.setVisible(self.magnetic_field_source == 2)
 
 
     def selectFileWithBvsY(self):
@@ -234,25 +232,8 @@ class OWWiggler(OWElectronBeam):
 
     def run_shadow4(self):
 
-        # electron_energy = 2.0
-        # filename = "/home/manuel/Oasys/BM_only7.b"
-        # use_emittances = True
-        # e_min = 1000.0
-        # e_max = 1000.1
-        # NRAYS = 5000
 
-        # wigFile = "xshwig.sha"
-        # inData = ""
-        #
         nTrajPoints = 501
-        # # ener_gev = electron_energy
-        # per = 0.5
-        # kValue = 4
-        # trajFile = ""
-        # shift_x_flag = 0
-        # shift_x_value = 0.0
-        # shift_betax_flag = 0
-        # shift_betax_value = 0.0
 
 
         #
@@ -263,8 +244,20 @@ class OWWiggler(OWElectronBeam):
         syned_electron_beam = self.get_syned_electron_beam()
 
         print(syned_electron_beam.info())
+
         # B from file
-        syned_wiggler = MagneticStructure1DField.initialize_from_file(self.file_with_b_vs_y)
+        if self.magnetic_field_source == 0:
+            syned_wiggler = Wiggler(
+                K_vertical=self.k_value,
+                K_horizontal=0.0,
+                period_length=self.id_period,
+                number_of_periods=self.number_of_periods
+                )
+        elif self.magnetic_field_source == 1:
+            syned_wiggler = MagneticStructure1DField.initialize_from_file(self.file_with_b_vs_y)
+        elif self.magnetic_field_source == 2:
+            raise Exception(NotImplemented)
+
         print(syned_wiggler.info())
         sw = SourceWiggler()
 
@@ -272,7 +265,7 @@ class OWWiggler(OWElectronBeam):
         sourcewiggler = SourceWiggler(name="test",
                         syned_electron_beam=syned_electron_beam,
                         syned_wiggler=syned_wiggler,
-                        flag_emittance=self.use_emittances_combo,
+                        flag_emittance=True,
                         emin=self.e_min,
                         emax=self.e_max,
                         ng_e=100,
@@ -291,7 +284,24 @@ class OWWiggler(OWElectronBeam):
                         shift_betax_flag=self.shift_betax_flag,
                         shift_betax_value=self.shift_betax_value)
 
-        sourcewiggler.calculate_radiation()
+        # sourcewiggler.calculate_radiation()
+
+
+
+
+
+
+        print(sourcewiggler.info())
+
+        t00 = time.time()
+        print(">>>> starting calculation...")
+        rays = sourcewiggler.calculate_rays(NRAYS=self.n_rays)
+        t11 = time.time() - t00
+        print(">>>> time for %d rays: %f s, %f min, " % (self.n_rays, t11, t11 / 60))
+        print(">>>   Results of calculate_radiation")
+        print(">>>       trajectory.shape: ",sourcewiggler._result_trajectory.shape)
+        print(">>>       cdf: ", sourcewiggler._result_cdf.keys())
+
 
         calculate_spectrum = True
 
@@ -311,17 +321,6 @@ class OWWiggler(OWElectronBeam):
 
 
 
-        print(">>>   Results of calculate_radiation")
-        print(">>>       trajectory.shape: ",sourcewiggler._result_trajectory.shape)
-        print(">>>       cdf: ", sourcewiggler._result_cdf.keys())
-
-        print(sourcewiggler.info())
-
-        t00 = time.time()
-        print(">>>> starting calculation...")
-        rays = sourcewiggler.calculate_rays(NRAYS=self.n_rays)
-        t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.n_rays, t11, t11 / 60))
 
         beam = Beam3.initialize_from_array(rays)
 
