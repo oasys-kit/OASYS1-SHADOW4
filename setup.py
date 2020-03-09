@@ -53,8 +53,8 @@ import sys
 from setuptools import find_packages, setup
 import subprocess
 
-NAME = 'OASYS1-SHADOW4'
-VERSION = '0.0.1'
+NAME = 'OASYS1-SHADOWFOUR'
+VERSION = '0.0.4'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
@@ -70,7 +70,7 @@ KEYWORDS = (
     'application',
     'Oasys',
     'Orange',
-    'shadow4',
+    'shadow4>=0.0.14',
     )
 
 CLASSIFIERS = (
@@ -101,7 +101,7 @@ PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
 PACKAGE_DATA = {
     "orangecontrib.shadow4.widgets.sources":["icons/*.png", "icons/*.jpg"],
     # "orangecontrib.comsyl.widgets.applications":["icons/*.png", "icons/*.jpg"],
-    # "orangecontrib.comsyl.widgets.tools":["icons/*.png", "icons/*.jpg"],
+    "orangecontrib.comsyl.widgets.tools":["icons/*.png", "icons/*.jpg"],
     }
 
 NAMESPACE_PACAKGES = ["orangecontrib","orangecontrib.shadow4", "orangecontrib.shadow4.widgets"]
