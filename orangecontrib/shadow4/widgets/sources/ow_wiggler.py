@@ -13,13 +13,18 @@ from oasys.widgets import gui as oasysgui
 from orangewidget import gui as orangegui
 from orangewidget.settings import Setting
 
-# from syned.storage_ring.electron_beam import ElectronBeam
-from shadow4.syned.magnetic_structure_1D_field import MagneticStructure1DField
-from syned.storage_ring.magnetic_structures.wiggler import Wiggler
+# from shadow4.syned.magnetic_structure_1D_field import MagneticStructure1DField
+# from syned.storage_ring.magnetic_structures.wiggler import Wiggler
 
-from shadow4.sources.wiggler.source_wiggler import SourceWiggler
-from shadow4.compatibility.beam3 import Beam3
+# from shadow4.sources.wiggler.source_wiggler import SourceWiggler
+from shadow4tests.compatibility.beam3 import Beam3
 from srxraylib.sources.srfunc import wiggler_spectrum
+
+
+
+from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
+from shadow4.sources.wiggler.s4_wiggler import S4Wiggler as SourceWiggler
+from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
 
 
 # for the moment, use ShadowOui beam...
@@ -46,7 +51,7 @@ class OWWiggler(OWElectronBeam):
     number_of_periods = Setting(1)
     k_value = Setting(10.0)
     id_period = Setting(0.010)
-    file_with_b_vs_y = Setting("/Users/srio/Oasys/BM_multi7.b")
+    file_with_b_vs_y = Setting("BM_multi.b")
     file_with_harmonics = Setting("tmp.h")
 
     shift_x_flag = Setting(4)
@@ -245,31 +250,83 @@ class OWWiggler(OWElectronBeam):
 
         print(syned_electron_beam.info())
 
-        # B from file
+        # # B from file
+        # if self.magnetic_field_source == 0:
+        #     syned_wiggler = Wiggler(
+        #         K_vertical=self.k_value,
+        #         K_horizontal=0.0,
+        #         period_length=self.id_period,
+        #         number_of_periods=self.number_of_periods
+        #         )
+        # elif self.magnetic_field_source == 1:
+        #     syned_wiggler = MagneticStructure1DField.initialize_from_file(self.file_with_b_vs_y)
+        # elif self.magnetic_field_source == 2:
+        #     raise Exception(NotImplemented)
+        #
+        # print(syned_wiggler.info())
+        # sw = SourceWiggler()
+        #
+        #
+        #
+        # sourcewiggler = SourceWiggler(name="test",
+        #                 syned_electron_beam=syned_electron_beam,
+        #                 syned_wiggler=syned_wiggler,
+        #                 flag_emittance=True,
+        #                 emin=self.e_min,
+        #                 emax=self.e_max,
+        #                 ng_e=100,
+        #                 ng_j=nTrajPoints)
+
+        ###################################
+
         if self.magnetic_field_source == 0:
-            syned_wiggler = Wiggler(
-                K_vertical=self.k_value,
-                K_horizontal=0.0,
-                period_length=self.id_period,
-                number_of_periods=self.number_of_periods
-                )
+            sourcewiggler = S4Wiggler(
+                    magnetic_field_periodic=1,  # 0=external, 1=periodic
+                    file_with_magnetic_field="",  # useful if magnetic_field_periodic=0
+                    K_vertical=self.k_value,
+                    period_length=self.id_period,
+                    number_of_periods=self.number_of_periods, # syned Wiggler pars: useful if magnetic_field_periodic=1
+                    emin=self.e_min,  # Photon energy scan from energy (in eV)
+                    emax=self.e_max,  # Photon energy scan to energy (in eV)
+                    ng_e=100,  # Photon energy scan number of points
+                    ng_j=nTrajPoints, # Number of points in electron trajectory (per period) for internal calculation only
+                    flag_emittance=1,  # when sampling rays: Use emittance (0=No, 1=Yes)
+                    shift_x_flag=0,
+                    shift_x_value=0.0,
+                    shift_betax_flag=0,
+                    shift_betax_value=0.0,  # ele
+                    )
+
         elif self.magnetic_field_source == 1:
-            syned_wiggler = MagneticStructure1DField.initialize_from_file(self.file_with_b_vs_y)
+            if self.e_min == self.e_max:
+                ng_e = 1
+            else:
+                ng_e = 10
+
+            sourcewiggler = S4Wiggler(
+                magnetic_field_periodic=0,
+                file_with_magnetic_field=self.file_with_b_vs_y,
+                                emin=self.e_min,
+                                emax=self.e_max,
+                                ng_e=ng_e,
+                                ng_j=nTrajPoints,
+                                flag_emittance=1,  # when sampling rays: Use emittance (0=No, 1=Yes)
+                                shift_x_flag=4,
+                                shift_x_value=0.0,
+                                shift_betax_flag=4,
+                                shift_betax_value=0.0,  # ele
+            )
+            sourcewiggler.set_electron_initial_conditions_by_label(position_label="value_at_zero",
+                                                                   velocity_label="value_at_zero")
         elif self.magnetic_field_source == 2:
             raise Exception(NotImplemented)
 
-        print(syned_wiggler.info())
-        sw = SourceWiggler()
 
 
-        sourcewiggler = SourceWiggler(name="test",
-                        syned_electron_beam=syned_electron_beam,
-                        syned_wiggler=syned_wiggler,
-                        flag_emittance=True,
-                        emin=self.e_min,
-                        emax=self.e_max,
-                        ng_e=100,
-                        ng_j=nTrajPoints)
+        ls = S4WigglerLightSource(name="", electron_beam=syned_electron_beam, wiggler_magnetic_structure=sourcewiggler)
+
+        ####################################
+
 
         if self.e_min == self.e_max:
             sourcewiggler.set_energy_monochromatic(self.e_min)
