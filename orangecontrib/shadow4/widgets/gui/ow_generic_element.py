@@ -6,12 +6,10 @@ from PyQt5.QtWidgets import QApplication
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
+from oasys.util.oasys_util import TriggerIn
 
-# from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
-# from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
 from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
-
 from orangecontrib.shadow4.util.python_script import PythonScript
 
 
@@ -25,8 +23,8 @@ class GenericElement(AutomaticElement):
     IMAGE_WIDTH = 860
     IMAGE_HEIGHT = 545
 
-    want_main_area = True
-    view_type = Setting(0)
+    want_main_area=1
+    view_type=Setting(0)
 
     plotted_beam=None
     footprint_beam=None
@@ -35,9 +33,8 @@ class GenericElement(AutomaticElement):
         super().__init__(show_automatic_box)
 
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
-
-        #Plot Tab
         plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots")
+        out_tab = oasysgui.createTabPage(self.main_tabs, "Output")
 
         view_box = oasysgui.widgetBox(plot_tab, "Plotting Style", addSpace=False, orientation="horizontal")
         view_box_1 = oasysgui.widgetBox(view_box, "", addSpace=False, orientation="vertical", width=350)
@@ -47,9 +44,6 @@ class GenericElement(AutomaticElement):
                                             items=["Detailed Plot", "Preview", "None"],
                                             callback=self.set_PlotQuality, sendSelectedValue=False, orientation="horizontal")
 
-
-        # Optput Tab
-        out_tab = oasysgui.createTabPage(self.main_tabs, "Output")
 
         # script tab
         script_tab = oasysgui.createTabPage(self.main_tabs, "Script")
@@ -66,7 +60,7 @@ class GenericElement(AutomaticElement):
 
         self.initializeTabs()
 
-        self.enableFootprint(True)
+        self.enableFootprint(False)
 
         self.shadow_output = oasysgui.textArea(height=580, width=800)
 
@@ -89,7 +83,6 @@ class GenericElement(AutomaticElement):
 
         for title in titles:
             self.tab.append(oasysgui.createTabPage(self.tabs, title))
-            self.plot_canvas.append(None)
 
         for tab in self.tab:
             tab.setFixedHeight(self.IMAGE_HEIGHT)
@@ -98,6 +91,23 @@ class GenericElement(AutomaticElement):
         self.enableFootprint(enabled)
 
         self.tabs.setCurrentIndex(current_tab)
+
+    def check_not_interactive_conditions(self, input_beam):
+        not_interactive = False
+
+        if not input_beam is None:
+            if not input_beam.scanned_variable_data is None:
+                not_interactive = input_beam.scanned_variable_data.has_additional_parameter("total_power")
+
+        return not_interactive
+
+    def sendEmptyBeam(self):
+        empty_beam = self.input_beam.duplicate()
+        empty_beam._beam.rays = numpy.array([])
+        empty_beam._oe_number += 1
+
+        self.send("Beam", empty_beam)
+        self.send("Trigger", TriggerIn(new_object=True))
 
     def isFootprintEnabled(self):
         return self.tabs.count() == 6
@@ -134,28 +144,15 @@ class GenericElement(AutomaticElement):
                                            str(exception),
                     QtWidgets.QMessageBox.Ok)
 
-                # CORRELATED TO QScrollArea Bug - see class Orange.canvas.gui.toolbox._ToolBoxScrollArea
-                # self.error_id = self.error_id + 1
-                # self.error(self.error_id, "Exception occurred: " + str(exception))
-
                 if self.IS_DEVELOP: raise exception
 
         self.progressBarFinished()
-
-    def getTitles(self):
-        return ["X,Z", "X',Z'", "X,X'", "Z,Z'", "Energy"]
-
-
-
-
-    #
-    # plots copied from shadowOui
-    #
 
     def plot_xy(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, xum="", yum="", is_footprint=False):
         if self.plot_canvas[plot_canvas_index] is None:
             self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedPlotWidget()
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
+
         self.plot_canvas[plot_canvas_index].plot_xy(beam_out, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
 
         self.progressBarSet(progressBarValue)
@@ -250,6 +247,40 @@ class GenericElement(AutomaticElement):
                 raise Exception("Empty Beam")
 
         self.plotted_beam = beam_out
+
+    def writeStdOut(self, text):
+        cursor = self.shadow_output.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertText(text)
+        self.shadow_output.setTextCursor(cursor)
+        self.shadow_output.ensureCursorVisible()
+
+    def onReceivingInput(self):
+        self.initializeTabs()
+
+    def deserialize(self, shadow_file):
+        pass
+
+    def getVariablestoPlot(self):
+        return [[1, 3], [4, 6], [1, 4], [3, 6], 11]
+
+    def getTitles(self):
+        return ["X,Z", "X',Z'", "X,X'", "Z,Z'", "Energy"]
+
+    def getXTitles(self):
+        return [r'X [$\mu$m]', "X' [$\mu$rad]", r'X [$\mu$m]', r'Z [$\mu$m]', "Energy [eV]"]
+
+    def getYTitles(self):
+        return [r'Z [$\mu$m]', "Z' [$\mu$rad]", "X' [$\mu$rad]", "Z' [$\mu$rad]", "Number of Rays"]
+
+    def getXUM(self):
+        return ["X [" + u"\u03BC" + "m]", "X' [" + u"\u03BC" + "rad]", "X [" + u"\u03BC" + "m]", "Z [" + u"\u03BC" + "m]", "[eV]"]
+
+    def getYUM(self):
+        return ["Z [" + u"\u03BC" + "m]", "Z' [" + u"\u03BC" + "rad]", "X' [" + u"\u03BC" + "rad]", "Z' [" + u"\u03BC" + "rad]", None]
+
+    def getConversionActive(self):
+        return True
 
 if __name__ == "__main__":
     a = QApplication(sys.argv)
