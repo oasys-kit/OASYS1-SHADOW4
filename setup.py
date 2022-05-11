@@ -3,8 +3,9 @@
 # coding: utf-8
 # /*##########################################################################
 #
-# Copyright (c) 2016 European Synchrotron Radiation Facility
-# Copyright (c) 2019 Lawrence Berkeley National Laboratory
+# Copyright (c) 2016-2019 European Synchrotron Radiation Facility
+# Copyright (c) 2019-2020 Lawrence Berkeley National Laboratory
+# Copyright (c) 2020-2022 European Synchrotron Radiation Facility
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +31,8 @@
 # Memorandum: 
 #
 # Install from sources: 
-#     git clone https://github.com/srio/oasys-shadow4
-#     cd oasys-shadow4
+#     git clone https://github.com/srio/oasys1-shadow4
+#     cd oasys1-shadow4
 #     python -m pip install -e . --no-deps --no-binary :all:
 #
 # Upload to pypi (when uploading, increment the version number):
@@ -53,7 +54,7 @@ import sys
 from setuptools import find_packages, setup
 import subprocess
 
-NAME = 'OASYS1-SHADOWFOUR'
+NAME = 'OASYS1-shadow4'
 VERSION = '0.0.4'
 ISRELEASED = False
 
@@ -61,16 +62,15 @@ DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
 README_FILE = os.path.join(os.path.dirname(__file__), 'README.txt')
 LONG_DESCRIPTION = open(README_FILE).read()
 AUTHOR = 'M. Sanchez del Rio'
-AUTHOR_EMAIL = 'srio@lbl.gov'
-URL = 'https://github.com/srio/OASYS-SHADOW4'
-DOWNLOAD_URL = 'https://github.com/srio/OASYS-SHADOW4'
+AUTHOR_EMAIL = 'srio@esrf.eu'
+URL = 'https://github.com/srio/OASYS1-SHADOW4'
+DOWNLOAD_URL = 'https://github.com/srio/OASYS1-SHADOW4'
 LICENSE = 'MIT'
 
 KEYWORDS = (
-    'application',
-    'Oasys',
-    'Orange',
-    'shadow4>=0.0.14',
+    'ray tracing',
+    'x-ray optics',
+    'Oasys1',
     )
 
 CLASSIFIERS = (
@@ -78,7 +78,6 @@ CLASSIFIERS = (
     'Environment :: X11 Applications :: Qt',
     'Environment :: Console',
     'Environment :: Plugins',
-    'Programming Language :: Cython',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Intended Audience :: Science/Research',
@@ -90,7 +89,7 @@ SETUP_REQUIRES = (
                   )
 
 INSTALL_REQUIRES = (
-                    'oasys1>=1.2.10',
+                    'oasys1>=1.2.102',
                     'shadow4'
                     )
 
@@ -100,8 +99,8 @@ PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
 
 PACKAGE_DATA = {
     "orangecontrib.shadow4.widgets.sources":["icons/*.png", "icons/*.jpg"],
-    # "orangecontrib.comsyl.widgets.applications":["icons/*.png", "icons/*.jpg"],
-    "orangecontrib.comsyl.widgets.tools":["icons/*.png", "icons/*.jpg"],
+    "orangecontrib.shadow4.widgets.optics": ["icons/*.png", "icons/*.jpg"],
+    "orangecontrib.shadow4.widgets.tools":["icons/*.png", "icons/*.jpg"],
     }
 
 NAMESPACE_PACAKGES = ["orangecontrib","orangecontrib.shadow4", "orangecontrib.shadow4.widgets"]

@@ -1,11 +1,6 @@
 import sys
 import time
-# from syned.storage_ring.magnetic_structures.wiggler import Wiggler
-#
-# from orangecontrib.shadow4.widgets.gui.ow_light_source import OWLightSource
-# # from orangecontrib.syned.widgets.gui.ow_light_source import OWLightSource
-# # from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
-# from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
+
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
 from orangecontrib.shadow4.widgets.gui.plots import plot_data1D
 
@@ -13,22 +8,12 @@ from oasys.widgets import gui as oasysgui
 from orangewidget import gui as orangegui
 from orangewidget.settings import Setting
 
-# from shadow4.syned.magnetic_structure_1D_field import MagneticStructure1DField
-# from syned.storage_ring.magnetic_structures.wiggler import Wiggler
 
-# from shadow4.sources.wiggler.source_wiggler import SourceWiggler
-from shadow4tests.compatibility.beam3 import Beam3
 from srxraylib.sources.srfunc import wiggler_spectrum
 
-
-
+from shadow4.beam.beam import Beam
 from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
-from shadow4.sources.wiggler.s4_wiggler import S4Wiggler as SourceWiggler
 from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
-
-
-# for the moment, use ShadowOui beam...
-from orangecontrib.shadow.util.shadow_objects import ShadowBeam
 
 
 class OWWiggler(OWElectronBeam):
@@ -42,39 +27,40 @@ class OWWiggler(OWElectronBeam):
     # inputs = [("Trigger", TriggerOut, "sendNewBeam")]
 
     outputs = [{"name":"Beam",
-                "type":ShadowBeam,
+                "type":Beam, # for the moment, shadow4 beam
                 "doc":"Shadow Beam",
                 "id":"beam"}]
 
 
-    magnetic_field_source = Setting(0)
+    magnetic_field_source = Setting(1)
     number_of_periods = Setting(1)
     k_value = Setting(10.0)
     id_period = Setting(0.010)
-    file_with_b_vs_y = Setting("BM_multi.b")
+    file_with_b_vs_y = Setting("https://raw.githubusercontent.com/srio/shadow4/master/examples/sources/BM_multi.b")
     file_with_harmonics = Setting("tmp.h")
 
-    shift_x_flag = Setting(4)
+    shift_x_flag = Setting(0)
     shift_x_value =Setting(0.0)
 
-    shift_betax_flag = Setting(4)
+    shift_betax_flag = Setting(0)
     shift_betax_value = Setting(0.0)
 
-    e_min = Setting(0.1)
-    e_max = Setting(0.1)
-    n_rays = Setting(100)
+    e_min = Setting(0.4)
+    e_max = Setting(0.4)
+    n_rays = Setting(5000)
 
     plot_wiggler_graph = 1
 
     workspace_units_to_cm = 1.0
 
-    shadowoui_neam = None
+
+    beam_out = None
+
 
     def __init__(self):
         super().__init__()
 
         tab_wiggler = oasysgui.createTabPage(self.tabs_control_area, "Wiggler Setting")
-
 
         # wiggler parameters box
         left_box_3 = oasysgui.widgetBox(tab_wiggler, "Wiggler Parameters", addSpace=False, orientation="vertical", height=200)
@@ -94,7 +80,7 @@ class OWWiggler(OWElectronBeam):
 
         self.le_file_with_b_vs_y = oasysgui.lineEdit(file_box, self, "file_with_b_vs_y", "File/Url with B vs Y", labelWidth=150, tooltip="File/Url with B vs Y", valueType=str, orientation="horizontal")
 
-        orangegui.button(file_box, self, "...", callback=self.selectFileWithBvsY)
+        orangegui.button(file_box, self, "...", callback=self.select_file_with_B_vs_Y)
 
         self.b_from_harmonics_box = oasysgui.widgetBox(left_box_3, "", addSpace=False, orientation="vertical")
 
@@ -104,25 +90,25 @@ class OWWiggler(OWElectronBeam):
 
         self.le_file_with_harmonics = oasysgui.lineEdit(file_box, self, "file_with_harmonics", "File/Url with harmonics", labelWidth=150, tooltip="File/Url with harmonics", valueType=str, orientation="horizontal")
 
-        orangegui.button(file_box, self, "...", callback=self.selectFileWithHarmonics)
+        orangegui.button(file_box, self, "...", callback=self.select_file_with_harmonics)
 
 
-        # Electron Box
+        # Electron initial conditions Box
         left_box_10 = oasysgui.widgetBox(tab_wiggler, "Electron Initial Condition", addSpace=False, orientation="vertical", height=200)
 
 
-        orangegui.comboBox(left_box_10, self, "shift_betax_flag", label="Shift Transversal Velocity", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_ShiftBetaXFlag, labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(left_box_10, self, "shift_betax_flag", label="Shift Transversal Velocity", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_beta_X_flag, labelWidth=260, orientation="horizontal")
         self.shift_betax_value_box = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
         self.shift_betax_value_box_hidden = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
         oasysgui.lineEdit(self.shift_betax_value_box, self, "shift_betax_value", "Value", labelWidth=260, valueType=float, orientation="horizontal")
 
-        orangegui.comboBox(left_box_10, self, "shift_x_flag", label="Shift Transversal Coordinate", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_ShiftXFlag, labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(left_box_10, self, "shift_x_flag", label="Shift Transversal Coordinate", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_X_flag, labelWidth=260, orientation="horizontal")
         self.shift_x_value_box = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
         self.shift_x_value_box_hidden = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
         oasysgui.lineEdit(self.shift_x_value_box, self, "shift_x_value", "Value [m]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        self.set_ShiftXFlag()
-        self.set_ShiftBetaXFlag()
+        self.set_shift_X_flag()
+        self.set_shift_beta_X_flag()
 
 
 
@@ -133,18 +119,17 @@ class OWWiggler(OWElectronBeam):
         oasysgui.lineEdit(left_box_11, self, "e_max", "Max photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "n_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
 
-        self.set_ShiftXFlag()
-        self.set_ShiftBetaXFlag()
+        self.set_shift_X_flag()
+        self.set_shift_beta_X_flag()
 
 
         # wiggler plots
         self.add_specific_wiggler_plots()
 
-
-
         self.set_visibility()
 
         orangegui.rubber(self.controlArea)
+
 
     def add_specific_wiggler_plots(self):
 
@@ -191,94 +176,35 @@ class OWWiggler(OWElectronBeam):
 
         self.wiggler_tabs.setCurrentIndex(current_tab)
 
-    def set_PlotGraphs(self):
-        pass
 
     def set_visibility(self):
         self.conventional_sinusoidal_box.setVisible(self.magnetic_field_source == 0)
         self.b_from_file_box.setVisible(self.magnetic_field_source == 1)
         self.b_from_harmonics_box.setVisible(self.magnetic_field_source == 2)
 
-
-    def selectFileWithBvsY(self):
+    def select_file_with_B_vs_Y(self):
         self.le_file_with_b_vs_y.setText(oasysgui.selectFileFromDialog(self, self.file_with_b_vs_y, "Open File With B vs Y"))
 
-    def selectFileWithHarmonics(self):
+    def select_file_with_harmonics(self):
         self.le_file_with_harmonics.setText(oasysgui.selectFileFromDialog(self, self.file_with_harmonics, "Open File With Harmonics"))
 
-
-    def set_ShiftXFlag(self):
+    def set_shift_X_flag(self):
         self.shift_x_value_box.setVisible(self.shift_x_flag==5)
         self.shift_x_value_box_hidden.setVisible(self.shift_x_flag!=5)
 
-    def set_ShiftBetaXFlag(self):
+    def set_shift_beta_X_flag(self):
         self.shift_betax_value_box.setVisible(self.shift_betax_flag==5)
         self.shift_betax_value_box_hidden.setVisible(self.shift_betax_flag!=5)
 
 
-    # def get_magnetic_structure(self):
-    #     return Wiggler(K_horizontal=self.K_horizontal,
-    #                    K_vertical=self.K_vertical,
-    #                    period_length=self.period_length,
-    #                    number_of_periods=self.number_of_periods)
-    #
-    # def check_magnetic_structure_instance(self, magnetic_structure):
-    #     if not isinstance(magnetic_structure, Wiggler):
-    #         raise ValueError("Magnetic Structure is not a Wiggler")
-    #
-    # def populate_magnetic_structure(self, magnetic_structure):
-    #     if not isinstance(magnetic_structure, Wiggler):
-    #         raise ValueError("Magnetic Structure is not a Wiggler")
-    #
-    #     self.K_horizontal = magnetic_structure._K_horizontal
-    #     self.K_vertical = magnetic_structure._K_vertical
-    #     self.period_length = magnetic_structure._period_length
-    #     self.number_of_periods = magnetic_structure._number_of_periods
-
     def run_shadow4(self):
 
-
-        nTrajPoints = 501
-
-
-        #
         # syned
-        #
-
-
         syned_electron_beam = self.get_syned_electron_beam()
+        print(">>>>>> ElectronBeam info: ", syned_electron_beam.info())
 
-        print(syned_electron_beam.info())
-
-        # # B from file
-        # if self.magnetic_field_source == 0:
-        #     syned_wiggler = Wiggler(
-        #         K_vertical=self.k_value,
-        #         K_horizontal=0.0,
-        #         period_length=self.id_period,
-        #         number_of_periods=self.number_of_periods
-        #         )
-        # elif self.magnetic_field_source == 1:
-        #     syned_wiggler = MagneticStructure1DField.initialize_from_file(self.file_with_b_vs_y)
-        # elif self.magnetic_field_source == 2:
-        #     raise Exception(NotImplemented)
-        #
-        # print(syned_wiggler.info())
-        # sw = SourceWiggler()
-        #
-        #
-        #
-        # sourcewiggler = SourceWiggler(name="test",
-        #                 syned_electron_beam=syned_electron_beam,
-        #                 syned_wiggler=syned_wiggler,
-        #                 flag_emittance=True,
-        #                 emin=self.e_min,
-        #                 emax=self.e_max,
-        #                 ng_e=100,
-        #                 ng_j=nTrajPoints)
-
-        ###################################
-
+        ng_j = 501 # trajectory points
+        # S4Wiggler
         if self.magnetic_field_source == 0:
             sourcewiggler = S4Wiggler(
                     magnetic_field_periodic=1,  # 0=external, 1=periodic
@@ -289,7 +215,7 @@ class OWWiggler(OWElectronBeam):
                     emin=self.e_min,  # Photon energy scan from energy (in eV)
                     emax=self.e_max,  # Photon energy scan to energy (in eV)
                     ng_e=100,  # Photon energy scan number of points
-                    ng_j=nTrajPoints, # Number of points in electron trajectory (per period) for internal calculation only
+                    ng_j=ng_j , # Number of points in electron trajectory (per period) for internal calculation only
                     flag_emittance=1,  # when sampling rays: Use emittance (0=No, 1=Yes)
                     shift_x_flag=0,
                     shift_x_value=0.0,
@@ -309,7 +235,7 @@ class OWWiggler(OWElectronBeam):
                                 emin=self.e_min,
                                 emax=self.e_max,
                                 ng_e=ng_e,
-                                ng_j=nTrajPoints,
+                                ng_j=ng_j,
                                 flag_emittance=1,  # when sampling rays: Use emittance (0=No, 1=Yes)
                                 shift_x_flag=4,
                                 shift_x_value=0.0,
@@ -321,19 +247,8 @@ class OWWiggler(OWElectronBeam):
         elif self.magnetic_field_source == 2:
             raise Exception(NotImplemented)
 
-
-
-        ls = S4WigglerLightSource(name="", electron_beam=syned_electron_beam, wiggler_magnetic_structure=sourcewiggler)
-
-        ####################################
-
-
         if self.e_min == self.e_max:
             sourcewiggler.set_energy_monochromatic(self.e_min)
-
-
-        # sourcewiggler.set_electron_initial_conditions_by_label(velocity_label="value_at_zero",
-        #                                                        position_label="value_at_zero",)
 
         sourcewiggler.set_electron_initial_conditions(
                         shift_x_flag=self.shift_x_flag,
@@ -341,66 +256,94 @@ class OWWiggler(OWElectronBeam):
                         shift_betax_flag=self.shift_betax_flag,
                         shift_betax_value=self.shift_betax_value)
 
-        # sourcewiggler.calculate_radiation()
+        print(">>>>>> S4Wiggler info: ", sourcewiggler.info())
 
 
+        # S4WigglerLightSource
+        lightsource = S4WigglerLightSource(name="", electron_beam=syned_electron_beam, wiggler_magnetic_structure=sourcewiggler)
+        print(">>>>>> S4WigglerLightSource info: ", lightsource.info())
 
-
-
-
-        print(sourcewiggler.info())
-
+        #
+        # run shadow4
+        #
         t00 = time.time()
         print(">>>> starting calculation...")
-        rays = sourcewiggler.calculate_rays(NRAYS=self.n_rays)
+        beam = lightsource.get_beam(
+                                    user_unit_to_m=1.0, F_COHER=0, NRAYS=self.n_rays, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
+                                    psi_interval_in_units_one_over_gamma=None,
+                                    psi_interval_number_of_points=1001,
+                                    verbose=True
+                                    )
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.n_rays, t11, t11 / 60))
-        print(">>>   Results of calculate_radiation")
-        print(">>>       trajectory.shape: ",sourcewiggler._result_trajectory.shape)
-        print(">>>       cdf: ", sourcewiggler._result_cdf.keys())
+        self.beam_out = beam
 
-
+        #
+        # calculate and plot wiggler data
+        #
         calculate_spectrum = True
-
         if calculate_spectrum:
-            e, f, w = wiggler_spectrum(sourcewiggler._result_trajectory,
-                                              enerMin=self.e_min,
-                                              enerMax=self.e_max,
-                                              nPoints=500,
-                                              electronCurrent=self.ring_current,
-                                              outFile="",
-                                              elliptical=False)
-            # from srxraylib.plot.gol import plot
-            # plot(e, f, xlog=False, ylog=False, show=False,
-            #      xtitle="Photon energy [eV]", ytitle="Flux [Photons/s/0.1%bw]", title="Flux")
-            # plot(e, w, xlog=False, ylog=False, show=True,
-            #      xtitle="Photon energy [eV]", ytitle="Spectral Power [E/eV]", title="Spectral Power")
+            traj, pars = lightsource.get_trajectory()
 
+            if traj is not None:
+                e, f, w = wiggler_spectrum(traj,
+                                                  enerMin=self.e_min,
+                                                  enerMax=self.e_max,
+                                                  nPoints=500,
+                                                  electronCurrent=self.ring_current,
+                                                  outFile="",
+                                                  elliptical=False)
+                if False:
+                    from srxraylib.plot.gol import plot
+                    plot(e, f, xlog=False, ylog=False, show=False,
+                         xtitle="Photon energy [eV]", ytitle="Flux [Photons/s/0.1%bw]", title="Flux")
+                    plot(e, w, xlog=False, ylog=False, show=True,
+                         xtitle="Photon energy [eV]", ytitle="Spectral Power [E/eV]", title="Spectral Power")
 
+                self.plot_widget_all(lightsource,e,f,w)
+            else:
+                print(">>>> trajectory data not available for current configuration")
 
-
-        beam = Beam3.initialize_from_array(rays)
 
 
         #
-        # wiggler plots
+        # shadow4 plots
         #
-        self.plot_widget_all(sourcewiggler,e,f,w)
+        if False:
+            from srxraylib.plot.gol import plot, plot_scatter, set_qt
+            rays = beam.rays
+            plot_scatter(rays[:, 0] * 1e6, rays[:, 2] * 1e6, xtitle="X um", ytitle="Z um")
+            plot_scatter(rays[:, 1], rays[:, 0] * 1e6, xtitle="Y m", ytitle="X um")
+            plot_scatter(rays[:, 1], rays[:, 2] * 1e6, xtitle="Y m", ytitle="Z um")
+            plot_scatter(rays[:, 3] * 1e6, rays[:, 5] * 1e6, xtitle="X' urad", ytitle="Z' urad")
 
-
-        self.shadowoui_beam = ShadowBeam(oe_number = 0, beam = beam, number_of_rays = 0)
-
+        # self.beam_out = beam
         self.plot_shadow_all()
 
-        self.send("Beam", self.shadowoui_beam)
 
-    def set_PlotQuality(self):
-        self.plot_shadow_all()
+        #
+        # send beam
+        #
+        self.send("Beam", self.beam_out)
+
+    # def set_PlotQuality(self):
+    #     self.plot_shadow_all()
 
     def plot_shadow_all(self):
 
-        if self.view_type == 2:
-
+        if self.view_type == 0:
+            self.plot_xy(   self.beam_out, 10, 1, 3, 0, "(X,Z)", "X", "Z",     xum="um", yum="um", is_footprint=False)
+            self.plot_xy(   self.beam_out, 10, 4, 6, 1, "(X',Z')", "X'", "Z'", xum="urad", yum="urad", is_footprint=False)
+            self.plot_xy(   self.beam_out, 10, 1, 4, 2, "(X,X')", "X", "X'",   xum="um", yum="urad", is_footprint=False)
+            self.plot_xy(   self.beam_out, 10, 3, 6, 3, "(Z,Z')", "Z", "Z'",   xum="um", yum="urad", is_footprint=False)
+            self.plot_histo(self.beam_out, 10,11, 4,"Photon energy","Photon energy [eV]","Intensity [a.u.]",xum="eV")
+        elif self.view_type == 1:
+            self.plot_xy_fast(   self.beam_out, 10, 1, 3, 0, "(X,Z)", "X", "Z",     is_footprint=False)
+            self.plot_xy_fast(   self.beam_out, 10, 4, 6, 1, "(X',Z')", "X'", "Z'", is_footprint=False)
+            self.plot_xy_fast(   self.beam_out, 10, 1, 4, 2, "(X,X')", "X", "X'",   is_footprint=False)
+            self.plot_xy_fast(   self.beam_out, 10, 3, 6, 3, "(Z,Z')", "Z", "Z'",   is_footprint=False)
+            self.plot_histo(self.beam_out, 10,11, 4,"Photon energy","Photon energy [eV]","Intensity [a.u.]",xum="eV")
+        elif self.view_type == 2:
             for slot_index in range(6):
                 current_item = self.tab[slot_index].layout().itemAt(0)
                 self.tab[slot_index].layout().removeItem(current_item)
@@ -408,20 +351,7 @@ class OWWiggler(OWElectronBeam):
                 self.tab[slot_index].layout().addWidget(tmp)
 
 
-        elif self.view_type == 1:
-            raise Exception(NotImplemented)
-        else:
-            self.plot_xy(self.shadowoui_beam, 10, 1, 3, 0, "(X,Z)", "X", "Z",     xum="um", yum="um", is_footprint=False)
-            self.plot_xy(self.shadowoui_beam, 10, 4, 6, 1, "(X',Z')", "X'", "Z'", xum="urad", yum="urad", is_footprint=False)
-            self.plot_xy(self.shadowoui_beam, 10, 1, 4, 2, "(X,X')", "X", "X'",   xum="um", yum="urad", is_footprint=False)
-            self.plot_xy(self.shadowoui_beam, 10, 3, 6, 3, "(Z,Z')", "Z", "Z'",   xum="um", yum="urad", is_footprint=False)
-            self.plot_histo(self.shadowoui_beam,10,11,4,"Photon energy","Photon energy [eV]","Intensity [a.u.]",xum="eV")
-
-
-    def plot_widget_all(self,sourcewiggler=None,e=None,f=None,w=None):
-
-        print(">>>>>>>>>>> ",sourcewiggler)
-        import numpy
+    def plot_widget_all(self,lightsource=None,e=None,f=None,w=None):
 
         if self.plot_wiggler_graph == 0:
             for wiggler_plot_slot_index in range(6):
@@ -431,18 +361,19 @@ class OWWiggler(OWElectronBeam):
                 self.wiggler_tab[wiggler_plot_slot_index].layout().addWidget(plot_widget_id)
         else:
 
-            if sourcewiggler is None: return
+            if lightsource is None: return
+            traj, pars = lightsource.get_trajectory()
 
-            self.plot_widget_item(sourcewiggler._result_trajectory[1, :],sourcewiggler._result_trajectory[7, :],0,
+            self.plot_widget_item(traj[1, :],traj[7, :],0,
                                   title="Magnetic Field",xtitle="y [m]",ytitle="B [T]")
 
-            self.plot_widget_item(sourcewiggler._result_trajectory[1, :],sourcewiggler._result_trajectory[6, :],1,
+            self.plot_widget_item(traj[1, :],traj[6, :],1,
                                   title="Electron curvature",xtitle="y [m]",ytitle="cirvature [m^-1]")
 
-            self.plot_widget_item(sourcewiggler._result_trajectory[1, :],sourcewiggler._result_trajectory[3, :],2,
+            self.plot_widget_item(traj[1, :],traj[3, :],2,
                                   title="Electron velocity",xtitle="y [m]",ytitle="BetaX")
 
-            self.plot_widget_item(sourcewiggler._result_trajectory[1, :],sourcewiggler._result_trajectory[0, :],3,
+            self.plot_widget_item(traj[1, :],traj[0, :],3,
                                   title="Electron trajectory",xtitle="y [m]",ytitle="x [m]")
 
             self.plot_widget_item(e,f,4,

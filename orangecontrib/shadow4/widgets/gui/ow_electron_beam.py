@@ -27,9 +27,9 @@ class OWElectronBeam(GenericElement):
 
     source_name         = Setting("Undefined")
 
-    electron_energy_in_GeV = Setting(2.0)
+    electron_energy_in_GeV = Setting(1.9)
     electron_energy_spread = Setting(0.001)
-    ring_current           = Setting(0.5)
+    ring_current           = Setting(0.4)
     number_of_bunches      = Setting(400)
 
     moment_xx           = Setting(0.0)
@@ -39,10 +39,10 @@ class OWElectronBeam(GenericElement):
     moment_yyp          = Setting(0.0)
     moment_ypyp         = Setting(0.0)
 
-    electron_beam_size_h       = Setting(0.0)
-    electron_beam_divergence_h = Setting(0.0)
-    electron_beam_size_v       = Setting(0.0)
-    electron_beam_divergence_v = Setting(0.0)
+    electron_beam_size_h       = Setting(39e-6)
+    electron_beam_divergence_h = Setting(31e-6)
+    electron_beam_size_v       = Setting(39.2e-6)
+    electron_beam_divergence_v = Setting(39.2e-6)
 
     electron_beam_emittance_h = Setting(0.0)
     electron_beam_emittance_v = Setting(0.0)
@@ -56,7 +56,7 @@ class OWElectronBeam(GenericElement):
     electron_beam_etap_v = Setting(0.0)
 
 
-    type_of_properties = Setting(0)
+    type_of_properties = Setting(1)
 
 
     def __init__(self):
