@@ -110,6 +110,7 @@ ENTRY_POINTS = {
     'oasys.addons' : ("SHADOW4 = orangecontrib.shadow4", ),
     'oasys.widgets' : (
             "SHADOW4 Sources = orangecontrib.shadow4.widgets.sources",
+            "SHADOW4 Optics = orangecontrib.shadow4.widgets.optics",
             "SHADOW4 Tools = orangecontrib.shadow4.widgets.tools",
             ),
     }
