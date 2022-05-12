@@ -1,9 +1,4 @@
-import sys
-
-from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
-from orangewidget.settings import Setting
 from PyQt5.QtGui import QPalette, QColor, QFont
-from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtCore import QRect
 
 from orangewidget import gui
@@ -15,22 +10,21 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
 from oasys.widgets.gui import ConfirmDialog
 
+from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
+
 from syned.storage_ring.light_source import ElectronBeam
 from syned.beamline.beamline import Beamline
 from syned.util.json_tools import load_from_json_file, load_from_json_url
 
 class OWElectronBeam(GenericElement):
 
-    # name = "Electron Beam"
-
     syned_file_name = Setting("Select *.json file")
-
-    source_name         = Setting("Undefined")
+    source_name = Setting("Undefined")
 
     electron_energy_in_GeV = Setting(1.9)
     electron_energy_spread = Setting(0.001)
     ring_current           = Setting(0.4)
-    number_of_bunches      = Setting(400)
+    # number_of_bunches      = Setting(400) #TODO: to be deleted in syned?
 
     moment_xx           = Setting(0.0)
     moment_xxp          = Setting(0.0)
@@ -185,28 +179,27 @@ class OWElectronBeam(GenericElement):
 
     def run_shadow4(self):
         raise Exception("To be defined in the superclass")
-        # try:
-        #     self.check_data()
-        #
-        #     self.send("SynedData", Beamline(light_source=self.get_syned_light_source()))
-        # except Exception as e:
-        #     QMessageBox.critical(self, "Error", str(e.args[0]), QMessageBox.Ok)
-        #
-        #     self.setStatusMessage("")
-        #     self.progressBarFinished()
-
 
     def get_syned_electron_beam(self):
         electron_beam = ElectronBeam(energy_in_GeV=self.electron_energy_in_GeV,
                                      energy_spread=self.electron_energy_spread,
                                      current=self.ring_current,
-                                     number_of_bunches=self.number_of_bunches)
+                                     # number_of_bunches=self.number_of_bunches,
+                                     )
+
+        script = "\n# electron beam"
+        script += "\nfrom syned.storage_ring.light_source import ElectronBeam"
+        script += "\nelectron_beam = ElectronBeam(energy_in_GeV=%g,energy_spread=%g,current=%g)" % \
+                  (self.electron_energy_in_GeV,self.electron_energy_spread,self.ring_current)
 
         recalculate_fields = False
 
         if self.type_of_properties == 0:
             electron_beam.set_moments_horizontal(self.moment_xx,self.moment_xxp,self.moment_xpxp)
             electron_beam.set_moments_vertical(self.moment_yy, self.moment_yyp, self.moment_ypyp)
+
+            script += "\nelectron_beam.set_moments_horizontal(%g,%g,%g)" % (self.moment_xx,self.moment_xxp,self.moment_xpxp)
+            script +=   "\nelectron_beam.set_moments_vertical(%g,%g,%g)" % (self.moment_yy, self.moment_yyp, self.moment_ypyp)
 
             if recalculate_fields:
 
@@ -235,7 +228,11 @@ class OWElectronBeam(GenericElement):
                                          sigma_y=self.electron_beam_size_v,
                                          sigma_xp=self.electron_beam_divergence_h,
                                          sigma_yp=self.electron_beam_divergence_v)
-
+            script += "\nelectron_beam.set_sigmas_all(sigma_x=%g,sigma_y=%g,sigma_xp=%g,sigma_yp=%g)" % \
+                        (self.electron_beam_size_h,
+                        self.electron_beam_size_v,
+                        self.electron_beam_divergence_h,
+                        self.electron_beam_divergence_v)
             if recalculate_fields:
                 moments_all = electron_beam.get_moments_all()
 
@@ -269,6 +266,22 @@ class OWElectronBeam(GenericElement):
                                              self.electron_beam_beta_v,
                                              self.electron_beam_eta_v,
                                              self.electron_beam_etap_v)
+            script += "\nelectron_beam.set_twiss_horizontal(%g,%g,%g,%g,%g)" % (
+                  self.electron_beam_emittance_h,
+                  self.electron_beam_alpha_h,
+                  self.electron_beam_beta_h,
+                  self.electron_beam_eta_h,
+                  self.electron_beam_etap_h,
+            )
+            script += "\nelectron_beam.set_twiss_vertical(%g,%g,%g,%g,%g)" % (
+                  self.electron_beam_emittance_v,
+                  self.electron_beam_alpha_v,
+                  self.electron_beam_beta_v,
+                  self.electron_beam_eta_v,
+                  self.electron_beam_etap_v,
+            )
+
+
 
             if recalculate_fields:
                 x, xp, y, yp = electron_beam.get_sigmas_all()
@@ -286,56 +299,11 @@ class OWElectronBeam(GenericElement):
                 self.moment_yy   = moments_all[3]
                 self.moment_yy   = moments_all[4]
                 self.moment_ypyp = moments_all[5]
-
         elif self.type_of_properties == 3:
             electron_beam.set_moments_all(0,0,0,0,0,0)
+            script += "\nelectron_beam.set_moments_all(0,0,0,0,0,0)"
 
-
-        return electron_beam
-
-    # def check_magnetic_structure(self):
-    #     raise NotImplementedError("Shoudl be implemented in subclasses")
-    #
-    # def get_magnetic_structure(self):
-    #     raise NotImplementedError("Shoudl be implemented in subclasses")
-    #
-    # def callResetSettings(self):
-    #     if ConfirmDialog.confirmed(parent=self, message="Confirm Reset of the Fields?"):
-    #         try:
-    #             self.resetSettings()
-    #         except:
-    #             pass
-    #
-    # def select_syned_file(self):
-    #     self.le_syned_file_name.setText(oasysgui.selectFileFromDialog(self, self.syned_file_name, "Open Syned File"))
-    #
-    # def read_syned_file(self):
-    #     try:
-    #         congruence.checkEmptyString(self.syned_file_name, "Syned File Name/Url")
-    #
-    #         if len(self.syned_file_name) > 7 and self.syned_file_name[:7] == "http://":
-    #             is_remote = True
-    #         else:
-    #             congruence.checkFile(self.syned_file_name)
-    #             is_remote = False
-    #
-    #         try:
-    #             if is_remote:
-    #                 content = load_from_json_url(self.syned_file_name)
-    #             else:
-    #                 content = load_from_json_file(self.syned_file_name)
-    #
-    #             if isinstance(content, LightSource):
-    #                 self.populate_fields(content)
-    #             elif isinstance(content, Beamline) and not content._light_source is None:
-    #                 self.populate_fields(content._light_source)
-    #             else:
-    #                 raise Exception("json file must contain a SYNED LightSource")
-    #         except Exception as e:
-    #             raise Exception("Error reading SYNED LightSource from file: " + str(e))
-    #     except Exception as e:
-    #         QMessageBox.critical(self, "Error", str(e.args[0]), QMessageBox.Ok)
-
+        return electron_beam, script
 
     def populate_fields_from_syned_electron_beam(self, electron_beam):
 
@@ -346,7 +314,7 @@ class OWElectronBeam(GenericElement):
         self.electron_energy_in_GeV = electron_beam._energy_in_GeV
         self.electron_energy_spread = electron_beam._energy_spread
         self.ring_current = electron_beam._current
-        self.number_of_bunches = electron_beam._number_of_bunches
+        # self.number_of_bunches = electron_beam._number_of_bunches
 
         self.type_of_properties = 0
 
@@ -365,30 +333,3 @@ class OWElectronBeam(GenericElement):
         self.electron_beam_divergence_v = yp
 
         self.set_TypeOfProperties()
-
-    # def check_magnetic_structure_instance(self, magnetic_structure):
-    #     raise NotImplementedError()
-    #
-    # def populate_magnetic_structure(self, magnetic_structure):
-    #     raise NotImplementedError()
-    #
-    # def write_syned_file(self):
-    #     try:
-    #         congruence.checkDir(self.syned_file_name)
-    #
-    #         self.get_light_source().to_json(self.syned_file_name)
-    #
-    #         QMessageBox.information(self, "File Read", "JSON file correctly written to disk", QMessageBox.Ok)
-    #     except Exception as e:
-    #         QMessageBox.critical(self, "Error", str(e.args[0]), QMessageBox.Ok)
-
-
-
-
-if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication
-    a = QApplication(sys.argv)
-    ow = OWElectronBeam()
-    ow.show()
-    a.exec_()
-    ow.saveSettings()

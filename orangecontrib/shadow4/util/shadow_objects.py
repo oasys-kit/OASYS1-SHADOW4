@@ -68,8 +68,8 @@ class ShadowBeam:
         __shadow_beam = super().__new__(cls)
         __shadow_beam._oe_number = oe_number
         if (beam is None):
-            if number_of_rays > 0: __shadow_beam._beam = Shadow.Beam(number_of_rays)
-            else:                  __shadow_beam._beam = Shadow.Beam()
+            if number_of_rays > 0: __shadow_beam._beam = Beam(number_of_rays)
+            else:                  __shadow_beam._beam = Beam()
         else:
             __shadow_beam._beam = beam
 
@@ -116,7 +116,7 @@ class ShadowBeam:
             self._beam.write(file_name)
 
     def duplicate(self, copy_rays=True, history=True):
-        beam = Shadow.Beam()
+        beam = Beam()
         if copy_rays: beam.rays = copy.deepcopy(self._beam.rays)
 
         new_shadow_beam = ShadowBeam(self._oe_number, beam)
@@ -181,7 +181,7 @@ class ShadowBeam:
 
     @classmethod
     def traceFromSource(cls, shadow_src, write_begin_file=0, write_start_file=0, write_end_file=0, history=True, widget_class_name=None):
-        __shadow_beam = cls.__new__(ShadowBeam, beam=Shadow.Beam())
+        __shadow_beam = cls.__new__(ShadowBeam, beam=Beam())
 
         shadow_src.self_repair()
 

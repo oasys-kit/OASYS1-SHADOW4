@@ -6,7 +6,7 @@ NAME = "Optics"
 
 DESCRIPTION = "Optics."
 
-BACKGROUND = "#FF00FF"
+BACKGROUND = "#b9d47a"
 
 ICON = "icons/opticalElements.png"
 

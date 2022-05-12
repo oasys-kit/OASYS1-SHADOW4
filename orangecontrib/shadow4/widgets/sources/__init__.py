@@ -6,7 +6,7 @@ NAME = "Sources"
 
 DESCRIPTION = "Sources."
 
-BACKGROUND = "#FF00FF"
+BACKGROUND = "#b9d47a"
 
 ICON = "icons/source.png"
 
