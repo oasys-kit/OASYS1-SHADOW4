@@ -517,7 +517,7 @@ try:
 
                 self.setLayout(layout)
 
-            def plot_histo(self, beam, col, nolost, xrange, ref, title, xtitle, ytitle, nbins = 100, xum="", conv=1.0, ticket_to_add=None, flux=None):
+            def plot_histo(self, beam, col, nolost, xrange, ref, title, xtitle, ytitle, nbins = 100, xum="", ticket_to_add=None, flux=None):
 
                 ticket = beam.histo1(col, nbins=nbins, xrange=xrange, nolost=nolost, ref=ref)
                 if ref in [24, 25]: ticket['intensity'] = beam.get_column(ref, nolost=nolost).sum()
@@ -537,7 +537,11 @@ try:
                 ticket['sigma']    = get_sigma(ticket['histogram'], ticket['bin_center'])
                 ticket['centroid'] = get_average(ticket['histogram'], ticket['bin_center'])
 
-                factor=ShadowPlot.get_factor(col, conv)
+                # factor=ShadowPlot.get_factor(col, conv)
+                if col in [1,2,3,4,5,6]:
+                    factor = 1e6
+                else:
+                    factor = 1.0
 
                 if ref != 0 and not ytitle is None:  ytitle = ytitle + ' weighted by ' + ShadowPlot.get_shadow_label(ref)
 
@@ -620,7 +624,7 @@ try:
 
                 self.setLayout(layout)
 
-            def plot_xy(self, beam, var_x, var_y, title, xtitle, ytitle, xrange=None, yrange=None, nolost=1, nbins=100, nbins_h=None, nbins_v=None, xum="", yum="", conv=1.0, ref=23, is_footprint=False, ticket_to_add=None, flux=None):
+            def plot_xy(self, beam, var_x, var_y, title, xtitle, ytitle, xrange=None, yrange=None, nolost=1, nbins=100, nbins_h=None, nbins_v=None, xum="", yum="", ref=23, is_footprint=False, ticket_to_add=None, flux=None):
 
                 matplotlib.rcParams['axes.formatter.useoffset']='False'
 
@@ -653,8 +657,8 @@ try:
                     factor1 = 1.0
                     factor2 = 1.0
                 else:
-                    factor1=ShadowPlot.get_factor(var_x, conv)
-                    factor2=ShadowPlot.get_factor(var_y, conv)
+                    factor1 = 1e6 # ShadowPlot.get_factor(var_x, conv)
+                    factor2 = 1e6 # ShadowPlot.get_factor(var_y, conv)
 
                 xx = ticket['bin_h_edges']
                 yy = ticket['bin_v_edges']
@@ -788,7 +792,7 @@ try:
         #########################################################################################
 
         @classmethod
-        def plotxy_preview(cls, plot_window, beam, var_x, var_y, nolost=0, title='PLOTXY', xtitle=None, ytitle=None, conv=1.0, is_footprint=False):
+        def plotxy_preview(cls, plot_window, beam, var_x, var_y, nolost=0, title='PLOTXY', xtitle=None, ytitle=None, is_footprint=False):
 
             matplotlib.rcParams['axes.formatter.useoffset']='False'
 
@@ -799,8 +803,8 @@ try:
                 factor1 = 1.0
                 factor2 = 1.0
             else:
-                factor1 = ShadowPlot.get_factor(var_x, conv)
-                factor2 = ShadowPlot.get_factor(var_y, conv)
+                factor1 = 1e6 # ShadowPlot.get_factor(var_x, conv)
+                factor2 = 1e6 # ShadowPlot.get_factor(var_y, conv)
 
             if xtitle is None: xtitle=ShadowPlot.get_shadow_label(var_x)
             if ytitle is None: ytitle=ShadowPlot.get_shadow_label(var_y)
@@ -817,7 +821,11 @@ try:
 
             matplotlib.rcParams['axes.formatter.useoffset']='False'
 
-            factor=ShadowPlot.get_factor(col, conv)
+            # factor=ShadowPlot.get_factor(col, conv)
+            if col in [1, 2, 3, 4, 5, 6]:
+                factor = 1e6
+            else:
+                factor = 1.0
 
             ticket = beam.histo1(col, nbins=100, xrange=None, nolost=nolost, ref=ref)
 
@@ -838,7 +846,7 @@ try:
             plot_window.replot()
 
         @classmethod
-        def get_factor(cls, var, conv):
+        def get_factor(cls, var, conv=100.0):
             factor = 1.0
 
             if ShadowPlot._is_conversione_active:

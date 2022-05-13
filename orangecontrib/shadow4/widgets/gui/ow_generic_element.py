@@ -153,7 +153,7 @@ class GenericElement(AutomaticElement):
             self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedPlotWidget()
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        self.plot_canvas[plot_canvas_index].plot_xy(beam_out, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
+        self.plot_canvas[plot_canvas_index].plot_xy(beam_out, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, is_footprint=is_footprint)
 
         self.progressBarSet(progressBarValue)
 
@@ -165,7 +165,7 @@ class GenericElement(AutomaticElement):
 
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        ShadowPlot.plotxy_preview(self.plot_canvas[plot_canvas_index], beam_out, var_x, var_y, nolost=1, title=title, xtitle=xtitle, ytitle=ytitle, conv=self.workspace_units_to_cm, is_footprint=is_footprint)
+        ShadowPlot.plotxy_preview(self.plot_canvas[plot_canvas_index], beam_out, var_x, var_y, nolost=1, title=title, xtitle=xtitle, ytitle=ytitle, is_footprint=is_footprint)
 
         self.progressBarSet(progressBarValue)
 
@@ -174,7 +174,7 @@ class GenericElement(AutomaticElement):
             self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedHistoWidget()
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        self.plot_canvas[plot_canvas_index].plot_histo(beam_out, var, 1, None, 23, title, xtitle, ytitle, xum=xum, conv=self.workspace_units_to_cm)
+        self.plot_canvas[plot_canvas_index].plot_histo(beam_out, var, 1, None, 23, title, xtitle, ytitle, xum=xum)
 
         self.progressBarSet(progressBarValue)
 
@@ -186,7 +186,7 @@ class GenericElement(AutomaticElement):
 
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        ShadowPlot.plot_histo_preview(self.plot_canvas[plot_canvas_index], beam_out, var, 1, 23, title, xtitle, ytitle, conv=self.workspace_units_to_cm)
+        ShadowPlot.plot_histo_preview(self.plot_canvas[plot_canvas_index], beam_out, var, 1, 23, title, xtitle, ytitle)
 
         self.progressBarSet(progressBarValue)
 
@@ -218,10 +218,10 @@ class GenericElement(AutomaticElement):
                             self.plot_xy_fast(   beam_out._beam, progressBarValue + 8,  variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
                             self.plot_xy_fast(   beam_out._beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
                             self.plot_xy_fast(   beam_out._beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
-                            self.plot_histo_fast(beam_out._beam, progressBarValue + 20, variables[4],                  plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
+                            self.plot_histo_fast(beam_out._beam, progressBarValue + 20, variables[4],                     plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
 
                             if self.isFootprintEnabled():
-                                self.plot_xy_fast(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [" + self.workspace_units_label +"]", ytitle="X [" + self.workspace_units_label +"]", is_footprint=True)
+                                self.plot_xy_fast(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", is_footprint=True)
 
 
                         elif self.view_type == 0:
@@ -229,11 +229,11 @@ class GenericElement(AutomaticElement):
                             self.plot_xy(   beam_out._beam, progressBarValue + 8,  variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
                             self.plot_xy(   beam_out._beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
                             self.plot_xy(   beam_out._beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
-                            self.plot_histo(beam_out._beam, progressBarValue + 20, variables[4],                  plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4] )
+                            self.plot_histo(beam_out._beam, progressBarValue + 20, variables[4],                     plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4] )
 
                             if self.isFootprintEnabled():
-                                self.plot_xy(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [" + self.workspace_units_label +"]", ytitle="X [" + self.workspace_units_label +"]",
-                                             xum=("Y [" + self.workspace_units_label +"]"), yum=("X [" + self.workspace_units_label +"]"), is_footprint=True)
+                                self.plot_xy(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]",
+                                             xum=("Y [m]"), yum=("X [m]"), is_footprint=True)
 
                     except Exception as e:
                         self.view_type_combo.setEnabled(True)
@@ -262,7 +262,7 @@ class GenericElement(AutomaticElement):
         pass
 
     def getVariablestoPlot(self):
-        return [[1, 3], [4, 6], [1, 4], [3, 6], 11]
+        return [[1, 3], [4, 6], [1, 4], [3, 6], 26]
 
     def getTitles(self):
         return ["X,Z", "X',Z'", "X,X'", "Z,Z'", "Energy"]

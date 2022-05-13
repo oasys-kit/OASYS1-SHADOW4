@@ -10,6 +10,10 @@ from oasys.widgets import gui as oasysgui
 from oasys.util.oasys_util import EmittingStream
 from PyQt5 import QtGui, QtWidgets
 
+from syned.beamline.beamline import Beamline
+from syned.storage_ring.magnetic_structures.insertion_device import InsertionDevice
+from syned.widget.widget_decorator import WidgetDecorator
+
 from orangewidget import gui as orangegui
 from orangewidget.settings import Setting
 
@@ -22,7 +26,7 @@ from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
 
 import numpy
 
-class OWWiggler(OWElectronBeam):
+class OWWiggler(OWElectronBeam, WidgetDecorator):
 
     name = "Wiggler Light Source"
     description = "Wiggler Light Source"
@@ -31,14 +35,12 @@ class OWWiggler(OWElectronBeam):
 
 
     # inputs = [("Trigger", TriggerOut, "sendNewBeam")]
+    inputs = []
+    WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
                 "type":ShadowBeam,
                 "doc":"",}]
-
-    # outputs = [{"name":"tmp",
-    #             "type":numpy.ndarray,
-    #             "doc":"",}]
 
     magnetic_field_source = Setting(1)
     number_of_periods = Setting(1)
@@ -55,12 +57,9 @@ class OWWiggler(OWElectronBeam):
 
     e_min = Setting(0.4)
     e_max = Setting(0.4)
-    n_rays = Setting(500)
+    number_of_rays = Setting(500)
 
     plot_wiggler_graph = 1
-
-    workspace_units_to_cm = 1.0
-
 
     beam_out = None
 
@@ -125,7 +124,7 @@ class OWWiggler(OWElectronBeam):
 
         oasysgui.lineEdit(left_box_11, self, "e_min", "Min photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "e_max", "Max photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(left_box_11, self, "n_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "number_of_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
 
         self.set_shift_X_flag()
         self.set_shift_beta_X_flag()
@@ -362,13 +361,14 @@ sourcewiggler.set_electron_initial_conditions_by_label(
         t00 = time.time()
         print(">>>> starting calculation...")
         beam = lightsource.get_beam(
-                        user_unit_to_m=1.0, F_COHER=0, NRAYS=self.n_rays, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
+                        user_unit_to_m=1.0, F_COHER=0, NRAYS=self.number_of_rays, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
                         psi_interval_in_units_one_over_gamma=None,
                         psi_interval_number_of_points=1001,
                         verbose=True
                         )
+        photon_energy, flux, spectral_power = lightsource.calculate_spectrum()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.n_rays, t11, t11 / 60))
+        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         script_template = """
 beam = lightsource.get_beam(
@@ -376,9 +376,10 @@ beam = lightsource.get_beam(
     psi_interval_in_units_one_over_gamma=None,
     psi_interval_number_of_points=1001,
     verbose=True
-    )"""
+    )
+photon_energy, flux, spectral_power = lightsource.calculate_spectrum()"""
         script_dict = {
-            "NRAYS": self.n_rays,
+            "NRAYS": self.number_of_rays,
         }
         script += script_template.format_map(script_dict)
 
@@ -386,36 +387,12 @@ beam = lightsource.get_beam(
 
 
         #
-        # beam plots
+        # plots
         #
-        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.n_rays)
+        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays)
         self.plot_results(BEAM, progressBarValue=80)
+        self.refresh_specific_wiggler_plots(lightsource, photon_energy, flux, spectral_power)
 
-        #
-        # calculate and plot specific wiggler data
-        #
-        calculate_spectrum = True
-        if calculate_spectrum:
-            traj, pars = lightsource.get_trajectory()
-
-            if traj is not None:
-                e, f, w = wiggler_spectrum(traj,
-                                                  enerMin=self.e_min,
-                                                  enerMax=self.e_max,
-                                                  nPoints=500,
-                                                  electronCurrent=self.ring_current,
-                                                  outFile="",
-                                                  elliptical=False)
-                if False:
-                    from srxraylib.plot.gol import plot
-                    plot(e, f, xlog=False, ylog=False, show=False,
-                         xtitle="Photon energy [eV]", ytitle="Flux [Photons/s/0.1%bw]", title="Flux")
-                    plot(e, w, xlog=False, ylog=False, show=True,
-                         xtitle="Photon energy [eV]", ytitle="Spectral Power [E/eV]", title="Spectral Power")
-
-                self.refresh_specific_wiggler_plots(lightsource, e, f, w)
-            else:
-                print(">>>> trajectory data not available for current configuration")
 
         #
         # script
@@ -469,7 +446,31 @@ beam = lightsource.get_beam(
         plot_widget_id = plot_data1D(x.copy(),y.copy(),title=title,xtitle=xtitle,ytitle=ytitle,symbol='.')
         self.wiggler_tab[wiggler_plot_slot_index].layout().addWidget(plot_widget_id)
 
+    def receive_syned_data(self, data):
+        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        if data is not None:
+            if isinstance(data, Beamline):
+                if not data.get_light_source() is None:
+                    if isinstance(data.get_light_source().get_magnetic_structure(), InsertionDevice):
+                        print(data.get_light_source().get_magnetic_structure(), InsertionDevice)
+                        light_source = data.get_light_source()
 
+                        self.magnetic_field_source = 0
+                        self.set_visibility()
+
+                        w = light_source.get_magnetic_structure()
+                        self.number_of_periods = int(w.number_of_periods())
+                        self.id_period = w.period_length()
+                        self.k_value = w.K_vertical()
+
+                        self.populate_fields_from_syned_electron_beam(light_source.get_electron_beam())
+
+                    else:
+                        raise ValueError("Syned light source not congruent")
+                else:
+                    raise ValueError("Syned data not correct: light source not present")
+            else:
+                raise ValueError("Syned data not correct")
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
@@ -477,4 +478,4 @@ if __name__ == "__main__":
     ow = OWWiggler()
     ow.show()
     a.exec_()
-    #ow.saveSettings()
+

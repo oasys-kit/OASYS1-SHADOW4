@@ -19,7 +19,7 @@ from syned.util.json_tools import load_from_json_file, load_from_json_url
 class OWElectronBeam(GenericElement):
 
     syned_file_name = Setting("Select *.json file")
-    source_name = Setting("Undefined")
+    # source_name = Setting("Undefined")
 
     electron_energy_in_GeV = Setting(1.9)
     electron_energy_spread = Setting(0.001)
@@ -87,10 +87,6 @@ class OWElectronBeam(GenericElement):
         self.tabs_control_area.setFixedWidth(self.CONTROL_AREA_WIDTH-5)
 
         self.tab_electron_beam = oasysgui.createTabPage(self.tabs_control_area, "Electron Beam Setting")
-
-
-
-        oasysgui.lineEdit(self.tab_electron_beam, self, "source_name", "Electron Beam Name", labelWidth=260, valueType=str, orientation="horizontal")
 
         self.electron_beam_box = oasysgui.widgetBox(self.tab_electron_beam, "Electron Beam/Machine Parameters", addSpace=False, orientation="vertical")
 
@@ -307,29 +303,23 @@ class OWElectronBeam(GenericElement):
 
     def populate_fields_from_syned_electron_beam(self, electron_beam):
 
-        self.check_magnetic_structure_instance(magnetic_structure)
-
-        self.source_name = electron_beam._name
-
-        self.electron_energy_in_GeV = electron_beam._energy_in_GeV
+        self.electron_energy_in_GeV = electron_beam.energy()
         self.electron_energy_spread = electron_beam._energy_spread
-        self.ring_current = electron_beam._current
-        # self.number_of_bunches = electron_beam._number_of_bunches
+        self.ring_current = electron_beam.current()
 
-        self.type_of_properties = 0
-
-        self.moment_xx   = electron_beam._moment_xx
-        self.moment_xxp  = electron_beam._moment_xxp
-        self.moment_xpxp = electron_beam._moment_xpxp
-        self.moment_yy   = electron_beam._moment_yy
-        self.moment_yyp  = electron_beam._moment_yyp
-        self.moment_ypyp = electron_beam._moment_ypyp
+        moment_xx, moment_xxp, moment_xpxp, moment_yy, moment_yyp, moment_ypyp = electron_beam.get_moments_all()
+        self.moment_xx   = moment_xx
+        self.moment_xxp  = moment_xxp
+        self.moment_xpxp = moment_xpxp
+        self.moment_yy   = moment_yy
+        self.moment_yyp  = moment_yyp
+        self.moment_ypyp = moment_ypyp
 
         x, xp, y, yp = electron_beam.get_sigmas_all()
-
-        self.electron_beam_size_h = x
-        self.electron_beam_size_v = y
+        self.electron_beam_size_h       = x
+        self.electron_beam_size_v       = y
         self.electron_beam_divergence_h = xp
         self.electron_beam_divergence_v = yp
 
+        self.type_of_properties = 1
         self.set_TypeOfProperties()
