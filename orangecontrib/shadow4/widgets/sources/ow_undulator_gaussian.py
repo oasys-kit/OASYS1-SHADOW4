@@ -173,7 +173,7 @@ sourceundulator = S4Undulator(
         #
         # send beam
         #
-        self.send("Beam4", ShadowBeam())
+        self.send("Beam4", BEAM)
 
 
     def receive_syned_data(self, data):

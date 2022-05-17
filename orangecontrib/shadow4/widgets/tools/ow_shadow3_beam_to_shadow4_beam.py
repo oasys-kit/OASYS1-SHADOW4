@@ -7,30 +7,30 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets.widget import AutomaticWidget
 from orangewidget.settings import Setting
 
-
+from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
 from orangecontrib.shadow4.util.shadow_objects import ShadowBeam as ShadowBeam4
+from shadow4.beam.beam import Beam
 
-try:
-    import Shadow
-    from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
-except:
-    pass
+# try:
+#     import Shadow
+#     from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
+# except:
+#     pass
 
-class OW_beam_converter_4_to_3(AutomaticWidget):
-    name = "shadow4->3 beam converter"
+class OW_beam_converter_3_to_4(AutomaticWidget):
+    name = "shadow3->4 beam converter"
     id = "toShadowOUIbeam"
     description = "shadow4->3 beam converter"
-    icon = "icons/beam4to3.png"
+    icon = "icons/beam3to4.png"
     priority = 20
     category = ""
     keywords = ["shadow3", "shadow4"]
 
-    inputs = [("Beam4", ShadowBeam4, "set_input")]
+    inputs = [("Beam", ShadowBeam3, "set_input")]
 
-    outputs = [{"name":"Beam",
-                "type":ShadowBeam3,
-                "doc":"",
-                "id":"Beam"}]
+    outputs = [{"name":"Beam4",
+                "type":ShadowBeam4,
+                "doc":"",}]
 
     MAX_WIDTH = 420
     MAX_HEIGHT = 230
@@ -77,22 +77,19 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
                 self.convert_beam()
 
     def convert_beam(self):
-        beam4 = self.shadow_beam._beam
-        print(">>beam4: ", beam4)
-        beam3 = Shadow.Beam(N=self.shadow_beam.get_number_of_rays())
-        beam3.rays = beam4.rays.copy()
+        beam3 = self.shadow_beam._beam
         print(">>beam3: ", beam3)
-        print(beam4.get_number_of_rays(), beam3.nrays())
-        BEAM3 = ShadowBeam3(oe_number=0, beam=beam3, number_of_rays=self.shadow_beam.get_number_of_rays())
-        print(BEAM3)
-        self.send("Beam", BEAM3)
+        BEAM4 = ShadowBeam4(oe_number=0, beam=Beam(array=beam3.rays))
+        print(BEAM4)
+        self.send("Beam4", BEAM4)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     import sys
+    import Shadow
     a = QApplication(sys.argv)
-    ow = OW_beam_converter_4_to_3()
-    ow.set_input(ShadowBeam4())
+    ow = OW_beam_converter_3_to_4()
+    ow.set_input(ShadowBeam3(oe_number=0,beam=Shadow.Beam(N=5000)))
     ow.show()
     a.exec_()
     #ow.saveSettings()
