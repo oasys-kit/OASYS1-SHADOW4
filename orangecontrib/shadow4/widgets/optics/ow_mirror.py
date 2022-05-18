@@ -16,16 +16,16 @@ from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
 
 from syned.beamline.beamline import Beamline
+from shadow4.beamline.s4_beamline import S4Beamline
+
 from syned.widget.widget_decorator import WidgetDecorator
 
 from shadow4.syned.element_coordinates import ElementCoordinates
 
 from shadow4.syned.shape import Rectangle  # TODO from syned.beamline.shape
-from shadow4.syned.shape import Convexity, Direction, Side
-#  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-#  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-#  Side:  SOURCE = 0  IMAGE = 1
-
+from shadow4.syned.shape import Convexity  #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
+from shadow4.syned.shape import Direction  #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
+from shadow4.syned.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
 from shadow4.beamline.s4_optical_element import SurfaceCalculation # INTERNAL = 0  EXTERNAL = 1
 
@@ -110,18 +110,6 @@ class OWMirror(GenericElement, WidgetDecorator):
     refraction_index_delta        = Setting(1e-5)
     refraction_index_beta         = Setting(1e-3)
 
-    # reflectivity_compound_name    = Setting("Rh")
-    # reflectivity_compound_density = Setting(12.41)
-
-    # f_reflec = 0    # reflectivity of surface: 0=no reflectivity, 1=full polarization
-    # f_refl   = 0    # 0=prerefl file
-    #                 # 1=electric susceptibility
-    #                 # 2=user defined file (1D reflectivity vs angle)
-    #                 # 3=user defined file (1D reflectivity vs energy)
-    #                 # 4=user defined file (2D reflectivity vs energy and angle)
-    # file_refl = "",  # preprocessor file fir f_refl=0,2,3,4
-    # refraction_index = 1.0,  # refraction index (complex) for f_refl=1
-
     #########################################################
     # dimensions
     #########################################################
@@ -134,6 +122,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
 
     input_beam = None
+    beamline = None
 
 
     def __init__(self):
@@ -823,7 +812,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
 
     def get_coordinates(self):
-        print(">>>>>>inc ref m.o.a.",self.incidence_angle_deg,self.reflection_angle_deg,self.get_mirror_orientation_angle())
+        print(">>>>>>inc ref m.o.a. in deg:",self.incidence_angle_deg,self.reflection_angle_deg,self.get_mirror_orientation_angle())
         return ElementCoordinates(
                 p=self.source_plane_distance,
                 q=self.image_plane_distance,
@@ -860,6 +849,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
         if ShadowCongruence.checkEmptyBeam(input_beam):
             self.input_beam = input_beam
+            self.beamline = input_beam.get_beamline()
 
             if self.is_automatic_run:
                 self.run_shadow4()
@@ -876,68 +866,57 @@ class OWMirror(GenericElement, WidgetDecorator):
 
         self.progressBarInit()
 
-
         beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
 
-        self.output_beam = ShadowBeam(oe_number=0, beam=beam1)
+        beamline = self.beamline.duplicate()
+        beamline.append_beamline_element(element)
+
+        output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
 
         self.set_PlotQuality()
 
-        self.plot_results(self.output_beam, progressBarValue=80)
+        self.plot_results(output_beam, progressBarValue=80)
 
         self.progressBarFinished()
-
 
         #
         # script
         #
-        self.shadow4_script.set_code("#script")
+        self.shadow4_script.set_code(beamline.to_python_code())
 
-#     def receive_syned_data(self, data):
-#         if data is not None:
-#             if isinstance(data, Beamline):
-#                 if not data.get_light_source() is None:
-#                     if isinstance(data.get_light_source().get_magnetic_structure(), Undulator):
-#                         light_source = data.get_light_source()
-#
-#                         self.energy =  round(light_source.get_magnetic_structure().resonance_energy(light_source.get_electron_beam().gamma()), 3)
-#                         self.delta_e = 0.0
-#                         self.undulator_length = light_source.get_magnetic_structure().length()
-#
-#                         self.populate_fields_from_syned_electron_beam(light_source.get_electron_beam())
-#
-#                     else:
-#                         raise ValueError("Syned light source not congruent")
-#                 else:
-#                     raise ValueError("Syned data not correct: light source not present")
-#             else:
-#                 raise ValueError("Syned data not correct")
+    def receive_syned_data(self, data):
+        raise Exception("Not yet implemented")
 
-def get_test_beam():
-    # electron beam
-    from syned.storage_ring.light_source import ElectronBeam
-    electron_beam = ElectronBeam(energy_in_GeV=6, energy_spread=0.001, current=0.2)
-    electron_beam.set_sigmas_all(sigma_x=3.01836e-05, sigma_y=3.63641e-06, sigma_xp=4.36821e-06, sigma_yp=1.37498e-06)
 
-    # Gaussian undulator
-    from shadow4.sources.undulator.s4_undulator import S4Undulator
-    sourceundulator = S4Undulator(
-        period_length=0.0159999,
-        number_of_periods=100,
-        emin=2700.136,
-        emax=2700.136,
-        flag_emittance=1,  # Use emittance (0=No, 1=Yes)
-    )
-    sourceundulator.set_energy_monochromatic(2700.14)
 
-    from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
-    lightsource = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                         undulator_magnetic_structure=sourceundulator)
-
-    beam = lightsource.get_beam_in_gaussian_approximation(NRAYS=5000, SEED=5676561)
-
-    return ShadowBeam(oe_number=0, beam=beam)
 if __name__ == "__main__":
+    from shadow4.beamline.s4_beamline import S4Beamline
+    def get_test_beam():
+        # electron beam
+        from syned.storage_ring.light_source import ElectronBeam
+        electron_beam = ElectronBeam(energy_in_GeV=6, energy_spread=0.001, current=0.2)
+        electron_beam.set_sigmas_all(sigma_x=3.01836e-05, sigma_y=3.63641e-06, sigma_xp=4.36821e-06,
+                                     sigma_yp=1.37498e-06)
+
+        # Gaussian undulator
+        from shadow4.sources.undulator.s4_undulator import S4Undulator
+        sourceundulator = S4Undulator(
+            period_length=0.0159999,
+            number_of_periods=100,
+            emin=2700.136,
+            emax=2700.136,
+            flag_emittance=1,  # Use emittance (0=No, 1=Yes)
+        )
+        sourceundulator.set_energy_monochromatic(2700.14)
+
+        from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
+        light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
+                                             undulator_magnetic_structure=sourceundulator)
+
+        beam = light_source.get_beam_in_gaussian_approximation(NRAYS=5000, SEED=5676561)
+
+        return ShadowBeam(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = OWMirror()

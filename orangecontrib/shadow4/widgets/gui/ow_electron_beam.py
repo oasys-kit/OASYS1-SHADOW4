@@ -12,9 +12,10 @@ from oasys.widgets.gui import ConfirmDialog
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 
-from syned.storage_ring.light_source import ElectronBeam
-from syned.beamline.beamline import Beamline
-from syned.util.json_tools import load_from_json_file, load_from_json_url
+from shadow4.sources.s4_electron_beam import S4ElectronBeam
+# from syned.storage_ring.light_source import ElectronBeam
+# from syned.beamline.beamline import Beamline
+# from syned.util.json_tools import load_from_json_file, load_from_json_url
 
 class OWElectronBeam(GenericElement):
 
@@ -176,16 +177,16 @@ class OWElectronBeam(GenericElement):
     def run_shadow4(self):
         raise Exception("To be defined in the superclass")
 
-    def get_syned_electron_beam(self):
-        electron_beam = ElectronBeam(energy_in_GeV=self.electron_energy_in_GeV,
+    def get_electron_beam(self):
+        electron_beam = S4ElectronBeam(energy_in_GeV=self.electron_energy_in_GeV,
                                      energy_spread=self.electron_energy_spread,
                                      current=self.ring_current,
                                      # number_of_bunches=self.number_of_bunches,
                                      )
 
         script = "\n# electron beam"
-        script += "\nfrom syned.storage_ring.light_source import ElectronBeam"
-        script += "\nelectron_beam = ElectronBeam(energy_in_GeV=%g,energy_spread=%g,current=%g)" % \
+        script += "\nfrom shadow4.sources.s4_electron_beam import S4ElectronBeam"
+        script += "\nelectron_beam = S4ElectronBeam(energy_in_GeV=%g,energy_spread=%g,current=%g)" % \
                   (self.electron_energy_in_GeV,self.electron_energy_spread,self.ring_current)
 
         recalculate_fields = False
@@ -301,7 +302,7 @@ class OWElectronBeam(GenericElement):
 
         return electron_beam, script
 
-    def populate_fields_from_syned_electron_beam(self, electron_beam):
+    def populate_fields_from_electron_beam(self, electron_beam):
 
         self.electron_energy_in_GeV = electron_beam.energy()
         self.electron_energy_spread = electron_beam._energy_spread

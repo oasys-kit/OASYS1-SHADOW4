@@ -15,6 +15,8 @@ from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
 
 
 from syned.beamline.beamline import Beamline
+from shadow4.beamline.s4_beamline import S4Beamline
+
 from syned.storage_ring.magnetic_structures.undulator import Undulator
 from syned.widget.widget_decorator import WidgetDecorator
 
@@ -70,8 +72,10 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
     def get_lightsource(self):
         # syned electron beam
-        electron_beam, script_electron_beam = self.get_syned_electron_beam()
-        print(">>>>>> electron_beam info: ", electron_beam.info())
+        electron_beam, script_electron_beam = self.get_electron_beam()
+        print("\n\n>>>>>> electron_beam info: ", electron_beam.info())
+        print("\n\n>>>>>> electron_beam script: ", electron_beam.to_python_code())
+
         script = script_electron_beam
 
         script += "\n\n# Gaussian undulator"
@@ -96,6 +100,9 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
             flag_emittance=flag_emittance,  # when sampling rays: Use emittance (0=No, 1=Yes)
             # flag_size=0,  # when sampling rays: 0=point,1=Gaussian,2=FT(Divergences)
         )
+
+        print("\n\n>>>>>> Undulator info: ", sourceundulator.info())
+        print("\n\n>>>>>> Undulator script: ", sourceundulator.to_python_code())
 
         script_template = """
 from shadow4.sources.undulator.s4_undulator import S4Undulator
@@ -126,10 +133,12 @@ sourceundulator = S4Undulator(
 
         # S4UndulatorLightSource
         lightsource = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                           undulator_magnetic_structure=sourceundulator)
+                                           magnetic_structure=sourceundulator)
         script += "\n\nfrom shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource"
-        script += "\nlightsource = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam, undulator_magnetic_structure=sourceundulator)"
-        print(">>>>>> S4UndulatorLightSource info: ", lightsource.info())
+        script += "\nlightsource = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam, magnetic_structure=sourceundulator)"
+
+        print("\n\n>>>>>> S4UndulatorLightSource info: ", lightsource.info())
+        print("\n\n>>>>>> S4UndulatorLightSource script: ", lightsource.to_python_code())
 
         return lightsource, script
 
@@ -141,7 +150,7 @@ sourceundulator = S4Undulator(
 
         self.progressBarInit()
 
-        lightsource, script = self.get_lightsource()
+        light_source, script = self.get_lightsource()
 
         self.progressBarSet(5)
         #
@@ -149,7 +158,7 @@ sourceundulator = S4Undulator(
         #
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = lightsource.get_beam_in_gaussian_approximation(NRAYS=self.number_of_rays, SEED=self.seed)
+        beam = light_source.get_beam_in_gaussian_approximation(NRAYS=self.number_of_rays, SEED=self.seed)
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
@@ -160,12 +169,17 @@ sourceundulator = S4Undulator(
         #
         # beam plots
         #
-        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays)
+        beamline = S4Beamline(light_source=light_source)
+        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
         self.plot_results(BEAM, progressBarValue=80)
 
         #
         # script
         #
+        script = light_source.to_python_code()
+        script +="\n\nbeam = light_source.get_beam_in_gaussian_approximation(NRAYS=%d, SEED=%d)" % \
+                 (self.number_of_rays, self.seed)
+
         self.shadow4_script.set_code(script)
 
         self.progressBarFinished()

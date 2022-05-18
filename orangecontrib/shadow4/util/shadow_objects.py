@@ -64,7 +64,7 @@ class ShadowBeam:
         def get_additional_parameter(self, name):
             return self.__additional_parameters[name]
 
-    def __new__(cls, oe_number=0, beam=None, number_of_rays=0):
+    def __new__(cls, oe_number=0, beam=None, number_of_rays=0, beamline=None):
         __shadow_beam = super().__new__(cls)
         __shadow_beam._oe_number = oe_number
         if (beam is None):
@@ -76,8 +76,12 @@ class ShadowBeam:
         __shadow_beam.history = []
         __shadow_beam.scanned_variable_data = None
         __shadow_beam.__initial_flux = None
+        __shadow_beam._beamline = beamline  # added by srio
 
         return __shadow_beam
+
+    def get_beamline(self):
+        return self._beamline
 
     def set_initial_flux(self, initial_flux):
         self.__initial_flux = initial_flux

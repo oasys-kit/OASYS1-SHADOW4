@@ -8,7 +8,6 @@ from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
 from oasys.widgets import gui as oasysgui
 
 from oasys.util.oasys_util import EmittingStream
-from PyQt5 import QtGui, QtWidgets
 
 from syned.beamline.beamline import Beamline
 from syned.storage_ring.magnetic_structures.insertion_device import InsertionDevice
@@ -18,11 +17,9 @@ from orangewidget import gui as orangegui
 from orangewidget.settings import Setting
 
 
-from srxraylib.sources.srfunc import wiggler_spectrum
-
-from shadow4.beam.beam import Beam
 from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
 from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
+from shadow4.beamline.s4_beamline import S4Beamline
 
 import numpy
 
@@ -34,7 +31,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     priority = 3
 
 
-    # inputs = [("Trigger", TriggerOut, "sendNewBeam")]
     inputs = []
     WidgetDecorator.append_syned_input_data(inputs)
 
@@ -205,8 +201,9 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
     def get_lightsource(self):
         # syned
-        electron_beam, script_electron_beam = self.get_syned_electron_beam()
-        print(">>>>>> ElectronBeam info: ", electron_beam.info())
+        electron_beam, script_electron_beam = self.get_electron_beam()
+        print("\n\n>>>>>> ElectronBeam info: ", electron_beam.info(), type(electron_beam))
+        print("\n\n>>>>>> ElectronBeam script: ", electron_beam.to_python_code())
 
         ng_j = 501 # trajectory points
         script = script_electron_beam
@@ -332,14 +329,18 @@ sourcewiggler.set_electron_initial_conditions_by_label(
                         shift_betax_flag=self.shift_betax_flag,
                         shift_betax_value=self.shift_betax_value)
 
-        print(">>>>>> S4Wiggler info: ", sourcewiggler.info())
+        print(">>>>>> \n\n S4Wiggler info: ", sourcewiggler.info())
+        print(">>>>>> \n\n S4Wiggler script: ", sourcewiggler.to_python_code())
 
 
         # S4WigglerLightSource
-        lightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, wiggler_magnetic_structure=sourcewiggler)
+        lightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, magnetic_structure=sourcewiggler)
         script += "\n\nfrom shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource"
-        script += "\nlightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, wiggler_magnetic_structure=sourcewiggler)"
-        print(">>>>>> S4WigglerLightSource info: ", lightsource.info())
+        script += "\nlightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, magnetic_structure=sourcewiggler)"
+
+
+        print("\n\n>>>>>> S4WigglerLightSource info: ", lightsource.info())
+        print("\n\n>>>>>> S4WigglerLightSource script: ", lightsource.to_python_code())
 
         return lightsource, script
 
@@ -352,7 +353,7 @@ sourcewiggler.set_electron_initial_conditions_by_label(
 
         self.progressBarInit()
 
-        lightsource, script = self.get_lightsource()
+        light_source, script = self.get_lightsource()
 
         self.progressBarSet(5)
         #
@@ -360,15 +361,16 @@ sourcewiggler.set_electron_initial_conditions_by_label(
         #
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = lightsource.get_beam(
+        beam = light_source.get_beam(
                         user_unit_to_m=1.0, F_COHER=0, NRAYS=self.number_of_rays, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
                         psi_interval_in_units_one_over_gamma=None,
                         psi_interval_number_of_points=1001,
                         verbose=True
                         )
-        photon_energy, flux, spectral_power = lightsource.calculate_spectrum()
+        photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+
 
         script_template = """
 beam = lightsource.get_beam(
@@ -389,14 +391,31 @@ photon_energy, flux, spectral_power = lightsource.calculate_spectrum()"""
         #
         # plots
         #
-        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays)
+        beamline = S4Beamline(light_source=light_source)
+        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
         self.plot_results(BEAM, progressBarValue=80)
-        self.refresh_specific_wiggler_plots(lightsource, photon_energy, flux, spectral_power)
+        self.refresh_specific_wiggler_plots(light_source, photon_energy, flux, spectral_power)
 
 
         #
         # script
         #
+        script = light_source.to_python_code()
+        script_template = """
+beam = light_source.get_beam(
+    user_unit_to_m=1.0, F_COHER=0, NRAYS={NRAYS}, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
+    psi_interval_in_units_one_over_gamma=None,
+    psi_interval_number_of_points=1001,
+    verbose=True
+    )
+photon_energy, flux, spectral_power = light_source.calculate_spectrum()"""
+        script_dict = {
+            "NRAYS": self.number_of_rays,
+        }
+
+        script += script_template.format_map(script_dict)
+
+
         self.shadow4_script.set_code(script)
 
         self.progressBarFinished()
@@ -463,7 +482,7 @@ photon_energy, flux, spectral_power = lightsource.calculate_spectrum()"""
                         self.id_period = w.period_length()
                         self.k_value = w.K_vertical()
 
-                        self.populate_fields_from_syned_electron_beam(light_source.get_electron_beam())
+                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
 
                     else:
                         raise ValueError("Syned light source not congruent")
