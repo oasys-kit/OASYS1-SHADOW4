@@ -882,7 +882,15 @@ class OWMirror(GenericElement, WidgetDecorator):
         #
         # script
         #
-        self.shadow4_script.set_code(beamline.to_python_code())
+        script = beamline.to_python_code()
+        script += "\n\n\n# run shadow4"
+        script += "\nbeamline.run_beamline()"
+        self.shadow4_script.set_code(script)
+
+        #
+        # send beam
+        #
+        self.send("Beam4", output_beam)
 
     def receive_syned_data(self, data):
         raise Exception("Not yet implemented")
@@ -911,7 +919,7 @@ if __name__ == "__main__":
 
         from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
         light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                             undulator_magnetic_structure=sourceundulator)
+                                             magnetic_structure=sourceundulator)
 
         beam = light_source.get_beam_in_gaussian_approximation(NRAYS=5000, SEED=5676561)
 

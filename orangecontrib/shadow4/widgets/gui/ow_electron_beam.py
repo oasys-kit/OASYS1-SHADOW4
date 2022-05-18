@@ -177,7 +177,7 @@ class OWElectronBeam(GenericElement):
     def run_shadow4(self):
         raise Exception("To be defined in the superclass")
 
-    def get_electron_beam(self):
+    def get_electron_beam(self): #to do: remove script
         electron_beam = S4ElectronBeam(energy_in_GeV=self.electron_energy_in_GeV,
                                      energy_spread=self.electron_energy_spread,
                                      current=self.ring_current,
@@ -300,7 +300,7 @@ class OWElectronBeam(GenericElement):
             electron_beam.set_moments_all(0,0,0,0,0,0)
             script += "\nelectron_beam.set_moments_all(0,0,0,0,0,0)"
 
-        return electron_beam, script
+        return electron_beam
 
     def populate_fields_from_electron_beam(self, electron_beam):
 

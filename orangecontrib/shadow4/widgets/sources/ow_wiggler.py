@@ -21,8 +21,6 @@ from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
 from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
 from shadow4.beamline.s4_beamline import S4Beamline
 
-import numpy
-
 class OWWiggler(OWElectronBeam, WidgetDecorator):
 
     name = "Wiggler Light Source"
@@ -54,6 +52,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     e_min = Setting(0.4)
     e_max = Setting(0.4)
     number_of_rays = Setting(500)
+    seed = Setting(5676561)
 
     plot_wiggler_graph = 1
 
@@ -121,6 +120,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_11, self, "e_min", "Min photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "e_max", "Max photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "number_of_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "seed", "Seed", tooltip="Seed (0=clock)", labelWidth=250, valueType=int, orientation="horizontal")
 
         self.set_shift_X_flag()
         self.set_shift_beta_X_flag()
@@ -201,13 +201,11 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
     def get_lightsource(self):
         # syned
-        electron_beam, script_electron_beam = self.get_electron_beam()
+        electron_beam = self.get_electron_beam()
         print("\n\n>>>>>> ElectronBeam info: ", electron_beam.info(), type(electron_beam))
-        print("\n\n>>>>>> ElectronBeam script: ", electron_beam.to_python_code())
 
         ng_j = 501 # trajectory points
-        script = script_electron_beam
-        script += "\n\n# wiggler"
+
         if self.type_of_properties == 3:
             flag_emittance = 0
         else:
@@ -230,36 +228,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                     shift_betax_flag         = 0,
                     shift_betax_value        = 0.0,
                     )
-            script_template = """
-from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
-sourcewiggler = S4Wiggler(
-    magnetic_field_periodic = 1,   # 0=external, 1=periodic
-    file_with_magnetic_field = "",  # useful if magnetic_field_periodic=0
-    K_vertical        = {K_vertical},
-    period_length     = {period_length},
-    number_of_periods = {number_of_periods}, # syned Wiggler pars: useful if magnetic_field_periodic=1
-    emin              = {emin},     # Photon energy scan from energy (in eV)
-    emax              = {emax},     # Photon energy scan to energy (in eV)
-    ng_e              = 100,            # Photon energy scan number of points
-    ng_j              = {ng_j} ,          # Number of points in electron trajectory (per period) for internal calculation only
-    flag_emittance    = {flag_emittance}, # Use emittance (0=No, 1=Yes)
-    shift_x_flag      = 0,
-    shift_x_value     = 0.0,
-    shift_betax_flag  = 0,
-    shift_betax_value = 0.0,
-    )"""
-
-            script_dict = {
-                "K_vertical"               : self.k_value,
-                "period_length"            : self.id_period,
-                "number_of_periods"        : self.number_of_periods,
-                "emin"                     : self.e_min,
-                "emax"                     : self.e_max,
-                "ng_j"                     : ng_j ,
-                "flag_emittance"           : flag_emittance,
-            }
-
-            script += script_template.format_map(script_dict)
 
         elif self.magnetic_field_source == 1:
             if self.e_min == self.e_max:
@@ -285,43 +253,11 @@ sourcewiggler = S4Wiggler(
                 velocity_label="value_at_zero",
                 )
 
-            script_template = """
-from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
-sourcewiggler = S4Wiggler(
-    magnetic_field_periodic = 0,
-    file_with_magnetic_field = "{file_with_magnetic_field}",
-    emin              = {emin},
-    emax              = {emax},
-    ng_e              = {ng_e},
-    ng_j              = {ng_j},
-    flag_emittance    = {flag_emittance},  # Use emittance (0=No, 1=Yes)
-    shift_x_flag      = 4,
-    shift_x_value     = 0.0,
-    shift_betax_flag  = 4,
-    shift_betax_value = 0.0,
-    )
-sourcewiggler.set_electron_initial_conditions_by_label(
-    position_label="value_at_zero",
-    velocity_label="value_at_zero",
-    )"""
-
-            script_dict = {
-                "file_with_magnetic_field"  : self.file_with_b_vs_y,
-                "emin"                      : self.e_min,
-                "emax"                      : self.e_max,
-                "ng_e"                      : ng_e,
-                "ng_j"                      : ng_j,
-                "flag_emittance"            : flag_emittance,
-            }
-
-            script += script_template.format_map(script_dict)
-
         elif self.magnetic_field_source == 2:
             raise Exception(NotImplemented)
 
         if self.e_min == self.e_max:
             sourcewiggler.set_energy_monochromatic(self.e_min)
-            script += "\nsourcewiggler.set_energy_monochromatic(%g)" % self.e_min
 
         sourcewiggler.set_electron_initial_conditions(
                         shift_x_flag=self.shift_x_flag,
@@ -330,19 +266,14 @@ sourcewiggler.set_electron_initial_conditions_by_label(
                         shift_betax_value=self.shift_betax_value)
 
         print(">>>>>> \n\n S4Wiggler info: ", sourcewiggler.info())
-        print(">>>>>> \n\n S4Wiggler script: ", sourcewiggler.to_python_code())
 
 
         # S4WigglerLightSource
         lightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, magnetic_structure=sourcewiggler)
-        script += "\n\nfrom shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource"
-        script += "\nlightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, magnetic_structure=sourcewiggler)"
-
 
         print("\n\n>>>>>> S4WigglerLightSource info: ", lightsource.info())
-        print("\n\n>>>>>> S4WigglerLightSource script: ", lightsource.to_python_code())
 
-        return lightsource, script
+        return lightsource
 
 
     def run_shadow4(self):
@@ -353,7 +284,7 @@ sourcewiggler.set_electron_initial_conditions_by_label(
 
         self.progressBarInit()
 
-        light_source, script = self.get_lightsource()
+        light_source = self.get_lightsource()
 
         self.progressBarSet(5)
         #
@@ -361,31 +292,10 @@ sourcewiggler.set_electron_initial_conditions_by_label(
         #
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = light_source.get_beam(
-                        user_unit_to_m=1.0, F_COHER=0, NRAYS=self.number_of_rays, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
-                        psi_interval_in_units_one_over_gamma=None,
-                        psi_interval_number_of_points=1001,
-                        verbose=True
-                        )
+        beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
         photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
-
-
-        script_template = """
-beam = lightsource.get_beam(
-    user_unit_to_m=1.0, F_COHER=0, NRAYS={NRAYS}, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
-    psi_interval_in_units_one_over_gamma=None,
-    psi_interval_number_of_points=1001,
-    verbose=True
-    )
-photon_energy, flux, spectral_power = lightsource.calculate_spectrum()"""
-        script_dict = {
-            "NRAYS": self.number_of_rays,
-        }
-        script += script_template.format_map(script_dict)
-
-
 
 
         #
@@ -402,15 +312,13 @@ photon_energy, flux, spectral_power = lightsource.calculate_spectrum()"""
         #
         script = light_source.to_python_code()
         script_template = """
-beam = light_source.get_beam(
-    user_unit_to_m=1.0, F_COHER=0, NRAYS={NRAYS}, SEED=123456, EPSI_DX=0.0, EPSI_DZ=0.0,
-    psi_interval_in_units_one_over_gamma=None,
-    psi_interval_number_of_points=1001,
-    verbose=True
-    )
+
+# run shadow4
+beam = light_source.get_beam(NRAYS={NRAYS}, SEED={SEED})
 photon_energy, flux, spectral_power = light_source.calculate_spectrum()"""
         script_dict = {
             "NRAYS": self.number_of_rays,
+            "SEED": self.seed,
         }
 
         script += script_template.format_map(script_dict)
