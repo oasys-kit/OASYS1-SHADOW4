@@ -49,7 +49,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
     name = "Generic Mirror"
     description = "Shadow Mirror"
-    icon = "icons/mirror.png"
+    icon = "icons/plane_mirror.png"
     priority = 5
 
     inputs = [("Input Beam", ShadowBeam, "setBeam")]
@@ -189,19 +189,29 @@ class OWMirror(GenericElement, WidgetDecorator):
         self.populate_tab_position(tab_position)
 
         #########################################################
-        # Surface Shape
+        # Basic Settings / Surface Shape
         #########################################################
         self.populate_tab_surface_shape(subtab_surface_shape)
 
         #########################################################
-        # Reflectivity
+        # Basic Settings / Reflectivity
         #########################################################
         self.populate_tab_reflectivity(subtab_reflectivity)
 
         #########################################################
-        # Dimensions
+        # Basic Settings / Dimensions
         #########################################################
         self.populate_tab_dimensions(subtab_dimensions)
+
+        #########################################################
+        # Advanced Settings / Modified Surface
+        #########################################################
+        self.populate_tab_modified_surface(subtab_modified_surface)
+
+        #########################################################
+        # Advanced Settings / Modified Surface
+        #########################################################
+        self.populate_tab_oe_movement(subtab_oe_movement)
 
         #
         #
@@ -475,6 +485,12 @@ class OWMirror(GenericElement, WidgetDecorator):
                                                 labelWidth=260, valueType=float, orientation="horizontal", tooltip="dim_y_minus")
 
         self.dimensions_tab_visibility()
+
+    def populate_tab_modified_surface(self, subtab_modified_surface):
+        box = oasysgui.widgetBox(subtab_modified_surface, "Not yet implemented", addSpace=True, orientation="vertical")
+
+    def populate_tab_oe_movement(self, subtab_oe_movement):
+        box = oasysgui.widgetBox(subtab_oe_movement, "Not yet implemented", addSpace=True, orientation="vertical")
 
     #########################################################
     # Position Methods
