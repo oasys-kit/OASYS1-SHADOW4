@@ -137,7 +137,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
         button_box = oasysgui.widgetBox(self.controlArea, "", addSpace=False, orientation="horizontal")
 
-        button = gui.button(button_box, self, "Run shadow4/source", callback=self.run_shadow4)
+        button = gui.button(button_box, self, "Run shadow4/trace", callback=self.run_shadow4)
         font = QFont(button.font())
         font.setBold(True)
         button.setFont(font)
