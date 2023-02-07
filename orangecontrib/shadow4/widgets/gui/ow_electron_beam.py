@@ -55,7 +55,7 @@ class OWElectronBeam(GenericElement):
 
 
     def __init__(self):
-        super().__init__()
+        super().__init__(show_automatic_box=False)
 
         self.runaction = widget.OWAction("Run Shadow4/Source", self)
         self.runaction.triggered.connect(self.run_shadow4)

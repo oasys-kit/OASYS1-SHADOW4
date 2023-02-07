@@ -11,6 +11,8 @@ from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
 from orangecontrib.shadow4.util.shadow_objects import ShadowBeam as ShadowBeam4
 from shadow4.beam.beam import Beam
 
+from shadow4.beamline.s4_beamline import S4Beamline
+
 # try:
 #     import Shadow
 #     from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
@@ -79,7 +81,7 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
     def convert_beam(self):
         beam3 = self.shadow_beam._beam
         print(">>beam3: ", beam3)
-        BEAM4 = ShadowBeam4(oe_number=0, beam=Beam(array=beam3.rays))
+        BEAM4 = ShadowBeam4(oe_number=0, beam=Beam(array=beam3.rays), beamline=S4Beamline())
         print(BEAM4)
         self.send("Beam4", BEAM4)
 
