@@ -44,13 +44,20 @@ class AutomaticElement(widget.OWWidget):
 
         self.controlArea.setFixedWidth(self.CONTROL_AREA_WIDTH)
 
-        self.general_options_box = gui.widgetBox(self.controlArea, "General Options", addSpace=True, orientation="horizontal")
+        if False: # OLD
+            self.general_options_box = gui.widgetBox(self.controlArea, "General Options", addSpace=True, orientation="horizontal")
 
-        if show_automatic_box :
-            gui.checkBox(self.general_options_box, self, 'is_automatic_run', 'Automatic Execution')
+            if show_automatic_box :
+                gui.checkBox(self.general_options_box, self, 'is_automatic_run', 'Automatic Execution')
 
-        trace = gui.checkBox(self.general_options_box, self, 'trace_shadow', 'Display Shadow Output')
-        trace.setVisible(False)
+            trace = gui.checkBox(self.general_options_box, self, 'trace_shadow', 'Display Shadow Output')
+            trace.setVisible(False)
+        else: # NEW todo: check!
+            if show_automatic_box:
+                self.general_options_box = gui.widgetBox(self.controlArea, "General Options", addSpace=True,
+                                                         orientation="horizontal")
+                gui.checkBox(self.general_options_box, self, 'is_automatic_run', 'Automatic Execution')
+
 
     def callResetSettings(self):
         if ConfirmDialog.confirmed(parent=self, message="Confirm Reset of the Fields?"):
