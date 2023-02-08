@@ -269,7 +269,11 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
 
         # S4WigglerLightSource
-        lightsource = S4WigglerLightSource(name='wiggler', electron_beam=electron_beam, magnetic_structure=sourcewiggler)
+        lightsource = S4WigglerLightSource(name='wiggler',
+                                           electron_beam=electron_beam,
+                                           magnetic_structure=sourcewiggler,
+                                           nrays=self.number_of_rays,
+                                           seed=self.seed)
 
         print("\n\n>>>>>> S4WigglerLightSource info: ", lightsource.info())
 
@@ -292,7 +296,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         #
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
+        beam = light_source.get_beam()
         photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
@@ -311,17 +315,21 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         # script
         #
         script = light_source.to_python_code()
-        script_template = """
+        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+        script += "\nrays = beam.get_rays()"
+        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
 
-# run shadow4
-beam = light_source.get_beam(NRAYS={NRAYS}, SEED={SEED})
-photon_energy, flux, spectral_power = light_source.calculate_spectrum()"""
-        script_dict = {
-            "NRAYS": self.number_of_rays,
-            "SEED": self.seed,
-        }
-
-        script += script_template.format_map(script_dict)
+#         script_template = """
+#
+# # run shadow4
+# beam = light_source.get_beam(NRAYS={NRAYS}, SEED={SEED})
+# photon_energy, flux, spectral_power = light_source.calculate_spectrum()"""
+#         script_dict = {
+#             "NRAYS": self.number_of_rays,
+#             "SEED": self.seed,
+#         }
+#
+#         script += script_template.format_map(script_dict)
 
 
         self.shadow4_script.set_code(script)

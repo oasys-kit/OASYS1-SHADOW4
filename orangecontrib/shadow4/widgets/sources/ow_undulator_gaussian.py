@@ -104,8 +104,11 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
             sourceundulator.set_energy_box(self.energy-0.5*self.delta_e, self.energy+0.5*self.delta_e,)
 
         # S4UndulatorLightSource
-        lightsource = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                           magnetic_structure=sourceundulator)
+        lightsource = S4UndulatorLightSource(name='GaussianUndulator',
+                                             electron_beam=electron_beam,
+                                             magnetic_structure=sourceundulator,
+                                             nrays=self.number_of_rays,
+                                             seed=self.seed)
 
         print("\n\n>>>>>> S4UndulatorLightSource info: ", lightsource.info())
 
@@ -128,7 +131,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
+        beam = light_source.get_beam()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
@@ -143,8 +146,11 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         # script
         #
         script = light_source.to_python_code()
-        script += "\n\n\n# run shadow4"
-        script += "\nbeam = light_source.get_beam(NRAYS=%d, SEED=%d)" % (self.number_of_rays, self.seed)
+        # script += "\n\n\n# run shadow4"
+        # script += "\nbeam = light_source.get_beam(NRAYS=%d, SEED=%d)" % (self.number_of_rays, self.seed)
+        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+        script += "\nrays = beam.get_rays()"
+        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
         self.shadow4_script.set_code(script)
 
         self.progressBarFinished()
