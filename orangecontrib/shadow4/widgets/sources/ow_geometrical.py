@@ -590,7 +590,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
 
     def get_lightsource(self):
 
-        gs = SourceGeometrical()
+        gs = SourceGeometrical(name="SourceGeometrical", nrays=self.number_of_rays, seed=self.seed)
 
         if self.spatial_type == 0: # point
             gs.set_spatial_type_point()
@@ -678,6 +678,12 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
             a = numpy.loadtxt(self.user_defined_file)
             gs.set_energy_distribution_userdefined(a[:,0],a[:,1],unit=unit)
 
+
+        # polarization / coherence
+        gs.set_polarization(polarization_degree=self.polarization_degree,
+                            phase_diff=self.phase_diff,
+                            coherent_beam=self.coherent_beam)
+
         return gs
 
     def run_shadow4(self):
@@ -696,12 +702,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
 
         t00 = time.time()
         # beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
-        beam = light_source.get_beam(N=self.number_of_rays,
-                                     POL_DEG=self.polarization_degree,
-                                     POL_ANGLE=self.phase_diff,
-                                     F_COHER=self.coherent_beam,
-                                     ISTAR1=self.seed,
-                                    )
+        beam = light_source.get_beam()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
@@ -717,9 +718,9 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         # script
         #
         script = light_source.to_python_code()
-        script += "\n\n\n# run shadow4"
-        script += "\nbeam = light_source.get_beam(N=%d, POL_DEG=%d, POL_ANGLE=%f, F_COHER=%d, ISTAR1=%d)" % \
-                  (self.number_of_rays, self.polarization_degree, self.phase_diff, self.coherent_beam, self.seed)
+        # script += "\n\n\n# run shadow4"
+        # script += "\nbeam = light_source.get_beam(N=%d, ISTAR1=%d)" % \
+        #           (self.number_of_rays, self.seed)
 
         script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
         script += "\nrays = beam.get_rays()"
