@@ -12,10 +12,6 @@ from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElem
 from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.util.python_script import PythonScript
 
-
-
-
-
 class GenericElement(AutomaticElement):
 
     # name = "Generic Element"

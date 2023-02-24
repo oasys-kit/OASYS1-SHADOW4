@@ -44,12 +44,29 @@ from shadow4.tools.graphics import plotxy
 from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
+from orangecanvas.resources import icon_loader
+from orangecanvas.scheme.node import SchemeNode
 
 class OWMirror(GenericElement, WidgetDecorator):
+
+    icons_for_type = {0 : "icons/plane_mirror.png",
+                      1 : "icons/spherical_mirror.png",
+                      2 : "icons/ellipsoid_mirror.png",
+                      3 : "icons/hyperboloid_mirror.png",
+                      4 : "icons/paraboloid_mirror.png",
+                      5 : "icons/toroidal_mirror.png",}
+
+    titles_for_type = {0 : "Plane",
+                       1 : "Spherical",
+                       2 : "Elliptical",
+                       3 : "Hyperbolical",
+                       4 : "Parabolical",
+                       5 : "Toroidal",}
 
     name = "Generic Mirror"
     description = "Shadow Mirror"
     icon = "icons/plane_mirror.png"
+
     priority = 5
 
     inputs = [("Input Beam", ShadowBeam, "setBeam")]
@@ -58,8 +75,6 @@ class OWMirror(GenericElement, WidgetDecorator):
     outputs = [{"name":"Beam4",
                 "type":ShadowBeam,
                 "doc":"",}]
-
-
 
     #########################################################
     # Position
@@ -120,10 +135,18 @@ class OWMirror(GenericElement, WidgetDecorator):
     dim_y_plus   = Setting(1.0)
     dim_y_minus  = Setting(1.0)
 
-
     input_beam = None
-    beamline = None
+    beamline   = None
 
+    def createdFromNode(self, node : SchemeNode):
+        super(GenericElement, self).createdFromNode(node)
+
+        self.__change_icon_from_surface_type(is_init=False)
+
+    def __change_icon_from_surface_type(self, is_init):
+        if not is_init:
+            self._node.description.icon = self.icons_for_type[self.surface_shape_type]
+            self.changeNodeIcon(icon_loader.from_description(self._node.description).get(self._node.description.icon))
 
     def __init__(self):
         super().__init__()
@@ -220,6 +243,7 @@ class OWMirror(GenericElement, WidgetDecorator):
         gui.rubber(self.controlArea)
         gui.rubber(self.mainArea)
 
+        self.__is_init = False
 
     def populate_tab_position(self, tab_position):
         self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True, orientation="vertical")
@@ -411,7 +435,7 @@ class OWMirror(GenericElement, WidgetDecorator):
                      valueType=float,
                      sendSelectedValue=False, orientation="horizontal", tooltip="cylinder_orientation")
 
-        self.surface_shape_tab_visibility()
+        self.surface_shape_tab_visibility(is_init=True)
 
     def populate_tab_reflectivity(self, subtab_reflectivity):
 
@@ -576,7 +600,7 @@ class OWMirror(GenericElement, WidgetDecorator):
     #########################################################
     # Surface Shape Methods
     #########################################################
-    def surface_shape_tab_visibility(self):
+    def surface_shape_tab_visibility(self, is_init=False):
 
         self.focusing_box.setVisible(False)
 
@@ -623,6 +647,8 @@ class OWMirror(GenericElement, WidgetDecorator):
 
             if self.is_cylinder:
                 self.cylinder_orientation_box.setVisible(True)
+
+        self.__change_icon_from_surface_type(is_init)
 
     #########################################################
     # Reflectvity Methods
