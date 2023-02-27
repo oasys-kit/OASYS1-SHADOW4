@@ -56,12 +56,20 @@ class OWMirror(GenericElement, WidgetDecorator):
                       4 : "icons/paraboloid_mirror.png",
                       5 : "icons/toroidal_mirror.png",}
 
-    titles_for_type = {0 : "Plane",
-                       1 : "Spherical",
-                       2 : "Elliptical",
-                       3 : "Hyperbolical",
-                       4 : "Parabolical",
-                       5 : "Toroidal",}
+    mirror_names = ["Generic Mirror",
+                    "Plane Mirror",
+                    "Spherical Mirror",
+                    "Elliptical Mirror",
+                    "Hyperbolical Mirror",
+                    "Parabolical Mirror",
+                    "Toroidal Mirror"]
+
+    titles_for_type = {0 : mirror_names[1],
+                       1 : mirror_names[2],
+                       2 : mirror_names[3],
+                       3 : mirror_names[4],
+                       4 : mirror_names[5],
+                       5 : mirror_names[6]}
 
     name = "Generic Mirror"
     description = "Shadow Mirror"
@@ -138,15 +146,17 @@ class OWMirror(GenericElement, WidgetDecorator):
     input_beam = None
     beamline   = None
 
-    def createdFromNode(self, node : SchemeNode):
-        super(GenericElement, self).createdFromNode(node)
+    def widgetNodeAdded(self, node_item : SchemeNode):
+        super(GenericElement, self).widgetNodeAdded(node_item)
 
         self.__change_icon_from_surface_type(is_init=False)
 
     def __change_icon_from_surface_type(self, is_init):
         if not is_init:
-            self._node.description.icon = self.icons_for_type[self.surface_shape_type]
-            self.changeNodeIcon(icon_loader.from_description(self._node.description).get(self._node.description.icon))
+            node = self.getNode()
+            node.description.icon = self.icons_for_type[self.surface_shape_type]
+            self.changeNodeIcon(icon_loader.from_description(node.description).get(node.description.icon))
+            if node.title in self.mirror_names: self.changeNodeTitle(self.titles_for_type[self.surface_shape_type])
 
     def __init__(self):
         super().__init__()
