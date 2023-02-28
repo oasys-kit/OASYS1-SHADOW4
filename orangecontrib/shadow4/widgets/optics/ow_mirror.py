@@ -20,12 +20,11 @@ from shadow4.beamline.s4_beamline import S4Beamline
 
 from syned.widget.widget_decorator import WidgetDecorator
 
-from shadow4.syned.element_coordinates import ElementCoordinates
-
-from shadow4.syned.shape import Rectangle  # TODO from syned.beamline.shape
-from shadow4.syned.shape import Convexity  #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-from shadow4.syned.shape import Direction  #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-from shadow4.syned.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
+from syned.beamline.element_coordinates import ElementCoordinates
+from syned.beamline.shape import Rectangle
+from syned.beamline.shape import Convexity  #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
+from syned.beamline.shape import Direction  #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
+from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
 from shadow4.beamline.s4_optical_element import SurfaceCalculation # INTERNAL = 0  EXTERNAL = 1
 
