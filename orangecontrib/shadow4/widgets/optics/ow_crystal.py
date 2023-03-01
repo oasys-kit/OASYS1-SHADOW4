@@ -28,15 +28,7 @@ from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
 from shadow4.beamline.s4_optical_element import SurfaceCalculation # INTERNAL = 0  EXTERNAL = 1
 
-from shadow4.beamline.optical_elements.mirrors.s4_conic_mirror import S4ConicMirror, S4ConicMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_toroidal_mirror import S4ToroidalMirror, S4ToroidalMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_surface_data_mirror import S4SurfaceDataMirror, S4SurfaceDataMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirror, S4PlaneMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_ellipsoid_mirror import S4EllipsoidMirror, S4EllipsoidMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_hyperboloid_mirror import S4HyperboloidMirror, S4HyperboloidMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_paraboloid_mirror import S4ParaboloidMirror, S4ParaboloidMirrorElement
-from shadow4.beamline.optical_elements.mirrors.s4_sphere_mirror import S4SphereMirror, S4SphereMirrorElement
-
+from shadow4.beamline.optical_elements.crystals.s4_plane_crystal import S4PlaneCrystal, S4PlaneCrystalElement
 
 from shadow4.tools.graphics import plotxy
 
@@ -46,22 +38,25 @@ from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 from orangecanvas.resources import icon_loader
 from orangecanvas.scheme.node import SchemeNode
 
-class OWMirror(GenericElement, WidgetDecorator):
+import xraylib
 
-    icons_for_type = {0 : "icons/plane_mirror.png",
-                      1 : "icons/spherical_mirror.png",
-                      2 : "icons/ellipsoid_mirror.png",
-                      3 : "icons/hyperboloid_mirror.png",
-                      4 : "icons/paraboloid_mirror.png",
-                      5 : "icons/toroidal_mirror.png",}
 
-    mirror_names = ["Generic Mirror",
-                    "Plane Mirror",
-                    "Spherical Mirror",
-                    "Elliptical Mirror",
-                    "Hyperbolical Mirror",
-                    "Parabolical Mirror",
-                    "Toroidal Mirror"]
+class OWCrystal(GenericElement, WidgetDecorator):
+
+    icons_for_type = {0 : "icons/plane_crystal.png",
+                      1 : "icons/spherical_crystal.png",
+                      2 : "icons/ellipsoid_crystal.png",
+                      3 : "icons/hyperboloid_crystal.png",
+                      4 : "icons/paraboloid_crystal.png",
+                      5 : "icons/toroidal_crystal.png",}
+
+    mirror_names = ["Generic Crystal",
+                    "Plane Crystal",
+                    "Spherical Crystal",
+                    "Elliptical Crystal",
+                    "Hyperbolical Crystal",
+                    "Parabolical Crystal",
+                    "Toroidal Crystal"]
 
     titles_for_type = {0 : mirror_names[1],
                        1 : mirror_names[2],
@@ -70,11 +65,11 @@ class OWMirror(GenericElement, WidgetDecorator):
                        4 : mirror_names[5],
                        5 : mirror_names[6]}
 
-    name = "Generic Mirror"
-    description = "Shadow Mirror"
-    icon = "icons/plane_mirror.png"
+    name = "Generic Crystal"
+    description = "Shadow Crystal"
+    icon = "icons/plane_crystal.png"
 
-    priority = 5
+    priority = 15
 
     inputs = [("Input Beam", ShadowBeam, "setBeam")]
     WidgetDecorator.append_syned_input_data(inputs)
@@ -122,15 +117,45 @@ class OWMirror(GenericElement, WidgetDecorator):
     cylinder_orientation                    = Setting(0)
 
     #########################################################
-    # reflectivity
+    # crystal
     #########################################################
 
-    reflectivity_flag             = Setting(0)  # f_reflec
-    reflectivity_source           = Setting(0) # f_refl
-    file_refl                     = Setting("<none>")
+    # reflectivity_flag             = Setting(0)  # f_reflec
+    # reflectivity_source           = Setting(0) # f_refl
+    # file_refl                     = Setting("<none>")
+    #
+    # refraction_index_delta        = Setting(1e-5)
+    # refraction_index_beta         = Setting(1e-3)
 
-    refraction_index_delta        = Setting(1e-5)
-    refraction_index_beta         = Setting(1e-3)
+    diffraction_geometry = Setting(0)
+    diffraction_calculation = Setting(0)
+    file_diffraction_profile = Setting("diffraction_profile.dat")
+
+    CRYSTALS = xraylib.Crystal_GetCrystalsList()
+
+    user_defined_bragg_angle = Setting(14.223)
+    user_defined_crystal = Setting(32)
+    user_defined_h = Setting(1)
+    user_defined_k = Setting(1)
+    user_defined_l = Setting(1)
+    user_defined_asymmetry_angle = Setting(0.0)
+    file_crystal_parameters = Setting("bragg.dat")
+    crystal_auto_setting = Setting(0)
+    units_in_use = Setting(0)
+    photon_energy = Setting(5.0)
+    photon_wavelength = Setting(5000.0)
+
+    mosaic_crystal = Setting(0)
+    angle_spread_FWHM = Setting(0.0)
+    thickness = Setting(0.0)
+    seed_for_mosaic = Setting(1626261131)
+
+    johansson_geometry = Setting(0)
+    johansson_radius = Setting(0.0)
+
+    asymmetric_cut = Setting(0)
+    planes_angle = Setting(0.0)
+    below_onto_bragg_planes = Setting(-1)
 
     #########################################################
     # dimensions
@@ -204,7 +229,9 @@ class OWMirror(GenericElement, WidgetDecorator):
         tab_basic_settings = oasysgui.createTabPage(self.tabs_control_area, "Basic Settings")
         tabs_basic_setting = oasysgui.tabWidget(tab_basic_settings)
         subtab_surface_shape = oasysgui.createTabPage(tabs_basic_setting, "Surface Shape")  # to be populated
-        subtab_reflectivity = oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")    # to be populated
+        # subtab_reflectivity = oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")    # to be populated
+        subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Xtal Diff")
+        subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Xtal Geom")
         subtab_dimensions = oasysgui.createTabPage(tabs_basic_setting, "Dimensions")        # to be populated
 
         tab_advanced_settings = oasysgui.createTabPage(self.tabs_control_area, "Advanced Settings")
@@ -229,9 +256,14 @@ class OWMirror(GenericElement, WidgetDecorator):
         self.populate_tab_surface_shape(subtab_surface_shape)
 
         #########################################################
-        # Basic Settings / Reflectivity
+        # Basic Settings / Crystal Diffraction
         #########################################################
-        self.populate_tab_reflectivity(subtab_reflectivity)
+        self.populate_tab_crystal_diffraction(subtab_crystal_diffraction)
+
+        #########################################################
+        # Basic Settings / Crystal Geometry
+        #########################################################
+        self.populate_tab_crystal_geometry(subtab_crystal_geometry)
 
         #########################################################
         # Basic Settings / Dimensions
@@ -449,53 +481,172 @@ class OWMirror(GenericElement, WidgetDecorator):
 
         self.surface_shape_tab_visibility(is_init=True)
 
-    def populate_tab_reflectivity(self, subtab_reflectivity):
 
-        # # f_reflec = 0    # reflectivity of surface: 0=no reflectivity, 1=full polarization
-        # # f_refl   = 0    # 0=prerefl file
-        # #                 # 1=electric susceptibility
-        # #                 # 2=user defined file (1D reflectivity vs angle)
-        # #                 # 3=user defined file (1D reflectivity vs energy)
-        # #                 # 4=user defined file (2D reflectivity vs energy and angle)
-        # # file_refl = "",  # preprocessor file fir f_refl=0,2,3,4
-        # # refraction_index = 1.0,  # refraction index (complex) for f_refl=1
+        # box_1 = oasysgui.widgetBox(subtab_reflectivity, "Reflectivity Parameter", addSpace=True, orientation="vertical")
+        #
+        # gui.comboBox(box_1, self, "reflectivity_flag", label="Reflectivity", labelWidth=150,
+        #              items=["Not considered", "Full polarization"],
+        #              callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
+        #              tooltip="reflectivity_flag")
+        #
+        # self.reflectivity_flag_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical")
+        # gui.comboBox(self.reflectivity_flag_box, self, "reflectivity_source", label="Reflectivity source", labelWidth=150,
+        #              items=["PreRefl File",
+        #                     "Refraction index",
+        #                     "file 1D: (reflectivity vs angle)",
+        #                     "file 1D: (reflectivity vs energy)",
+        #                     "file 2D: (reflectivity vs energy and angle)",
+        #                     ],
+        #              callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
+        #              tooltip="reflectivity_source")
+        #
+        #
+        # self.file_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
+        # self.le_file_refl = oasysgui.lineEdit(self.file_refl_box, self, "file_refl", "File Name", labelWidth=100,
+        #                                       valueType=str, orientation="horizontal", tooltip="file_refl")
+        # gui.button(self.file_refl_box, self, "...", callback=self.select_file_refl)
+        #
+        #
+        # self.refraction_index_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
+        # oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_delta",
+        #                   "n=1-delta+i beta; delta: ", labelWidth=110, valueType=float,
+        #                   orientation="horizontal", tooltip="refraction_index_delta")
+        #
+        # oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_beta",
+        #                   "beta: ", labelWidth=30, valueType=float,
+        #                   orientation="horizontal", tooltip="refraction_index_beta")
+        #
+        # self.reflectivity_tab_visibility()
 
+    def populate_tab_crystal_diffraction(self, subtab_crystal_diffraction):
+        crystal_box = oasysgui.widgetBox(subtab_crystal_diffraction, "Diffraction Settings", addSpace=True, orientation="vertical")
 
-        box_1 = oasysgui.widgetBox(subtab_reflectivity, "Reflectivity Parameter", addSpace=True, orientation="vertical")
+        # crystal_box = oasysgui.widgetBox(self.tab_cryst_1, "Diffraction Parameters", addSpace=True,
+        #                                  orientation="vertical", height=435)
 
-        gui.comboBox(box_1, self, "reflectivity_flag", label="Reflectivity", labelWidth=150,
-                     items=["Not considered", "Full polarization"],
-                     callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
-                     tooltip="reflectivity_flag")
+        gui.comboBox(crystal_box, self, "diffraction_geometry", label="Diffraction Geometry", labelWidth=250,
+                     items=["Bragg", "Laue"],
+                     sendSelectedValue=False, orientation="horizontal", callback=self.set_BraggLaue)
 
-        self.reflectivity_flag_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical")
-        gui.comboBox(self.reflectivity_flag_box, self, "reflectivity_source", label="Reflectivity source", labelWidth=150,
-                     items=["PreRefl File",
-                            "Refraction index",
-                            "file 1D: (reflectivity vs angle)",
-                            "file 1D: (reflectivity vs energy)",
-                            "file 2D: (reflectivity vs energy and angle)",
-                            ],
-                     callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
-                     tooltip="reflectivity_source")
+        gui.comboBox(crystal_box, self, "diffraction_calculation", label="Diffraction Profile", labelWidth=250,
+                     items=["Calculated internally", "Preprocessor file", "User File (energy-independent)", "User File (energy-dependent)"],
+                     sendSelectedValue=False, orientation="horizontal",
+                     callback=self.set_DiffractionCalculation)
 
+        gui.separator(crystal_box)
 
-        self.file_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
-        self.le_file_refl = oasysgui.lineEdit(self.file_refl_box, self, "file_refl", "File Name", labelWidth=100,
-                                              valueType=str, orientation="horizontal", tooltip="file_refl")
-        gui.button(self.file_refl_box, self, "...", callback=self.select_file_refl)
+        self.crystal_box_1 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical", height=340)
 
+        file_box = oasysgui.widgetBox(self.crystal_box_1, "", addSpace=False, orientation="horizontal", height=30)
 
-        self.refraction_index_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
-        oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_delta",
-                          "n=1-delta+i beta; delta: ", labelWidth=110, valueType=float,
-                          orientation="horizontal", tooltip="refraction_index_delta")
+        self.le_file_crystal_parameters = oasysgui.lineEdit(file_box, self, "file_crystal_parameters",
+                                                            "File with crystal\nparameters",
+                                                            labelWidth=150, valueType=str, orientation="horizontal")
 
-        oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_beta",
-                          "beta: ", labelWidth=30, valueType=float,
-                          orientation="horizontal", tooltip="refraction_index_beta")
+        gui.button(file_box, self, "...", callback=self.selectFileCrystalParameters)
 
-        self.reflectivity_tab_visibility()
+        gui.comboBox(self.crystal_box_1, self, "crystal_auto_setting", label="Auto setting", labelWidth=350,
+                     items=["No", "Yes"],
+                     callback=self.set_Autosetting, sendSelectedValue=False, orientation="horizontal")
+
+        gui.separator(self.crystal_box_1, height=10)
+
+        self.autosetting_box = oasysgui.widgetBox(self.crystal_box_1, "", addSpace=False,
+                                                  orientation="vertical")
+        self.autosetting_box_empty = oasysgui.widgetBox(self.crystal_box_1, "", addSpace=False,
+                                                        orientation="vertical")
+
+        self.autosetting_box_units = oasysgui.widgetBox(self.autosetting_box, "", addSpace=False, orientation="vertical")
+
+        gui.comboBox(self.autosetting_box_units, self, "units_in_use", label="Units in use", labelWidth=260,
+                     items=["eV", "Angstroms"],
+                     callback=self.set_UnitsInUse, sendSelectedValue=False, orientation="horizontal")
+
+        self.autosetting_box_units_1 = oasysgui.widgetBox(self.autosetting_box_units, "", addSpace=False,
+                                                          orientation="vertical")
+
+        oasysgui.lineEdit(self.autosetting_box_units_1, self, "photon_energy", "Set photon energy [eV]", labelWidth=260,
+                          valueType=float, orientation="horizontal")
+
+        self.autosetting_box_units_2 = oasysgui.widgetBox(self.autosetting_box_units, "", addSpace=False,
+                                                          orientation="vertical")
+
+        oasysgui.lineEdit(self.autosetting_box_units_2, self, "photon_wavelength", "Set wavelength [Å]", labelWidth=260,
+                          valueType=float, orientation="horizontal")
+
+        self.crystal_box_2 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical", height=340)
+
+        crystal_box_2_1 = oasysgui.widgetBox(self.crystal_box_2, "", addSpace=False, orientation="horizontal")
+
+        self.le_file_diffraction_profile = oasysgui.lineEdit(crystal_box_2_1, self, "file_diffraction_profile",
+                                                             "File with Diffraction\nProfile (XOP format)", labelWidth=120,
+                                                             valueType=str,
+                                                             orientation="horizontal")
+
+        gui.button(crystal_box_2_1, self, "...", callback=self.selectFileDiffractionProfile)
+
+    def populate_tab_crystal_geometry(self, subtab_crystal_geometry):
+        mosaic_box = oasysgui.widgetBox(subtab_crystal_geometry, "Geometric Parameters", addSpace=True, orientation="vertical")
+
+        gui.comboBox(mosaic_box, self, "mosaic_crystal", label="Mosaic Crystal", labelWidth=355,
+                     items=["No", "Yes"],
+                     callback=self.set_Mosaic, sendSelectedValue=False, orientation="horizontal")
+
+        gui.separator(mosaic_box, height=10)
+
+        self.mosaic_box_1 = oasysgui.widgetBox(mosaic_box, "", addSpace=False, orientation="vertical")
+
+        self.asymmetric_cut_box = oasysgui.widgetBox(self.mosaic_box_1, "", addSpace=False, orientation="vertical",
+                                                     height=110)
+
+        self.asymmetric_cut_combo = gui.comboBox(self.asymmetric_cut_box, self, "asymmetric_cut", label="Asymmetric cut",
+                                                 labelWidth=355,
+                                                 items=["No", "Yes"],
+                                                 callback=self.set_AsymmetricCut, sendSelectedValue=False,
+                                                 orientation="horizontal")
+
+        self.asymmetric_cut_box_1 = oasysgui.widgetBox(self.asymmetric_cut_box, "", addSpace=False, orientation="vertical")
+        self.asymmetric_cut_box_1_empty = oasysgui.widgetBox(self.asymmetric_cut_box, "", addSpace=False,
+                                                             orientation="vertical")
+
+        oasysgui.lineEdit(self.asymmetric_cut_box_1, self, "planes_angle", "Planes angle [deg]", labelWidth=260,
+                          valueType=float, orientation="horizontal")
+
+        self.asymmetric_cut_box_1_order = oasysgui.widgetBox(self.asymmetric_cut_box_1, "", addSpace=False,
+                                                             orientation="vertical")
+
+        oasysgui.lineEdit(self.asymmetric_cut_box_1_order, self, "below_onto_bragg_planes",
+                          "Below[-1]/onto[1] bragg planes", labelWidth=260, valueType=float, orientation="horizontal")
+        self.le_thickness_1 = oasysgui.lineEdit(self.asymmetric_cut_box_1_order, self, "thickness", "Thickness",
+                                                valueType=float, labelWidth=260, orientation="horizontal")
+
+        self.set_BraggLaue()
+
+        gui.separator(self.mosaic_box_1)
+
+        self.johansson_box = oasysgui.widgetBox(self.mosaic_box_1, "", addSpace=False, orientation="vertical", height=100)
+
+        gui.comboBox(self.johansson_box, self, "johansson_geometry", label="Johansson Geometry", labelWidth=355,
+                     items=["No", "Yes"],
+                     callback=self.set_JohanssonGeometry, sendSelectedValue=False, orientation="horizontal")
+
+        self.johansson_box_1 = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
+        self.johansson_box_1_empty = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
+
+        self.le_johansson_radius = oasysgui.lineEdit(self.johansson_box_1, self, "johansson_radius", "Johansson radius",
+                                                     labelWidth=260, valueType=float, orientation="horizontal")
+
+        self.mosaic_box_2 = oasysgui.widgetBox(mosaic_box, "", addSpace=False, orientation="vertical")
+
+        oasysgui.lineEdit(self.mosaic_box_2, self, "angle_spread_FWHM", "Angle spread FWHM [deg]", labelWidth=260,
+                          valueType=float, orientation="horizontal")
+        self.le_thickness_2 = oasysgui.lineEdit(self.mosaic_box_2, self, "thickness", "Thickness", labelWidth=260,
+                                                valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.mosaic_box_2, self, "seed_for_mosaic", "Seed for mosaic [>10^5]", labelWidth=260,
+                          valueType=float, orientation="horizontal")
+
+        self.set_Mosaic()
+
 
     def populate_tab_dimensions(self, subtab_dimensions):
         dimension_box = oasysgui.widgetBox(subtab_dimensions, "Dimensions", addSpace=True, orientation="vertical")
@@ -663,24 +814,92 @@ class OWMirror(GenericElement, WidgetDecorator):
         self.__change_icon_from_surface_type(is_init)
 
     #########################################################
-    # Reflectvity Methods
+    # Crystal Methods
     #########################################################
-    def reflectivity_tab_visibility(self):
+    # def reflectivity_tab_visibility(self):
+    #
+    #     self.reflectivity_flag_box.setVisible(False)
+    #     self.file_refl_box.setVisible(False)
+    #     self.refraction_index_box.setVisible(False)
+    #
+    #     if self.reflectivity_flag == 1:
+    #         self.reflectivity_flag_box.setVisible(True)
+    #
+    #     if self.reflectivity_source in [0, 2, 3, 4]:
+    #         self.file_refl_box.setVisible(True)
+    #     else:
+    #         self.refraction_index_box.setVisible(True)
+    #
+    # def select_file_refl(self):
+    #     self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
 
-        self.reflectivity_flag_box.setVisible(False)
-        self.file_refl_box.setVisible(False)
-        self.refraction_index_box.setVisible(False)
-
-        if self.reflectivity_flag == 1:
-            self.reflectivity_flag_box.setVisible(True)
-
-        if self.reflectivity_source in [0, 2, 3, 4]:
-            self.file_refl_box.setVisible(True)
+    def set_BraggLaue(self):
+        self.asymmetric_cut_box_1_order.setVisible(self.diffraction_geometry==1) #LAUE
+        if self.diffraction_geometry==1:
+            self.asymmetric_cut = 1
+            self.set_AsymmetricCut()
+            self.asymmetric_cut_combo.setEnabled(False)
         else:
-            self.refraction_index_box.setVisible(True)
+            self.asymmetric_cut_combo.setEnabled(True)
 
-    def select_file_refl(self):
-        self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
+    def set_DiffractionCalculation(self):
+        # todo: reimplement this
+        # self.tab_cryst_2.setEnabled(self.diffraction_calculation == 0)
+
+        self.crystal_box_1.setVisible(self.diffraction_calculation == 1)
+
+        self.crystal_box_2.setVisible(self.diffraction_calculation in (0,2))
+
+        if (self.diffraction_calculation == 2):
+            self.incidence_angle_deg_le.setEnabled(True)
+            self.incidence_angle_rad_le.setEnabled(True)
+            self.reflection_angle_deg_le.setEnabled(True)
+            self.reflection_angle_rad_le.setEnabled(True)
+        else:
+            self.set_Autosetting()
+
+    def selectFileCrystalParameters(self):
+        self.le_file_crystal_parameters.setText(oasysgui.selectFileFromDialog(self, self.file_crystal_parameters, "Select File With Crystal Parameters"))
+
+    def set_Autosetting(self):
+        self.autosetting_box_empty.setVisible(self.crystal_auto_setting == 0)
+        self.autosetting_box.setVisible(self.crystal_auto_setting == 1)
+
+        if self.crystal_auto_setting == 0:
+            self.incidence_angle_deg_le.setEnabled(True)
+            self.incidence_angle_rad_le.setEnabled(True)
+            self.reflection_angle_deg_le.setEnabled(True)
+            self.reflection_angle_rad_le.setEnabled(True)
+        else:
+            self.incidence_angle_deg_le.setEnabled(False)
+            self.incidence_angle_rad_le.setEnabled(False)
+            self.reflection_angle_deg_le.setEnabled(False)
+            self.reflection_angle_rad_le.setEnabled(False)
+            self.set_UnitsInUse()
+
+    def set_UnitsInUse(self):
+        self.autosetting_box_units_1.setVisible(self.units_in_use == 0)
+        self.autosetting_box_units_2.setVisible(self.units_in_use == 1)
+
+    def selectFileDiffractionProfile(self):
+        self.le_file_diffraction_profile.setText(oasysgui.selectFileFromDialog(self, self.file_diffraction_profile, "Select File With User Defined Diffraction Profile"))
+
+
+    def set_Mosaic(self):
+        self.mosaic_box_1.setVisible(self.mosaic_crystal == 0)
+        self.mosaic_box_2.setVisible(self.mosaic_crystal == 1)
+
+        if self.mosaic_crystal == 0:
+            self.set_AsymmetricCut()
+            self.set_JohanssonGeometry()
+
+    def set_AsymmetricCut(self):
+        self.asymmetric_cut_box_1.setVisible(self.asymmetric_cut == 1)
+        self.asymmetric_cut_box_1_empty.setVisible(self.asymmetric_cut == 0)
+
+    def set_JohanssonGeometry(self):
+        self.johansson_box_1.setVisible(self.johansson_geometry == 1)
+        self.johansson_box_1_empty.setVisible(self.johansson_geometry == 0)
 
     #########################################################
     # Dimensions Methods
@@ -728,18 +947,9 @@ class OWMirror(GenericElement, WidgetDecorator):
 
 
         if self.surface_shape_type == 0:
-            mirror = S4PlaneMirror(
+            mirror = S4PlaneCrystal(
                 name="Plane Mirror",
-                boundary_shape=self.get_boundary_shape(),
-                # inputs related to mirror reflectivity
-                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
-                f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
-                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                boundary_shape=self.get_boundary_shape(), # todo: add kws...
             )
         elif self.surface_shape_type == 1:
             print("FOCUSING DISTANCES: convexity:  ", numpy.logical_not(self.surface_curvature).astype(int))
@@ -749,118 +959,10 @@ class OWMirror(GenericElement, WidgetDecorator):
             print("FOCUSING DISTANCES: q:  ", self.get_focusing_q())
             print("FOCUSING DISTANCES: grazing angle:  ", self.get_focusing_grazing_angle())
 
-            mirror = S4SphereMirror(
-                name="Sphere Mirror",
-                boundary_shape=self.get_boundary_shape(),
-                surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
-                is_cylinder=self.is_cylinder,
-                cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-                convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                radius=self.spherical_radius,
-                p_focus=self.get_focusing_p(),
-                q_focus=self.get_focusing_q(),
-                grazing_angle=self.get_focusing_grazing_angle(),
-                # inputs related to mirror reflectivity
-                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
-                f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
-                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
-            )
+            raise NotImplementedError
 
-        elif self.surface_shape_type == 2:
-            mirror = S4EllipsoidMirror(
-                name="Ellipsoid Mirror",
-                boundary_shape=self.get_boundary_shape(),
-                surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
-                is_cylinder=self.is_cylinder,
-                cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-                convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                min_axis=0.0,
-                maj_axis=0.0,
-                p_focus=self.get_focusing_p(),
-                q_focus=self.get_focusing_q(),
-                grazing_angle=self.get_focusing_grazing_angle(),
-                # inputs related to mirror reflectivity
-                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
-                f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
-                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
-            )
-        elif self.surface_shape_type == 3:
-            mirror = S4HyperboloidMirror(
-                name="Hyperboloid Mirror",
-                boundary_shape=self.get_boundary_shape(),
-                surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
-                is_cylinder=self.is_cylinder,
-                cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-                convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                min_axis=0.0,
-                maj_axis=0.0,
-                p_focus=self.get_focusing_p(),
-                q_focus=self.get_focusing_q(),
-                grazing_angle=self.get_focusing_grazing_angle(),
-                # inputs related to mirror reflectivity
-                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
-                f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
-                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
-            )
-        elif self.surface_shape_type == 4:
-            mirror = S4ParaboloidMirror(
-                name="Paraboloid Mirror",
-                boundary_shape=self.get_boundary_shape(),
-                surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
-                is_cylinder=self.is_cylinder,
-                cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-                convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                parabola_parameter=0.0,
-                at_infinity=Side.SOURCE, #  Side:  SOURCE = 0  IMAGE = 1
-                pole_to_focus=None,
-                p_focus=self.get_focusing_p(),
-                q_focus=self.get_focusing_q(),
-                grazing_angle=self.get_focusing_grazing_angle(),
-                # inputs related to mirror reflectivity
-                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
-                f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
-                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
-            )
-        elif self.surface_shape_type == 5:
-            mirror = S4ToroidalMirror(
-                name="Toroidal Mirror",
-                boundary_shape=self.get_boundary_shape(),
-                surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
-                min_radius=0.1,
-                maj_radius=1.0,
-                p_focus=self.get_focusing_p(),
-                q_focus=self.get_focusing_q(),
-                grazing_angle=self.get_focusing_grazing_angle(),
-                # inputs related to mirror reflectivity
-                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
-                f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
-                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
-            )
+        else:
+            raise NotImplementedError
 
         return mirror
 
@@ -878,17 +980,19 @@ class OWMirror(GenericElement, WidgetDecorator):
     def get_element_instance(self):
 
         if self.surface_shape_type == 0:
-            optical_element = S4PlaneMirrorElement()
-        elif self.surface_shape_type == 1:
-            optical_element = S4SphereMirrorElement()
-        elif self.surface_shape_type == 2:
-            optical_element = S4EllipsoidMirrorElement()
-        elif self.surface_shape_type == 3:
-            optical_element = S4HyperboloidMirrorElement()
-        elif self.surface_shape_type == 4:
-            optical_element = S4ParaboloidMirrorElement()
-        elif self.surface_shape_type == 5:
-            optical_element = S4ToroidalMirrorElement()
+            optical_element = S4PlaneCrystalElement()
+        else:
+            raise NotImplementedError
+        # elif self.surface_shape_type == 1:
+        #     optical_element = S4SphereMirrorElement()
+        # elif self.surface_shape_type == 2:
+        #     optical_element = S4EllipsoidMirrorElement()
+        # elif self.surface_shape_type == 3:
+        #     optical_element = S4HyperboloidMirrorElement()
+        # elif self.surface_shape_type == 4:
+        #     optical_element = S4ParaboloidMirrorElement()
+        # elif self.surface_shape_type == 5:
+        #     optical_element = S4ToroidalMirrorElement()
 
         optical_element.set_optical_element(self.get_mirror_instance())
         optical_element.set_coordinates(self.get_coordinates())
@@ -910,44 +1014,45 @@ class OWMirror(GenericElement, WidgetDecorator):
 
 
     def run_shadow4(self):
+        pass
 
         self.shadow_output.setText("")
 
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
-
-        element = self.get_element_instance()
-        print(element.info())
-
-        self.progressBarInit()
-
-        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
-
-        beamline = self.beamline.duplicate()
-        beamline.append_beamline_element(element)
-
-        output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
-
-        self.set_PlotQuality()
-
-        self.plot_results(output_beam, progressBarValue=80)
-
-        self.progressBarFinished()
-
+        # sys.stdout = EmittingStream(textWritten=self.writeStdOut)
         #
-        # script
+        # element = self.get_element_instance()
+        # print(element.info())
         #
-        script = beamline.to_python_code()
-        script += "\n\n\n# test plot"
-        script += "\nif True:"
-        script += "\n   from srxraylib.plot.gol import plot_scatter"
-        script += "\n   rays = beam.get_rays()"
-        script += "\n   plot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-        self.shadow4_script.set_code(script)
-
+        # self.progressBarInit()
         #
-        # send beam
+        # beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
         #
-        self.send("Beam4", output_beam)
+        # beamline = self.beamline.duplicate()
+        # beamline.append_beamline_element(element)
+        #
+        # output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
+        #
+        # self.set_PlotQuality()
+        #
+        # self.plot_results(output_beam, progressBarValue=80)
+        #
+        # self.progressBarFinished()
+        #
+        # #
+        # # script
+        # #
+        # script = beamline.to_python_code()
+        # script += "\n\n\n# test plot"
+        # script += "\nif True:"
+        # script += "\n   from srxraylib.plot.gol import plot_scatter"
+        # script += "\n   rays = beam.get_rays()"
+        # script += "\n   plot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+        # self.shadow4_script.set_code(script)
+        #
+        # #
+        # # send beam
+        # #
+        # self.send("Beam4", output_beam)
 
     def receive_syned_data(self, data):
         raise Exception("Not yet implemented")
@@ -984,7 +1089,7 @@ if __name__ == "__main__":
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
-    ow = OWMirror()
+    ow = OWCrystal()
     ow.setBeam(get_test_beam())
     ow.show()
     a.exec_()
