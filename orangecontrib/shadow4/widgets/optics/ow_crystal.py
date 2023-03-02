@@ -25,6 +25,7 @@ from syned.beamline.shape import Rectangle
 from syned.beamline.shape import Convexity  #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
 from syned.beamline.shape import Direction  #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
 from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
+from syned.beamline.optical_elements.crystals.crystal import Crystal, DiffractionGeometry
 
 from shadow4.beamline.s4_optical_element import SurfaceCalculation # INTERNAL = 0  EXTERNAL = 1
 
@@ -120,30 +121,25 @@ class OWCrystal(GenericElement, WidgetDecorator):
     # crystal
     #########################################################
 
-    # reflectivity_flag             = Setting(0)  # f_reflec
-    # reflectivity_source           = Setting(0) # f_refl
-    # file_refl                     = Setting("<none>")
-    #
-    # refraction_index_delta        = Setting(1e-5)
-    # refraction_index_beta         = Setting(1e-3)
-
     diffraction_geometry = Setting(0)
     diffraction_calculation = Setting(0)
+
     file_diffraction_profile = Setting("diffraction_profile.dat")
+    user_defined_bragg_angle = Setting(14.223)
+    user_defined_asymmetry_angle = Setting(0.0)
 
     CRYSTALS = xraylib.Crystal_GetCrystalsList()
-
-    user_defined_bragg_angle = Setting(14.223)
     user_defined_crystal = Setting(32)
+
     user_defined_h = Setting(1)
     user_defined_k = Setting(1)
     user_defined_l = Setting(1)
-    user_defined_asymmetry_angle = Setting(0.0)
+
     file_crystal_parameters = Setting("bragg.dat")
-    crystal_auto_setting = Setting(0)
+    crystal_auto_setting = Setting(1)
     units_in_use = Setting(0)
-    photon_energy = Setting(5.0)
-    photon_wavelength = Setting(5000.0)
+    photon_energy = Setting(8000.0)
+    photon_wavelength = Setting(1.0)
 
     mosaic_crystal = Setting(0)
     angle_spread_FWHM = Setting(0.0)
@@ -230,8 +226,8 @@ class OWCrystal(GenericElement, WidgetDecorator):
         tabs_basic_setting = oasysgui.tabWidget(tab_basic_settings)
         subtab_surface_shape = oasysgui.createTabPage(tabs_basic_setting, "Surface Shape")  # to be populated
         # subtab_reflectivity = oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")    # to be populated
-        subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Xtal Diff")
-        subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Xtal Geom")
+        subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Xtal Diff")    # to be populated
+        subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Xtal Geom")    # to be populated
         subtab_dimensions = oasysgui.createTabPage(tabs_basic_setting, "Dimensions")        # to be populated
 
         tab_advanced_settings = oasysgui.createTabPage(self.tabs_control_area, "Advanced Settings")
@@ -482,85 +478,90 @@ class OWCrystal(GenericElement, WidgetDecorator):
         self.surface_shape_tab_visibility(is_init=True)
 
 
-        # box_1 = oasysgui.widgetBox(subtab_reflectivity, "Reflectivity Parameter", addSpace=True, orientation="vertical")
-        #
-        # gui.comboBox(box_1, self, "reflectivity_flag", label="Reflectivity", labelWidth=150,
-        #              items=["Not considered", "Full polarization"],
-        #              callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
-        #              tooltip="reflectivity_flag")
-        #
-        # self.reflectivity_flag_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical")
-        # gui.comboBox(self.reflectivity_flag_box, self, "reflectivity_source", label="Reflectivity source", labelWidth=150,
-        #              items=["PreRefl File",
-        #                     "Refraction index",
-        #                     "file 1D: (reflectivity vs angle)",
-        #                     "file 1D: (reflectivity vs energy)",
-        #                     "file 2D: (reflectivity vs energy and angle)",
-        #                     ],
-        #              callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
-        #              tooltip="reflectivity_source")
-        #
-        #
-        # self.file_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
-        # self.le_file_refl = oasysgui.lineEdit(self.file_refl_box, self, "file_refl", "File Name", labelWidth=100,
-        #                                       valueType=str, orientation="horizontal", tooltip="file_refl")
-        # gui.button(self.file_refl_box, self, "...", callback=self.select_file_refl)
-        #
-        #
-        # self.refraction_index_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
-        # oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_delta",
-        #                   "n=1-delta+i beta; delta: ", labelWidth=110, valueType=float,
-        #                   orientation="horizontal", tooltip="refraction_index_delta")
-        #
-        # oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_beta",
-        #                   "beta: ", labelWidth=30, valueType=float,
-        #                   orientation="horizontal", tooltip="refraction_index_beta")
-        #
-        # self.reflectivity_tab_visibility()
-
     def populate_tab_crystal_diffraction(self, subtab_crystal_diffraction):
         crystal_box = oasysgui.widgetBox(subtab_crystal_diffraction, "Diffraction Settings", addSpace=True, orientation="vertical")
 
-        # crystal_box = oasysgui.widgetBox(self.tab_cryst_1, "Diffraction Parameters", addSpace=True,
-        #                                  orientation="vertical", height=435)
-
         gui.comboBox(crystal_box, self, "diffraction_geometry", label="Diffraction Geometry", labelWidth=250,
-                     items=["Bragg", "Laue"],
-                     sendSelectedValue=False, orientation="horizontal", callback=self.set_BraggLaue)
+                     items=["Bragg", "Laue *NYI*"],
+                     sendSelectedValue=False, orientation="horizontal", callback=self.crystal_diffraction_tab_visibility)
+
 
         gui.comboBox(crystal_box, self, "diffraction_calculation", label="Diffraction Profile", labelWidth=250,
-                     items=["Calculated internally", "Preprocessor file", "User File (energy-independent)", "User File (energy-dependent)"],
+                     items=["Calculated internally with xraylib",
+                            "Calculated internally with dabax *NYI*",
+                            "bragg preprocessor file v1",
+                            "bragg preprocessor file v2",
+                            "User File (energy-independent) *NYI*",
+                            "User File (energy-dependent) *NYI*"],
                      sendSelectedValue=False, orientation="horizontal",
-                     callback=self.set_DiffractionCalculation)
+                     callback=self.crystal_diffraction_tab_visibility)
 
         gui.separator(crystal_box)
 
-        self.crystal_box_1 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical", height=340)
+
+        ## preprocessor file
+        self.crystal_box_1 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical")
 
         file_box = oasysgui.widgetBox(self.crystal_box_1, "", addSpace=False, orientation="horizontal", height=30)
 
         self.le_file_crystal_parameters = oasysgui.lineEdit(file_box, self, "file_crystal_parameters",
-                                                            "File with crystal\nparameters",
+                                                            "File (preprocessor)",
                                                             labelWidth=150, valueType=str, orientation="horizontal")
 
         gui.button(file_box, self, "...", callback=self.selectFileCrystalParameters)
 
-        gui.comboBox(self.crystal_box_1, self, "crystal_auto_setting", label="Auto setting", labelWidth=350,
+        ## xoppy file
+        self.crystal_box_2 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical")
+
+
+        crystal_box_2_1 = oasysgui.widgetBox(self.crystal_box_2, "", addSpace=False, orientation="horizontal")
+
+        self.le_file_diffraction_profile = oasysgui.lineEdit(crystal_box_2_1, self, "file_diffraction_profile",
+                                                             "File (user Diff Profile)", labelWidth=120,
+                                                             valueType=str,
+                                                             orientation="horizontal")
+        gui.button(crystal_box_2_1, self, "...", callback=self.selectFileDiffractionProfile)
+
+        oasysgui.lineEdit(self.crystal_box_2, self, "user_defined_bragg_angle",
+                          "Bragg Angle respect to the surface [deg]", labelWidth=260, valueType=float,
+                          orientation="horizontal", callback=self.crystal_diffraction_tab_visibility)
+        oasysgui.lineEdit(self.crystal_box_2, self, "user_defined_asymmetry_angle", "Asymmetry angle [deg]",
+                          labelWidth=260, valueType=float, orientation="horizontal",
+                          callback=self.crystal_diffraction_tab_visibility)
+
+        ##  parameters for internal calculations / xoppy file
+        self.crystal_box_3 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical") #, height=340)
+
+        gui.comboBox(self.crystal_box_3, self, "user_defined_crystal", label="Crystal", addSpace=True,
+                     items=self.CRYSTALS, sendSelectedValue=False, orientation="horizontal", labelWidth=260)
+
+        box_miller = oasysgui.widgetBox(self.crystal_box_3, "", orientation="horizontal", width=350)
+        oasysgui.lineEdit(box_miller, self, "user_defined_h", label="Miller Indices [h k l]", addSpace=True,
+                          valueType=int, labelWidth=200, orientation="horizontal")
+        oasysgui.lineEdit(box_miller, self, "user_defined_k", addSpace=True, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(box_miller, self, "user_defined_l", addSpace=True, valueType=int, orientation="horizontal")
+
+
+        ## autosetting
+        self.crystal_box_4 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical") #, height=240)
+
+        gui.comboBox(self.crystal_box_4, self, "crystal_auto_setting", label="Auto setting", labelWidth=350,
                      items=["No", "Yes"],
-                     callback=self.set_Autosetting, sendSelectedValue=False, orientation="horizontal")
+                     callback=self.crystal_diffraction_tab_visibility, sendSelectedValue=False, orientation="horizontal")
 
-        gui.separator(self.crystal_box_1, height=10)
+        gui.separator(self.crystal_box_4, height=10)
 
-        self.autosetting_box = oasysgui.widgetBox(self.crystal_box_1, "", addSpace=False,
+        ##
+        self.autosetting_box = oasysgui.widgetBox(self.crystal_box_4, "", addSpace=False,
                                                   orientation="vertical")
-        self.autosetting_box_empty = oasysgui.widgetBox(self.crystal_box_1, "", addSpace=False,
+        self.autosetting_box_empty = oasysgui.widgetBox(self.crystal_box_4, "", addSpace=False,
                                                         orientation="vertical")
 
         self.autosetting_box_units = oasysgui.widgetBox(self.autosetting_box, "", addSpace=False, orientation="vertical")
 
         gui.comboBox(self.autosetting_box_units, self, "units_in_use", label="Units in use", labelWidth=260,
                      items=["eV", "Angstroms"],
-                     callback=self.set_UnitsInUse, sendSelectedValue=False, orientation="horizontal")
+                     callback=self.crystal_diffraction_tab_visibility, sendSelectedValue=False, orientation="horizontal")
 
         self.autosetting_box_units_1 = oasysgui.widgetBox(self.autosetting_box_units, "", addSpace=False,
                                                           orientation="vertical")
@@ -574,23 +575,18 @@ class OWCrystal(GenericElement, WidgetDecorator):
         oasysgui.lineEdit(self.autosetting_box_units_2, self, "photon_wavelength", "Set wavelength [Å]", labelWidth=260,
                           valueType=float, orientation="horizontal")
 
-        self.crystal_box_2 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical", height=340)
 
-        crystal_box_2_1 = oasysgui.widgetBox(self.crystal_box_2, "", addSpace=False, orientation="horizontal")
 
-        self.le_file_diffraction_profile = oasysgui.lineEdit(crystal_box_2_1, self, "file_diffraction_profile",
-                                                             "File with Diffraction\nProfile (XOP format)", labelWidth=120,
-                                                             valueType=str,
-                                                             orientation="horizontal")
 
-        gui.button(crystal_box_2_1, self, "...", callback=self.selectFileDiffractionProfile)
+
+        self.crystal_diffraction_tab_visibility()
 
     def populate_tab_crystal_geometry(self, subtab_crystal_geometry):
-        mosaic_box = oasysgui.widgetBox(subtab_crystal_geometry, "Geometric Parameters", addSpace=True, orientation="vertical")
+        mosaic_box = oasysgui.widgetBox(subtab_crystal_geometry, "Geometric Parameters *Not Yet Implemented*", addSpace=True, orientation="vertical")
 
         gui.comboBox(mosaic_box, self, "mosaic_crystal", label="Mosaic Crystal", labelWidth=355,
                      items=["No", "Yes"],
-                     callback=self.set_Mosaic, sendSelectedValue=False, orientation="horizontal")
+                     callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False, orientation="horizontal")
 
         gui.separator(mosaic_box, height=10)
 
@@ -602,7 +598,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
         self.asymmetric_cut_combo = gui.comboBox(self.asymmetric_cut_box, self, "asymmetric_cut", label="Asymmetric cut",
                                                  labelWidth=355,
                                                  items=["No", "Yes"],
-                                                 callback=self.set_AsymmetricCut, sendSelectedValue=False,
+                                                 callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False,
                                                  orientation="horizontal")
 
         self.asymmetric_cut_box_1 = oasysgui.widgetBox(self.asymmetric_cut_box, "", addSpace=False, orientation="vertical")
@@ -620,7 +616,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
         self.le_thickness_1 = oasysgui.lineEdit(self.asymmetric_cut_box_1_order, self, "thickness", "Thickness",
                                                 valueType=float, labelWidth=260, orientation="horizontal")
 
-        self.set_BraggLaue()
+        # self.set_BraggLaue()
 
         gui.separator(self.mosaic_box_1)
 
@@ -628,7 +624,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
         gui.comboBox(self.johansson_box, self, "johansson_geometry", label="Johansson Geometry", labelWidth=355,
                      items=["No", "Yes"],
-                     callback=self.set_JohanssonGeometry, sendSelectedValue=False, orientation="horizontal")
+                     callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False, orientation="horizontal")
 
         self.johansson_box_1 = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
         self.johansson_box_1_empty = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
@@ -645,7 +641,9 @@ class OWCrystal(GenericElement, WidgetDecorator):
         oasysgui.lineEdit(self.mosaic_box_2, self, "seed_for_mosaic", "Seed for mosaic [>10^5]", labelWidth=260,
                           valueType=float, orientation="horizontal")
 
-        self.set_Mosaic()
+        # self.set_Mosaic()
+
+        self.crystal_geometry_tab_visibility()
 
 
     def populate_tab_dimensions(self, subtab_dimensions):
@@ -816,47 +814,54 @@ class OWCrystal(GenericElement, WidgetDecorator):
     #########################################################
     # Crystal Methods
     #########################################################
-    # def reflectivity_tab_visibility(self):
-    #
-    #     self.reflectivity_flag_box.setVisible(False)
-    #     self.file_refl_box.setVisible(False)
-    #     self.refraction_index_box.setVisible(False)
-    #
-    #     if self.reflectivity_flag == 1:
-    #         self.reflectivity_flag_box.setVisible(True)
-    #
-    #     if self.reflectivity_source in [0, 2, 3, 4]:
-    #         self.file_refl_box.setVisible(True)
-    #     else:
-    #         self.refraction_index_box.setVisible(True)
-    #
-    # def select_file_refl(self):
-    #     self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
 
-    def set_BraggLaue(self):
-        self.asymmetric_cut_box_1_order.setVisible(self.diffraction_geometry==1) #LAUE
-        if self.diffraction_geometry==1:
-            self.asymmetric_cut = 1
-            self.set_AsymmetricCut()
-            self.asymmetric_cut_combo.setEnabled(False)
-        else:
-            self.asymmetric_cut_combo.setEnabled(True)
+    def crystal_diffraction_tab_visibility(self):
+        # self.set_BraggLaue()  #todo: to be deleted
+        self.set_DiffractionCalculation()
+        self.set_Autosetting()
+        self.set_UnitsInUse()
+
+    def crystal_geometry_tab_visibility(self):
+        self.set_Mosaic()
+        self.set_AsymmetricCut()
+        self.set_JohanssonGeometry()
+
+
+    # todo: change next methods name from CamelCase to undercore...
+    # def set_BraggLaue(self):
+    #     self.asymmetric_cut_box_1_order.setVisible(self.diffraction_geometry==1) #LAUE
+    #     if self.diffraction_geometry==1:
+    #         self.asymmetric_cut = 1
+    #         self.set_AsymmetricCut()
+    #         self.asymmetric_cut_combo.setEnabled(False)
+    #     else:
+    #         self.asymmetric_cut_combo.setEnabled(True)
 
     def set_DiffractionCalculation(self):
-        # todo: reimplement this
-        # self.tab_cryst_2.setEnabled(self.diffraction_calculation == 0)
 
-        self.crystal_box_1.setVisible(self.diffraction_calculation == 1)
+        self.crystal_box_1.setVisible(False)
+        self.crystal_box_2.setVisible(False)
+        self.crystal_box_3.setVisible(False)
 
-        self.crystal_box_2.setVisible(self.diffraction_calculation in (0,2))
+        if (self.diffraction_calculation == 0):   # internal xraylib
+            self.crystal_box_3.setVisible(True)
+        elif (self.diffraction_calculation == 1): # internal
+            self.crystal_box_3.setVisible(True)
+        elif (self.diffraction_calculation == 2): # preprocessor bragg v1
+            self.crystal_box_1.setVisible(True)
+        elif (self.diffraction_calculation == 3): # preprocessor bragg v2
+            self.crystal_box_1.setVisible(True)
+        elif (self.diffraction_calculation == 4): # user file, E-independent
+            self.crystal_box_2.setVisible(True)
+        elif (self.diffraction_calculation == 5): # user file, E-dependent
+            self.crystal_box_2.setVisible(True)
 
-        if (self.diffraction_calculation == 2):
+        if self.diffraction_calculation in (4,5):
             self.incidence_angle_deg_le.setEnabled(True)
             self.incidence_angle_rad_le.setEnabled(True)
             self.reflection_angle_deg_le.setEnabled(True)
             self.reflection_angle_rad_le.setEnabled(True)
-        else:
-            self.set_Autosetting()
+
 
     def selectFileCrystalParameters(self):
         self.le_file_crystal_parameters.setText(oasysgui.selectFileFromDialog(self, self.file_crystal_parameters, "Select File With Crystal Parameters"))
@@ -941,16 +946,34 @@ class OWCrystal(GenericElement, WidgetDecorator):
         return None
 
     def get_mirror_instance(self):
-        #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-        #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-        #  Side:  SOURCE = 0  IMAGE = 1
-
 
         if self.surface_shape_type == 0:
             mirror = S4PlaneCrystal(
-                name="Plane Mirror",
-                boundary_shape=self.get_boundary_shape(), # todo: add kws...
+                name="Plane Crystal",
+                boundary_shape=self.get_boundary_shape(),
+                material=self.CRYSTALS[self.user_defined_crystal],
+                diffraction_geometry=DiffractionGeometry.BRAGG,  # ?? not supposed to be in syned...
+                miller_index_h=self.user_defined_h,  #todo: check if this is needed if material_constants_library_flag in (2,3)
+                miller_index_k=self.user_defined_k,  #todo: check if this is needed if material_constants_library_flag in (2,3)
+                miller_index_l=self.user_defined_l,  #todo: check if this is needed if material_constants_library_flag in (2,3)
+                asymmetry_angle=0.0,
+                thickness=0.010, # this is thick crystal by now...
+                f_central=self.crystal_auto_setting,
+                f_phot_cent=self.units_in_use,
+                phot_cent=(self.photon_energy if (self.units_in_use == 0) else self.photon_wavelength),
+                file_refl=self.file_crystal_parameters,
+                f_bragg_a=False,
+                f_johansson=False,
+                r_johansson=1.0,
+                f_mosaic=False,
+                spread_mos=0.4 * numpy.pi / 180,
+                f_ext=0,
+                material_constants_library_flag=self.diffraction_calculation,
+                # 0=xraylib, 1=dabax
+                # 2=shadow preprocessor file v1, 3=shadow preprocessor file v2
+                # 4=xoppy e-independent, 5=xoppy e-dependent
             )
+
         elif self.surface_shape_type == 1:
             print("FOCUSING DISTANCES: convexity:  ", numpy.logical_not(self.surface_curvature).astype(int))
             print("FOCUSING DISTANCES: internal/external:  ", self.surface_shape_parameters)
@@ -979,23 +1002,32 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
     def get_element_instance(self):
 
-        if self.surface_shape_type == 0:
-            optical_element = S4PlaneCrystalElement()
-        else:
-            raise NotImplementedError
-        # elif self.surface_shape_type == 1:
-        #     optical_element = S4SphereMirrorElement()
-        # elif self.surface_shape_type == 2:
-        #     optical_element = S4EllipsoidMirrorElement()
-        # elif self.surface_shape_type == 3:
-        #     optical_element = S4HyperboloidMirrorElement()
-        # elif self.surface_shape_type == 4:
-        #     optical_element = S4ParaboloidMirrorElement()
-        # elif self.surface_shape_type == 5:
-        #     optical_element = S4ToroidalMirrorElement()
+        if self.surface_shape_type > 0: raise NotImplementedError  # todo: complete for curved crystals
 
-        optical_element.set_optical_element(self.get_mirror_instance())
-        optical_element.set_coordinates(self.get_coordinates())
+        if self.surface_shape_type == 0:
+            optical_element = S4PlaneCrystalElement(
+                optical_element=self.get_mirror_instance(),
+                coordinates=self.get_coordinates())
+        elif self.surface_shape_type == 1:
+            optical_element = S4SphereCrystalElement(
+                optical_element=self.get_mirror_instance(),
+                coordinates=self.get_coordinates())
+        elif self.surface_shape_type == 2:
+            optical_element = S4EllipsoidCrystalElement(
+                optical_element=self.get_mirror_instance(),
+                coordinates=self.get_coordinates())
+        elif self.surface_shape_type == 3:
+            optical_element = S4HyperboloidCrystalElement(
+                optical_element=self.get_mirror_instance(),
+                coordinates=self.get_coordinates())
+        elif self.surface_shape_type == 4:
+            optical_element = S4ParaboloidCrystalElement(
+                optical_element=self.get_mirror_instance(),
+                coordinates=self.get_coordinates())
+        elif self.surface_shape_type == 5:
+            optical_element = S4ToroidalCrystalElement(
+                optical_element=self.get_mirror_instance(),
+                coordinates=self.get_coordinates())
 
         return optical_element
 
@@ -1014,45 +1046,49 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
 
     def run_shadow4(self):
-        pass
 
         self.shadow_output.setText("")
 
-        # sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+
+        element = self.get_element_instance()
+        print(element.info())
+
+        self.progressBarInit()
+
+        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
+
+        beamline = self.beamline.duplicate()
+        beamline.append_beamline_element(element)
+
+        output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
+
+        self.set_PlotQuality()
+
+        print(">>>>>>", element.get_optical_element().get_input_dictionary() )
+        print(">>>>>> coordinates:\n    incident angle (graz) = %f deg\n    reflection angle (graz) = %f deg" % \
+              (90.0 - element.get_coordinates().angle_radial()*180/numpy.pi,
+              90.0 - element.get_coordinates().angle_radial_out() * 180 / numpy.pi))
+
+        self.plot_results(output_beam, progressBarValue=80)
+
+        self.progressBarFinished()
+
         #
-        # element = self.get_element_instance()
-        # print(element.info())
+        # script
         #
-        # self.progressBarInit()
+        script = beamline.to_python_code()
+        script += "\n\n\n# test plot"
+        script += "\nif True:"
+        script += "\n   from srxraylib.plot.gol import plot_scatter"
+        script += "\n   rays = beam.get_rays()"
+        script += "\n   plot_scatter(beam.get_photon_energy_eV(), beam.get_column(23), title='(Intensity,Photon Energy)')"
+        self.shadow4_script.set_code(script)
+
         #
-        # beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
+        # send beam
         #
-        # beamline = self.beamline.duplicate()
-        # beamline.append_beamline_element(element)
-        #
-        # output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
-        #
-        # self.set_PlotQuality()
-        #
-        # self.plot_results(output_beam, progressBarValue=80)
-        #
-        # self.progressBarFinished()
-        #
-        # #
-        # # script
-        # #
-        # script = beamline.to_python_code()
-        # script += "\n\n\n# test plot"
-        # script += "\nif True:"
-        # script += "\n   from srxraylib.plot.gol import plot_scatter"
-        # script += "\n   rays = beam.get_rays()"
-        # script += "\n   plot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-        # self.shadow4_script.set_code(script)
-        #
-        # #
-        # # send beam
-        # #
-        # self.send("Beam4", output_beam)
+        self.send("Beam4", output_beam)
 
     def receive_syned_data(self, data):
         raise Exception("Not yet implemented")
@@ -1061,30 +1097,15 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline
+    from shadow4.sources.source_geometrical.source_geometrical import SourceGeometrical
     def get_test_beam():
-        # electron beam
-        from syned.storage_ring.light_source import ElectronBeam
-        electron_beam = ElectronBeam(energy_in_GeV=6, energy_spread=0.001, current=0.2)
-        electron_beam.set_sigmas_all(sigma_x=3.01836e-05, sigma_y=3.63641e-06, sigma_xp=4.36821e-06,
-                                     sigma_yp=1.37498e-06)
-
-        # Gaussian undulator
-        from shadow4.sources.undulator.s4_undulator import S4Undulator
-        sourceundulator = S4Undulator(
-            period_length=0.0159999,
-            number_of_periods=100,
-            emin=2700.136,
-            emax=2700.136,
-            flag_emittance=1,  # Use emittance (0=No, 1=Yes)
-        )
-        sourceundulator.set_energy_monochromatic(2700.14)
-
-        from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
-        light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                             magnetic_structure=sourceundulator, nrays=5000, seed=5676561)
-
-        beam = light_source.get_beam_in_gaussian_approximation()
-
+        from shadow4.sources.source_geometrical.source_geometrical import SourceGeometrical
+        light_source = SourceGeometrical(name='SourceGeometrical', nrays=5000, seed=5676561)
+        light_source.set_spatial_type_point()
+        light_source.set_angular_distribution_flat(hdiv1=-0.000000, hdiv2=0.000000, vdiv1=-0.000000, vdiv2=0.000000)
+        light_source.set_energy_distribution_uniform(value_min=7990.000000, value_max=8010.000000, unit='eV')
+        light_source.set_polarization(polarization_degree=1.000000, phase_diff=0.000000, coherent_beam=0)
+        beam = light_source.get_beam()
         return ShadowBeam(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
