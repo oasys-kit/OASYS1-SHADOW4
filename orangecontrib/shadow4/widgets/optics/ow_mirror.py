@@ -721,7 +721,7 @@ class OWMirror(GenericElement, WidgetDecorator):
     def get_boundary_shape(self):
         return None
 
-    def get_mirror_instance(self):
+    def get_optical_element_instance(self):
         #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
         #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
         #  Side:  SOURCE = 0  IMAGE = 1
@@ -875,7 +875,7 @@ class OWMirror(GenericElement, WidgetDecorator):
                 angle_radial_out=numpy.radians(self.reflection_angle_deg),
                 )
 
-    def get_element_instance(self):
+    def get_beamline_element_instance(self):
 
         if self.surface_shape_type == 0:
             optical_element = S4PlaneMirrorElement()
@@ -890,7 +890,7 @@ class OWMirror(GenericElement, WidgetDecorator):
         elif self.surface_shape_type == 5:
             optical_element = S4ToroidalMirrorElement()
 
-        optical_element.set_optical_element(self.get_mirror_instance())
+        optical_element.set_optical_element(self.get_optical_element_instance())
         optical_element.set_coordinates(self.get_coordinates())
 
         return optical_element
@@ -915,7 +915,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
         sys.stdout = EmittingStream(textWritten=self.writeStdOut)
 
-        element = self.get_element_instance()
+        element = self.get_beamline_element_instance()
         print(element.info())
 
         self.progressBarInit()

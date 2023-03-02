@@ -225,7 +225,6 @@ class OWCrystal(GenericElement, WidgetDecorator):
         tab_basic_settings = oasysgui.createTabPage(self.tabs_control_area, "Basic Settings")
         tabs_basic_setting = oasysgui.tabWidget(tab_basic_settings)
         subtab_surface_shape = oasysgui.createTabPage(tabs_basic_setting, "Surface Shape")  # to be populated
-        # subtab_reflectivity = oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")    # to be populated
         subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Xtal Diff")    # to be populated
         subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Xtal Geom")    # to be populated
         subtab_dimensions = oasysgui.createTabPage(tabs_basic_setting, "Dimensions")        # to be populated
@@ -476,7 +475,6 @@ class OWCrystal(GenericElement, WidgetDecorator):
                      sendSelectedValue=False, orientation="horizontal", tooltip="cylinder_orientation")
 
         self.surface_shape_tab_visibility(is_init=True)
-
 
     def populate_tab_crystal_diffraction(self, subtab_crystal_diffraction):
         crystal_box = oasysgui.widgetBox(subtab_crystal_diffraction, "Diffraction Settings", addSpace=True, orientation="vertical")
@@ -945,7 +943,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
     def get_boundary_shape(self):
         return None
 
-    def get_mirror_instance(self):
+    def get_optical_element_instance(self):
 
         if self.surface_shape_type == 0:
             mirror = S4PlaneCrystal(
@@ -1000,33 +998,33 @@ class OWCrystal(GenericElement, WidgetDecorator):
                 angle_radial_out=numpy.radians(self.reflection_angle_deg),
                 )
 
-    def get_element_instance(self):
+    def get_beamline_element_instance(self):
 
         if self.surface_shape_type > 0: raise NotImplementedError  # todo: complete for curved crystals
 
         if self.surface_shape_type == 0:
             optical_element = S4PlaneCrystalElement(
-                optical_element=self.get_mirror_instance(),
+                optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
         elif self.surface_shape_type == 1:
             optical_element = S4SphereCrystalElement(
-                optical_element=self.get_mirror_instance(),
+                optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
         elif self.surface_shape_type == 2:
             optical_element = S4EllipsoidCrystalElement(
-                optical_element=self.get_mirror_instance(),
+                optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
         elif self.surface_shape_type == 3:
             optical_element = S4HyperboloidCrystalElement(
-                optical_element=self.get_mirror_instance(),
+                optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
         elif self.surface_shape_type == 4:
             optical_element = S4ParaboloidCrystalElement(
-                optical_element=self.get_mirror_instance(),
+                optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
         elif self.surface_shape_type == 5:
             optical_element = S4ToroidalCrystalElement(
-                optical_element=self.get_mirror_instance(),
+                optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
 
         return optical_element
@@ -1051,7 +1049,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
         sys.stdout = EmittingStream(textWritten=self.writeStdOut)
 
-        element = self.get_element_instance()
+        element = self.get_beamline_element_instance()
         print(element.info())
 
         self.progressBarInit()
