@@ -13,7 +13,7 @@ from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
 from syned.beamline.beamline import Beamline
 from shadow4.beamline.s4_beamline import S4Beamline
@@ -40,7 +40,7 @@ from shadow4.beamline.optical_elements.mirrors.s4_sphere_mirror import S4SphereM
 
 from shadow4.tools.graphics import plotxy
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
 from orangecanvas.resources import icon_loader
@@ -76,11 +76,11 @@ class OWMirror(GenericElement, WidgetDecorator):
 
     priority = 5
 
-    inputs = [("Input Beam", ShadowBeam, "set_beam")]
+    inputs = [("Input Beam", ShadowData, "set_beam")]
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
-                "type":ShadowBeam,
+                "type":ShadowData,
                 "doc":"",}]
 
     #########################################################
@@ -922,7 +922,7 @@ class OWMirror(GenericElement, WidgetDecorator):
         beamline = self.input_beam.beamline.duplicate()
         beamline.append_beamline_element(element)
 
-        output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
+        output_beam = ShadowData(oe_number=0, beam=beam1, beamline=beamline)
 
         self._set_plot_quality()
 
@@ -977,7 +977,7 @@ if __name__ == "__main__":
 
         beam = light_source.get_beam_in_gaussian_approximation()
 
-        return ShadowBeam(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+        return ShadowData(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

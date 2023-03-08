@@ -1,63 +1,8 @@
 
 import os, copy, numpy
-from shadow4.beam.beam import Beam
+from shadow4.beam.s4_beam import S4Beam
 
-
-class ShadowOEHistoryItem(object):
-    def __init__(self,
-                 oe_number=0,
-                 input_beam=None,
-                 shadow_source_start=None,
-                 shadow_source_end=None,
-                 shadow_oe_start=None,
-                 shadow_oe_end=None,
-                 widget_class_name=None):
-        self.__oe_number = oe_number
-        self.__input_beam = input_beam
-        self.__shadow_source_start = shadow_source_start
-        self.__shadow_source_end = shadow_source_end
-        self.__shadow_oe_start = shadow_oe_start
-        self.__shadow_oe_end = shadow_oe_end
-        self.__widget_class_name = widget_class_name
-
-    def duplicate(self):
-        return ShadowOEHistoryItem(oe_number=self.__oe_number,
-                                   input_beam=self.__input_beam,
-                                   shadow_source_start=self.__shadow_source_start,
-                                   shadow_source_end=self.__shadow_source_end,
-                                   shadow_oe_start=self.__shadow_oe_start,
-                                   shadow_oe_end=self.__shadow_oe_end,
-                                   widget_class_name=self.__widget_class_name)
-
-    @property
-    def oe_number(self):
-        return self.__oe_number
-
-    @property
-    def input_beam(self):
-        return self.__input_beam
-
-    @property
-    def shadow_source_start(self):
-        return self.__shadow_source_start
-
-    @property
-    def shadow_source_end(self):
-        return self.__shadow_source_end
-
-    @property
-    def shadow_oe_start(self):
-        return self.__shadow_oe_start
-
-    @property
-    def shadow_oe_end(self):
-        return self.__shadow_oe_end
-
-    @property
-    def widget_class_name(self):
-        return self.__widget_class_name
-
-class ShadowBeam:
+class ShadowData:
     class ScanningData(object):
         def __init__(self,
                      scanned_variable_name,
@@ -93,15 +38,13 @@ class ShadowBeam:
         def get_additional_parameter(self, name):
             return self.__additional_parameters[name]
 
-    def __init__(self, oe_number=0, beam=None, number_of_rays=0, beamline=None):
-        self.__oe_number = oe_number
+    def __init__(self, beam=None, number_of_rays=0, beamline=None):
         if (beam is None):
-            if number_of_rays > 0: self.__beam = Beam(number_of_rays)
-            else:                  self.__beam = Beam()
+            if number_of_rays > 0: self.__beam = S4Beam(number_of_rays)
+            else:                  self.__beam = S4Beam()
         else:
             self.__beam = beam
 
-        self.__history       = []
         self.__scanning_data = None
         self.__initial_flux  = None
         self.__beamline      = beamline  # added by srio
@@ -113,14 +56,6 @@ class ShadowBeam:
     @beam.setter
     def beam(self, beam):
         self.__beam = beam
-
-    @property
-    def oe_number(self):
-        return self.__oe_number
-
-    @oe_number.setter
-    def oe_number(self, oe_number):
-        self.__oe_number = oe_number
 
     @property
     def beamline(self):
@@ -183,10 +118,10 @@ class ShadowBeam:
             self.__beam.write_h5(file_name)
 
     def duplicate(self, copy_rays=True, history=True):
-        beam = Beam()
+        beam = S4Beam()
         if copy_rays: beam.rays = copy.deepcopy(self.beam.rays)
 
-        new_shadow_beam = ShadowBeam(self.__oe_number, beam)
+        new_shadow_beam = ShadowData(self.__oe_number, beam)
         new_shadow_beam.scanning_data = self.__scanning_data
         new_shadow_beam.initial_flux  = self.__initial_flux
         new_shadow_beam.beamline = self.__beamline.duplicate()
@@ -230,7 +165,7 @@ class ShadowBeam:
                             history_element_2 =  beam_2.get_oe_history(index)
 
                             merged_history_element = merged_beam.get_oe_history(index)
-                            merged_history_element.input_beam = ShadowBeam.merge_beams(history_element_1.input_beam, history_element_2.input_beam, which_flux, merge_history=(merge_history!=1))
+                            merged_history_element.input_beam = ShadowData.merge_beams(history_element_1.input_beam, history_element_2.input_beam, which_flux, merge_history=(merge_history != 1))
                     else:
                         raise ValueError("Histories must have the same path to be merged")
                 else:

@@ -8,7 +8,7 @@ from oasys.widgets.widget import AutomaticWidget
 from orangewidget.settings import Setting
 
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam as ShadowBeam4
+from orangecontrib.shadow4.util.shadow_objects import ShadowData as ShadowBeam4
 
 try:
     import Shadow

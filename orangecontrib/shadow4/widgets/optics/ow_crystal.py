@@ -13,7 +13,7 @@ from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
 from syned.beamline.beamline import Beamline
 from shadow4.beamline.s4_beamline import S4Beamline
@@ -33,7 +33,7 @@ from shadow4.beamline.optical_elements.crystals.s4_plane_crystal import S4PlaneC
 
 from shadow4.tools.graphics import plotxy
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
 from orangecanvas.resources import icon_loader
@@ -72,11 +72,11 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
     priority = 15
 
-    inputs = [("Input Beam", ShadowBeam, "set_beam")]
+    inputs = [("Input Beam", ShadowData, "set_beam")]
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
-                "type":ShadowBeam,
+                "type":ShadowData,
                 "doc":"",}]
 
     #########################################################
@@ -574,9 +574,6 @@ class OWCrystal(GenericElement, WidgetDecorator):
                           valueType=float, orientation="horizontal")
 
 
-
-
-
         self.crystal_diffraction_tab_visibility()
 
     def populate_tab_crystal_geometry(self, subtab_crystal_geometry):
@@ -1058,7 +1055,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
         beamline = self.input_beam.beamline.duplicate()
         beamline.append_beamline_element(element)
 
-        output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
+        output_beam = ShadowData(oe_number=0, beam=beam1, beamline=beamline)
 
         self._set_plot_quality()
 
@@ -1103,7 +1100,7 @@ if __name__ == "__main__":
         light_source.set_energy_distribution_uniform(value_min=7990.000000, value_max=8010.000000, unit='eV')
         light_source.set_polarization(polarization_degree=1.000000, phase_diff=0.000000, coherent_beam=0)
         beam = light_source.get_beam()
-        return ShadowBeam(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+        return ShadowData(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

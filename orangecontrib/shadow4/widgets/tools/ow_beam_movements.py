@@ -18,7 +18,7 @@ from syned.widget.widget_decorator import WidgetDecorator
 
 from shadow4.beamline.optical_elements.ideal_elements.s4_beam_movement import S4BeamMovement, S4BeamMovementElement
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
 
@@ -29,11 +29,11 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
     icon = "icons/beam_movement.png"
     priority = 5
 
-    inputs = [("Input Beam", ShadowBeam, "set_beam")]
+    inputs = [("Input Beam", ShadowData, "set_beam")]
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
-                "type":ShadowBeam,
+                "type":ShadowData,
                 "doc":"",}]
 
 
@@ -205,7 +205,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         beamline = self.beamline.duplicate()
         beamline.append_beamline_element(element)
 
-        output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
+        output_beam = ShadowData(oe_number=0, beam=beam1, beamline=beamline)
 
 
         self._set_plot_quality()
@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
         beam = light_source.get_beam_in_gaussian_approximation(NRAYS=5000, SEED=5676561)
 
-        return ShadowBeam(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+        return ShadowData(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

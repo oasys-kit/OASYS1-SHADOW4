@@ -13,7 +13,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 
 from shadow4.beamline.s4_beamline import S4Beamline
@@ -33,7 +33,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
-                "type":ShadowBeam,
+                "type":ShadowData,
                 "doc":"",}]
 
     number_of_rays = Setting(5000)
@@ -711,7 +711,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         #
         beamline = S4Beamline(light_source=light_source)
 
-        output_beam = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
+        output_beam = ShadowData(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
         self._plot_results(output_beam, progressBarValue=80)
 
         #

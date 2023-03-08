@@ -10,7 +10,7 @@ from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
 
 from syned.beamline.beamline import Beamline
@@ -33,7 +33,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
-                "type":ShadowBeam,
+                "type":ShadowData,
                 "doc":"",}]
 
     undulator_length = Setting(4.0)
@@ -139,7 +139,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         # beam plots
         #
         beamline = S4Beamline(light_source=light_source)
-        output_beam = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
+        output_beam = ShadowData(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
         self._plot_results(output_beam, progressBarValue=80)
 
         #

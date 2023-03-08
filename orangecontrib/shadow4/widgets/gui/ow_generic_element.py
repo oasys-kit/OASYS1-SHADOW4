@@ -9,7 +9,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.util.oasys_util import TriggerIn
 
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
-from orangecontrib.shadow4.util.shadow_objects import ShadowBeam
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.util.python_script import PythonScript
 
@@ -83,7 +83,7 @@ class GenericElement(AutomaticElement):
 
         self.tabs.setCurrentIndex(current_tab)
 
-    def _check_not_interactive_conditions(self, input_beam : ShadowBeam):
+    def _check_not_interactive_conditions(self, input_beam : ShadowData):
         not_interactive = False
 
         if not (input_beam is None or \
