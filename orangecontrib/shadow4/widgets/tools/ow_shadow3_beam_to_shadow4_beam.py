@@ -81,9 +81,9 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
     def convert_beam(self):
         beam3 = self.shadow_beam._beam
         print(">>beam3: ", beam3)
-        BEAM4 = ShadowBeam4(oe_number=0, beam=Beam(array=beam3.rays), beamline=S4Beamline())
-        print(BEAM4)
-        self.send("Beam4", BEAM4)
+        beam4 = ShadowBeam4(oe_number=0, beam=Beam(array=beam3.rays), beamline=S4Beamline())
+        print(beam4)
+        self.send("Beam4", beam4)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

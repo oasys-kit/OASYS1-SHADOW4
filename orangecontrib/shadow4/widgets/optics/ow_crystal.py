@@ -72,7 +72,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
     priority = 15
 
-    inputs = [("Input Beam", ShadowBeam, "setBeam")]
+    inputs = [("Input Beam", ShadowBeam, "set_beam")]
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
@@ -202,7 +202,7 @@ class OWCrystal(GenericElement, WidgetDecorator):
         button.setPalette(palette) # assign new palette
         button.setFixedHeight(45)
 
-        button = gui.button(button_box, self, "Reset Fields", callback=self.callResetSettings)
+        button = gui.button(button_box, self, "Reset Fields", callback=self.call_reset_settings)
         font = QFont(button.font())
         font.setItalic(True)
         button.setFont(font)
@@ -1000,12 +1000,13 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
     def get_beamline_element_instance(self):
 
-        if self.surface_shape_type > 0: raise NotImplementedError  # todo: complete for curved crystals
+        if self.surface_shape_type > 0: raise NotImplementedError()  # todo: complete for curved crystals
 
         if self.surface_shape_type == 0:
             optical_element = S4PlaneCrystalElement(
                 optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
+        '''
         elif self.surface_shape_type == 1:
             optical_element = S4SphereCrystalElement(
                 optical_element=self.get_optical_element_instance(),
@@ -1026,49 +1027,47 @@ class OWCrystal(GenericElement, WidgetDecorator):
             optical_element = S4ToroidalCrystalElement(
                 optical_element=self.get_optical_element_instance(),
                 coordinates=self.get_coordinates())
+        '''
 
         return optical_element
 
 
-    def setBeam(self, input_beam):
-        self.not_interactive = self.check_not_interactive_conditions(input_beam)
+    def set_beam(self, input_beam):
+        self.not_interactive = self._check_not_interactive_conditions(input_beam)
 
-        self.onReceivingInput()
+        self._on_receiving_input()
 
-        if ShadowCongruence.checkEmptyBeam(input_beam):
-            self.input_beam = input_beam
-            self.beamline = input_beam.get_beamline()
+        if ShadowCongruence.check_empty_beam(input_beam):
+            self.input_beam = input_beam.duplicate()
 
-            if self.is_automatic_run:
-                self.run_shadow4()
+            if self.is_automatic_run: self.run_shadow4()
 
 
     def run_shadow4(self):
-
         self.shadow_output.setText("")
 
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         element = self.get_beamline_element_instance()
         print(element.info())
 
         self.progressBarInit()
 
-        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
+        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam.beam)
 
-        beamline = self.beamline.duplicate()
+        beamline = self.input_beam.beamline.duplicate()
         beamline.append_beamline_element(element)
 
         output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
 
-        self.set_PlotQuality()
+        self._set_plot_quality()
 
         print(">>>>>>", element.get_optical_element().get_input_dictionary() )
         print(">>>>>> coordinates:\n    incident angle (graz) = %f deg\n    reflection angle (graz) = %f deg" % \
               (90.0 - element.get_coordinates().angle_radial()*180/numpy.pi,
               90.0 - element.get_coordinates().angle_radial_out() * 180 / numpy.pi))
 
-        self.plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, progressBarValue=80)
 
         self.progressBarFinished()
 
@@ -1109,7 +1108,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = OWCrystal()
-    ow.setBeam(get_test_beam())
+    ow.set_beam(get_test_beam())
     ow.show()
     a.exec_()
     ow.saveSettings()

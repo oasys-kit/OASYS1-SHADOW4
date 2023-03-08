@@ -29,7 +29,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
     icon = "icons/beam_movement.png"
     priority = 5
 
-    inputs = [("Input Beam", ShadowBeam, "setBeam")]
+    inputs = [("Input Beam", ShadowBeam, "set_beam")]
     WidgetDecorator.append_syned_input_data(inputs)
 
     outputs = [{"name":"Beam4",
@@ -74,7 +74,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         button.setPalette(palette) # assign new palette
         button.setFixedHeight(45)
 
-        button = gui.button(button_box, self, "Reset Fields", callback=self.callResetSettings)
+        button = gui.button(button_box, self, "Reset Fields", callback=self.call_reset_settings)
         font = QFont(button.font())
         font.setItalic(True)
         button.setFont(font)
@@ -175,12 +175,12 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         return optical_element
 
 
-    def setBeam(self, input_beam):
-        self.not_interactive = self.check_not_interactive_conditions(input_beam)
+    def set_beam(self, input_beam):
+        self.not_interactive = self._check_not_interactive_conditions(input_beam)
 
-        self.onReceivingInput()
+        self._on_receiving_input()
 
-        if ShadowCongruence.checkEmptyBeam(input_beam):
+        if ShadowCongruence.check_empty_beam(input_beam):
             self.input_beam = input_beam
             self.beamline = input_beam.get_beamline()
 
@@ -192,7 +192,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
         self.shadow_output.setText("")
 
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         element = self.get_element_instance()
         print(element.info())
@@ -200,7 +200,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         self.progressBarInit()
 
 
-        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam._beam)
+        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam.beam)
 
         beamline = self.beamline.duplicate()
         beamline.append_beamline_element(element)
@@ -208,9 +208,9 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         output_beam = ShadowBeam(oe_number=0, beam=beam1, beamline=beamline)
 
 
-        self.set_PlotQuality()
+        self._set_plot_quality()
 
-        self.plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, progressBarValue=80)
 
         self.progressBarFinished()
 
@@ -259,7 +259,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = OWBeamMovement()
-    ow.setBeam(get_test_beam())
+    ow.set_beam(get_test_beam())
     ow.show()
     a.exec_()
     ow.saveSettings()

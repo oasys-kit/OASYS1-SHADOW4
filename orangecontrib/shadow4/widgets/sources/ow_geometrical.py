@@ -144,7 +144,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         button.setPalette(palette) # assign new palette
         button.setFixedHeight(45)
 
-        button = gui.button(button_box, self, "Reset Fields", callback=self.callResetSettings)
+        button = gui.button(button_box, self, "Reset Fields", callback=self.call_reset_settings)
         font = QFont(button.font())
         font.setItalic(True)
         button.setFont(font)
@@ -477,8 +477,8 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
     def is_scanning_enabled(self):
         return True
 
-    def callResetSettings(self):
-        super().callResetSettings()
+    def call_reset_settings(self):
+        super().call_reset_settings()
 
         self.set_Sampling()
         self.set_SpatialType()
@@ -688,9 +688,9 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
 
     def run_shadow4(self):
 
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
-        self.set_PlotQuality()
+        self._set_plot_quality()
 
         self.progressBarInit()
 
@@ -711,8 +711,8 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         #
         beamline = S4Beamline(light_source=light_source)
 
-        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
-        self.plot_results(BEAM, progressBarValue=80)
+        output_beam = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
+        self._plot_results(output_beam, progressBarValue=80)
 
         #
         # script
@@ -733,7 +733,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         #
         # send beam
         #
-        self.send("Beam4", BEAM)
+        self.send("Beam4", output_beam)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

@@ -72,7 +72,7 @@ class OWElectronBeam(GenericElement):
         button.setPalette(palette) # assign new palette
         button.setFixedHeight(45)
 
-        button = gui.button(button_box, self, "Reset Fields", callback=self.callResetSettings)
+        button = gui.button(button_box, self, "Reset Fields", callback=self.call_reset_settings)
         font = QFont(button.font())
         font.setItalic(True)
         button.setFont(font)

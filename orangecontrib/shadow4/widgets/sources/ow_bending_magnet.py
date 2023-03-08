@@ -136,9 +136,9 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
 
     def run_shadow4(self):
 
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
-        self.set_PlotQuality()
+        self._set_plot_quality()
 
         self.progressBarInit()
 
@@ -162,8 +162,8 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         # beam plots
         #
         beamline = S4Beamline(light_source=light_source)
-        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
-        self.plot_results(BEAM, progressBarValue=80)
+        output_beam = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
+        self._plot_results(output_beam, progressBarValue=80)
 
         #
         # script
@@ -179,7 +179,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         #
         # send beam
         #
-        self.send("Beam4", BEAM)
+        self.send("Beam4", output_beam)
 
 
     def receive_syned_data(self, data):

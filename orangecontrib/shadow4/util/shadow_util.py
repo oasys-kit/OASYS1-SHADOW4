@@ -45,15 +45,15 @@ import scipy.constants as codata
 class ShadowCongruence():
 
     @classmethod
-    def checkEmptyBeam(cls, input_beam):
+    def check_empty_beam(cls, input_beam):
         if input_beam is None: return False
-        elif not hasattr(input_beam._beam, "rays"): return False
-        elif len(input_beam._beam.rays) == 0: return False
+        elif not hasattr(input_beam.beam, "rays"): return False
+        elif len(input_beam.beam.rays) == 0: return False
         else: return True
 
     @classmethod
-    def checkGoodBeam(cls, input_beam):
-        return len(input_beam._beam.rays[numpy.where(input_beam._beam.rays[:, 9] == 1)]) > 0
+    def check_good_beam(cls, input_beam):
+        return len(input_beam.beam.rays[numpy.where(input_beam.beam.rays[:, 9] == 1)]) > 0
 
     @classmethod
     def checkBraggFile(cls, file_name):

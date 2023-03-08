@@ -282,9 +282,9 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
     def run_shadow4(self):
 
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
-        self.set_PlotQuality()
+        self._set_plot_quality()
 
         self.progressBarInit()
 
@@ -306,8 +306,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         # plots
         #
         beamline = S4Beamline(light_source=light_source)
-        BEAM = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
-        self.plot_results(BEAM, progressBarValue=80)
+        output_beam = ShadowBeam(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
+        self._plot_results(output_beam, progressBarValue=80)
         self.refresh_specific_wiggler_plots(light_source, photon_energy, flux, spectral_power)
 
 
@@ -319,19 +319,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         script += "\nrays = beam.get_rays()"
         script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
 
-#         script_template = """
-#
-# # run shadow4
-# beam = light_source.get_beam(NRAYS={NRAYS}, SEED={SEED})
-# photon_energy, flux, spectral_power = light_source.calculate_spectrum()"""
-#         script_dict = {
-#             "NRAYS": self.number_of_rays,
-#             "SEED": self.seed,
-#         }
-#
-#         script += script_template.format_map(script_dict)
-
-
         self.shadow4_script.set_code(script)
 
         self.progressBarFinished()
@@ -339,7 +326,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         #
         # send beam
         #
-        self.send("Beam4", BEAM)
+        self.send("Beam4", output_beam)
 
 
     def refresh_specific_wiggler_plots(self, lightsource=None, e=None, f=None, w=None):
@@ -382,7 +369,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         self.wiggler_tab[wiggler_plot_slot_index].layout().addWidget(plot_widget_id)
 
     def receive_syned_data(self, data):
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
         if data is not None:
             if isinstance(data, Beamline):
                 if not data.get_light_source() is None:
@@ -399,7 +386,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                         self.k_value = w.K_vertical()
 
                         self.populate_fields_from_electron_beam(light_source.get_electron_beam())
-
                     else:
                         raise ValueError("Syned light source not congruent")
                 else:

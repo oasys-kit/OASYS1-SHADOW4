@@ -77,15 +77,15 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
                 self.convert_beam()
 
     def convert_beam(self):
-        beam4 = self.shadow_beam._beam
+        beam4 = self.shadow_beam.beam
         print(">>beam4: ", beam4)
         beam3 = Shadow.Beam(N=self.shadow_beam.get_number_of_rays())
         beam3.rays = beam4.rays.copy()
         print(">>beam3: ", beam3)
         print(beam4.get_number_of_rays(), beam3.nrays())
-        BEAM3 = ShadowBeam3(oe_number=0, beam=beam3, number_of_rays=self.shadow_beam.get_number_of_rays())
-        print(BEAM3)
-        self.send("Beam", BEAM3)
+        output_beam3 = ShadowBeam3(oe_number=0, beam=beam3, number_of_rays=self.shadow_beam.get_number_of_rays())
+        print(output_beam3)
+        self.send("Beam", output_beam3)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

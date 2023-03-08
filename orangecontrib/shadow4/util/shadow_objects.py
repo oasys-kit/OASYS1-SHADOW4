@@ -1,10 +1,9 @@
 
-import os, copy, numpy, platform
+import os, copy, numpy
 from shadow4.beam.beam import Beam
 
 
 class ShadowOEHistoryItem(object):
-
     def __init__(self,
                  oe_number=0,
                  input_beam=None,
@@ -13,26 +12,52 @@ class ShadowOEHistoryItem(object):
                  shadow_oe_start=None,
                  shadow_oe_end=None,
                  widget_class_name=None):
-        self._oe_number = oe_number
-        self._input_beam = input_beam
-        self._shadow_source_start = shadow_source_start
-        self._shadow_source_end = shadow_source_end
-        self._shadow_oe_start = shadow_oe_start
-        self._shadow_oe_end = shadow_oe_end
-        self._widget_class_name = widget_class_name
+        self.__oe_number = oe_number
+        self.__input_beam = input_beam
+        self.__shadow_source_start = shadow_source_start
+        self.__shadow_source_end = shadow_source_end
+        self.__shadow_oe_start = shadow_oe_start
+        self.__shadow_oe_end = shadow_oe_end
+        self.__widget_class_name = widget_class_name
 
     def duplicate(self):
-        return ShadowOEHistoryItem(oe_number=self._oe_number,
-                                   input_beam=self._input_beam,
-                                   shadow_source_start=self._shadow_source_start,
-                                   shadow_source_end=self._shadow_source_end,
-                                   shadow_oe_start=self._shadow_oe_start,
-                                   shadow_oe_end=self._shadow_oe_end,
-                                   widget_class_name=self._widget_class_name)
+        return ShadowOEHistoryItem(oe_number=self.__oe_number,
+                                   input_beam=self.__input_beam,
+                                   shadow_source_start=self.__shadow_source_start,
+                                   shadow_source_end=self.__shadow_source_end,
+                                   shadow_oe_start=self.__shadow_oe_start,
+                                   shadow_oe_end=self.__shadow_oe_end,
+                                   widget_class_name=self.__widget_class_name)
 
+    @property
+    def oe_number(self):
+        return self.__oe_number
+
+    @property
+    def input_beam(self):
+        return self.__input_beam
+
+    @property
+    def shadow_source_start(self):
+        return self.__shadow_source_start
+
+    @property
+    def shadow_source_end(self):
+        return self.__shadow_source_end
+
+    @property
+    def shadow_oe_start(self):
+        return self.__shadow_oe_start
+
+    @property
+    def shadow_oe_end(self):
+        return self.__shadow_oe_end
+
+    @property
+    def widget_class_name(self):
+        return self.__widget_class_name
 
 class ShadowBeam:
-
     class ScanningData(object):
         def __init__(self,
                      scanned_variable_name,
@@ -46,16 +71,20 @@ class ShadowBeam:
             self.__scanned_variable_um = scanned_variable_um
             self.__additional_parameters=additional_parameters
 
-        def get_scanned_variable_name(self):
+        @property
+        def scanned_variable_name(self):
             return self.__scanned_variable_name
 
-        def get_scanned_variable_value(self):
+        @property
+        def scanned_variable_value(self):
             return self.__scanned_variable_value
 
-        def get_scanned_variable_display_name(self):
+        @property
+        def scanned_variable_display_name(self):
             return self.__scanned_variable_display_name
 
-        def get_scanned_variable_um(self):
+        @property
+        def scanned_variable_um(self):
             return self.__scanned_variable_um
 
         def has_additional_parameter(self, name):
@@ -64,116 +93,144 @@ class ShadowBeam:
         def get_additional_parameter(self, name):
             return self.__additional_parameters[name]
 
-    def __new__(cls, oe_number=0, beam=None, number_of_rays=0, beamline=None):
-        __shadow_beam = super().__new__(cls)
-        __shadow_beam._oe_number = oe_number
+    def __init__(self, oe_number=0, beam=None, number_of_rays=0, beamline=None):
+        self.__oe_number = oe_number
         if (beam is None):
-            if number_of_rays > 0: __shadow_beam._beam = Beam(number_of_rays)
-            else:                  __shadow_beam._beam = Beam()
+            if number_of_rays > 0: self.__beam = Beam(number_of_rays)
+            else:                  self.__beam = Beam()
         else:
-            __shadow_beam._beam = beam
+            self.__beam = beam
 
-        __shadow_beam.history = []
-        __shadow_beam.scanned_variable_data = None
-        __shadow_beam.__initial_flux = None
-        __shadow_beam._beamline = beamline  # added by srio
+        self.__history       = []
+        self.__scanning_data = None
+        self.__initial_flux  = None
+        self.__beamline      = beamline  # added by srio
 
-        return __shadow_beam
+    @property
+    def beam(self):
+        return self.__beam
 
-    def get_beamline(self):
-        return self._beamline
+    @beam.setter
+    def beam(self, beam):
+        self.__beam = beam
 
-    def set_initial_flux(self, initial_flux):
-        self.__initial_flux = initial_flux
+    @property
+    def oe_number(self):
+        return self.__oe_number
 
-    def get_initial_flux(self):
+    @oe_number.setter
+    def oe_number(self, oe_number):
+        self.__oe_number = oe_number
+
+    @property
+    def beamline(self):
+        return self.__beamline
+
+    @beamline.setter
+    def beamline(self, beamline):
+        self.__beamline = beamline
+
+    @property
+    def initial_flux(self):
         return self.__initial_flux
 
+    @initial_flux.setter
+    def initial_flux(self, initial_flux):
+        self.__initial_flux = initial_flux
+
+    @property
+    def scanning_data(self):
+        return self.__scanning_data
+
+    @scanning_data.setter
+    def scanning_data(self, scanning_data : ScanningData):
+        self.__scanning_data = scanning_data
+
+    @property
+    def history(self):
+        return self.__history
+    
+    @history.setter
+    def history(self, history):
+        self.__history = history
+        
+    def get_oe_history(self, oe_number):
+        return self.__history[oe_number]
+
+    def history_size(self):
+        return len(self.__history)
+
     def get_flux(self, nolost=1):
-        if not self._beam is None and not self.__initial_flux is None:
-            return (self._beam.intensity(nolost) / self.get_number_of_rays(0)) * self.get_initial_flux()
+        if not self.__beam is None and not self.__initial_flux is None:
+            return (self.__beam.intensity(nolost) / self.get_number_of_rays(0)) * self.get_initial_flux()
         else:
             return None
 
     def get_number_of_rays(self, nolost=0):
-        if not hasattr(self._beam, "rays"): return 0
-        if nolost==0:     return self._beam.rays.shape[0]
-        elif nolost==1:   return self._beam.rays[numpy.where(self._beam.rays[:, 9] > 0)].shape[0]
-        elif nolost == 2: return self._beam.rays[numpy.where(self._beam.rays[:, 9] < 0)].shape[0]
+        if not hasattr(self.__beam, "rays"): return 0
+        if nolost == 0:   return self.__beam.rays.shape[0]
+        elif nolost == 1: return self.__beam.rays[numpy.where(self.__beam.rays[:, 9] > 0)].shape[0]
+        elif nolost == 2: return self.__beam.rays[numpy.where(self.__beam.rays[:, 9] < 0)].shape[0]
         else: raise ValueError("nolost flag value not valid")
 
-    def setBeam(self, beam):
-        self._beam = beam
+    def load_from_file(self, file_name):
+        if not self.__beam is None:
+            if os.path.exists(file_name): self.__beam.load_h5(file_name)
+            else: raise Exception("File " + file_name + " not existing")
 
-    def setScanningData(self, scanned_variable_data=ScanningData(None, None, None, None)):
-        self.scanned_variable_data=scanned_variable_data
-
-    def loadFromFile(self, file_name):
-        if not self._beam is None:
-            if os.path.exists(file_name):
-                self._beam.load(file_name)
-            else:
-                raise Exception("File " + file_name + " not existing")
-
-    def writeToFile(self, file_name):
-        if not self._beam is None:
-            self._beam.write(file_name)
+    def write_to_file(self, file_name):
+        if not self.__beam is None:
+            self.__beam.write_h5(file_name)
 
     def duplicate(self, copy_rays=True, history=True):
         beam = Beam()
-        if copy_rays: beam.rays = copy.deepcopy(self._beam.rays)
+        if copy_rays: beam.rays = copy.deepcopy(self.beam.rays)
 
-        new_shadow_beam = ShadowBeam(self._oe_number, beam)
-        new_shadow_beam.setScanningData(self.scanned_variable_data)
-        new_shadow_beam.set_initial_flux(self.get_initial_flux())
+        new_shadow_beam = ShadowBeam(self.__oe_number, beam)
+        new_shadow_beam.scanning_data = self.__scanning_data
+        new_shadow_beam.initial_flux  = self.__initial_flux
+        new_shadow_beam.beamline = self.__beamline.duplicate()
 
-        if history:
-            for historyItem in self.history: new_shadow_beam.history.append(historyItem)
+        if history: 
+            for history_item in self.__history: new_shadow_beam.history.append(history_item)
 
         return new_shadow_beam
 
     @classmethod
-    def mergeBeams(cls, beam_1, beam_2, which_flux=3, merge_history=1):
+    def merge_beams(cls, beam_1, beam_2, which_flux=3, merge_history=1):
         if beam_1 and beam_2:
             rays_1 = None
             rays_2 = None
 
-            if len(getattr(beam_1._beam, "rays", numpy.zeros(0))) > 0:
-                rays_1 = copy.deepcopy(beam_1._beam.rays)
-            if len(getattr(beam_2._beam, "rays", numpy.zeros(0))) > 0:
-                rays_2 = copy.deepcopy(beam_2._beam.rays)
-
-            #if len(rays_2) != len(rays_1): raise ValueError("The two beams must have the same amount of rays for merging")
+            if len(getattr(beam_1.beam, "rays", numpy.zeros(0))) > 0: rays_1 = copy.deepcopy(beam_1.beam.rays)
+            if len(getattr(beam_2.beam, "rays", numpy.zeros(0))) > 0: rays_2 = copy.deepcopy(beam_2.beam.rays)
 
             merged_beam = beam_1.duplicate(copy_rays=False, history=True)
 
-            merged_beam._oe_number = beam_1._oe_number
-            merged_beam._beam.rays = numpy.append(rays_1, rays_2, axis=0)
+            merged_beam.oe_number = beam_1.oe_number
+            merged_beam.beam.rays = numpy.append(rays_1, rays_2, axis=0)
 
-            merged_beam._beam.rays[:, 11] = numpy.arange(1, len(merged_beam._beam.rays) + 1, 1) # ray_index
+            merged_beam.beam.rays[:, 11] = numpy.arange(1, len(merged_beam.beam.rays) + 1, 1) # ray_index
 
-            if which_flux==1:
-                if not beam_1.get_initial_flux() is None:
-                    merged_beam.set_initial_flux(beam_1.get_initial_flux())
-            elif which_flux==2:
-                if not beam_2.get_initial_flux() is None:
-                    merged_beam.set_initial_flux(beam_2.get_initial_flux())
+            if which_flux ==1 :
+                if not beam_1.initial_flux is None:
+                    merged_beam.initial_flux = beam_1.initial_flux
+            elif which_flux == 2:
+                if not beam_2.initial_flux is None:
+                    merged_beam.initial_flux = beam_2.initial_flux
             else:
-                if not beam_1.get_initial_flux() is None and not beam_2.get_initial_flux() is None:
-                    merged_beam.set_initial_flux(beam_1.get_initial_flux() + beam_2.get_initial_flux())
+                if not beam_1.initial_flux is None and not beam_2.initial_flux is None:
+                    merged_beam.initial_flux = beam_1.initial_flux + beam_2.initial_flux
 
             if merge_history > 0:
                 if beam_1.history and beam_2.history:
                     if len(beam_1.history) == len(beam_2.history):
-                        for index in range(1, beam_1._oe_number + 1):
-                            history_element_1 =  beam_1.getOEHistory(index)
-                            history_element_2 =  beam_2.getOEHistory(index)
+                        for index in range(1, beam_1.oe_number + 1):
+                            history_element_1 =  beam_1.get_oe_history(index)
+                            history_element_2 =  beam_2.get_oe_history(index)
 
-                            merged_history_element = merged_beam.getOEHistory(index)
-                            if merge_history == 1:
-                                merged_history_element._input_beam = ShadowBeam.mergeBeams(history_element_1._input_beam, history_element_2._input_beam, which_flux, merge_history=False)
-                            else:
-                                merged_history_element._input_beam = ShadowBeam.mergeBeams(history_element_1._input_beam, history_element_2._input_beam, which_flux, merge_history=True)
+                            merged_history_element = merged_beam.get_oe_history(index)
+                            merged_history_element.input_beam = ShadowBeam.merge_beams(history_element_1.input_beam, history_element_2.input_beam, which_flux, merge_history=(merge_history!=1))
                     else:
                         raise ValueError("Histories must have the same path to be merged")
                 else:
@@ -184,160 +241,9 @@ class ShadowBeam:
             raise Exception("Both input beams should provided for merging")
 
     @classmethod
-    def traceFromSource(cls, shadow_src, write_begin_file=0, write_start_file=0, write_end_file=0, history=True, widget_class_name=None):
-        __shadow_beam = cls.__new__(ShadowBeam, beam=Beam())
+    def initialize_from_beam(cls, input_beam):
+        shadow_beam = input_beam.duplicate()
+        shadow_beam.oe_number = input_beam.oe_number + 1
 
-        shadow_src.self_repair()
-
-        shadow_source_start = shadow_src.duplicate()
-
-        if write_start_file == 1:
-            shadow_src.src.write("start.00")
-
-        __shadow_beam._beam.genSource(shadow_src.src)
-
-        shadow_src.self_repair()
-
-        if write_begin_file:
-            __shadow_beam.writeToFile("begin.dat")
-
-        if write_end_file == 1:
-            shadow_src.src.write("end.00")
-
-        shadow_source_end = shadow_src.duplicate()
-
-        if history:
-            __shadow_beam.history.append(ShadowOEHistoryItem(shadow_source_start=shadow_source_start,
-                                                    shadow_source_end=shadow_source_end,
-                                                    widget_class_name=widget_class_name))
-
-        return __shadow_beam
-
-    @classmethod
-    def traceFromOE(cls, input_beam, shadow_oe, write_start_file=0, write_end_file=0, history=True, widget_class_name=None):
-        __shadow_beam = cls.initializeFromPreviousBeam(input_beam)
-
-        shadow_oe.self_repair()
-
-        if history: history_shadow_oe_start = shadow_oe.duplicate()
-        if write_start_file == 1: shadow_oe._oe.write("start.%02d"%__shadow_beam._oe_number)
-
-        __shadow_beam._beam.traceOE(shadow_oe._oe, __shadow_beam._oe_number)
-
-        shadow_oe.self_repair()
-
-        if write_end_file == 1: shadow_oe._oe.write("end.%02d"%__shadow_beam._oe_number)
-
-        if history:
-            history_shadow_oe_end = shadow_oe.duplicate()
-
-            #N.B. history[0] = Source
-            if not __shadow_beam._oe_number == 0:
-                if len(__shadow_beam.history) - 1 < __shadow_beam._oe_number:
-                    __shadow_beam.history.append(ShadowOEHistoryItem(oe_number=__shadow_beam._oe_number,
-                                                                     input_beam=input_beam.duplicate(),
-                                                                     shadow_oe_start=history_shadow_oe_start,
-                                                                     shadow_oe_end=history_shadow_oe_end,
-                                                                     widget_class_name=widget_class_name))
-                else:
-                    __shadow_beam.history[__shadow_beam._oe_number]=ShadowOEHistoryItem(oe_number=__shadow_beam._oe_number,
-                                                                      input_beam=input_beam.duplicate(),
-                                                                      shadow_oe_start=history_shadow_oe_start,
-                                                                      shadow_oe_end=history_shadow_oe_end,
-                                                                      widget_class_name=widget_class_name)
-
-        return __shadow_beam
-
-    @classmethod
-    def traceIdealLensOE(cls, input_beam, shadow_oe, history=True, widget_class_name=None):
-        __shadow_beam = cls.initializeFromPreviousBeam(input_beam)
-
-        shadow_oe.self_repair()
-
-        if history: history_shadow_oe_start = shadow_oe.duplicate()
-
-        __shadow_beam._beam.traceIdealLensOE(shadow_oe._oe, __shadow_beam._oe_number)
-
-        shadow_oe.self_repair()
-
-        if history:
-            history_shadow_oe_end = shadow_oe.duplicate()
-
-            #N.B. history[0] = Source
-            if not __shadow_beam._oe_number == 0:
-                if len(__shadow_beam.history) - 1 < __shadow_beam._oe_number:
-                    __shadow_beam.history.append(ShadowOEHistoryItem(oe_number=__shadow_beam._oe_number,
-                                                                     input_beam=input_beam.duplicate(),
-                                                                     shadow_oe_start=history_shadow_oe_start,
-                                                                     shadow_oe_end=history_shadow_oe_end,
-                                                                     widget_class_name=widget_class_name))
-                else:
-                    __shadow_beam.history[__shadow_beam._oe_number]=ShadowOEHistoryItem(oe_number=__shadow_beam._oe_number,
-                                                                                        input_beam=input_beam.duplicate(),
-                                                                                        shadow_oe_start=history_shadow_oe_start,
-                                                                                        shadow_oe_end=history_shadow_oe_end,
-                                                                                        widget_class_name=widget_class_name)
-
-        return __shadow_beam
-
-    @classmethod
-    def traceFromCompoundOE(cls,
-                            input_beam,
-                            shadow_oe,
-                            write_start_files=0,
-                            write_end_files=0,
-                            write_star_files=0,
-                            write_mirr_files=0,
-                            history=True,
-                            widget_class_name=None):
-        __shadow_beam = cls.initializeFromPreviousBeam(input_beam)
-
-        shadow_oe.self_repair()
-
-        if history: history_shadow_oe_start = shadow_oe.duplicate()
-
-        __shadow_beam._beam.traceCompoundOE(shadow_oe._oe,
-                                            from_oe=__shadow_beam._oe_number,
-                                            write_start_files=write_start_files,
-                                            write_end_files=write_end_files,
-                                            write_star_files=write_star_files,
-                                            write_mirr_files=write_mirr_files)
-
-        shadow_oe.self_repair()
-
-        if history:
-            history_shadow_oe_end = shadow_oe.duplicate()
-
-            # N.B. history[0] = Source
-            if not __shadow_beam._oe_number == 0:
-                if len(__shadow_beam.history) - 1 < __shadow_beam._oe_number:
-                    __shadow_beam.history.append(ShadowOEHistoryItem(oe_number=__shadow_beam._oe_number,
-                                                                     input_beam=input_beam.duplicate(),
-                                                                     shadow_oe_start=history_shadow_oe_start,
-                                                                     shadow_oe_end=history_shadow_oe_end,
-                                                                     widget_class_name=widget_class_name))
-                else:
-                    __shadow_beam.history[__shadow_beam._oe_number] = ShadowOEHistoryItem(oe_number=__shadow_beam._oe_number,
-                                                                                          input_beam=input_beam.duplicate(),
-                                                                                          shadow_oe_start=history_shadow_oe_start,
-                                                                                          shadow_oe_end=history_shadow_oe_end,
-                                                                                          widget_class_name=widget_class_name)
-
-        return __shadow_beam
-
-    @classmethod
-    def initializeFromPreviousBeam(cls, input_beam):
-        __shadow_beam = input_beam.duplicate()
-        __shadow_beam._oe_number = input_beam._oe_number + 1
-
-        return __shadow_beam
-
-    def getOEHistory(self, oe_number=None):
-        if oe_number is None:
-            return self.history
-        else:
-            return self.history[oe_number]
-
-    def historySize(self):
-        return len(self.history)
+        return shadow_beam
 
