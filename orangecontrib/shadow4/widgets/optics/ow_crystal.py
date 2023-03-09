@@ -1002,7 +1002,9 @@ class OWCrystal(GenericElement, WidgetDecorator):
         if self.surface_shape_type == 0:
             optical_element = S4PlaneCrystalElement(
                 optical_element=self.get_optical_element_instance(),
-                coordinates=self.get_coordinates())
+                coordinates=self.get_coordinates(),
+                input_beam=self.input_beam.beam,
+                )
         '''
         elif self.surface_shape_type == 1:
             optical_element = S4SphereCrystalElement(
@@ -1050,12 +1052,12 @@ class OWCrystal(GenericElement, WidgetDecorator):
 
         self.progressBarInit()
 
-        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam.beam)
+        beam1, mirr1 = element.trace_beam()
 
         beamline = self.input_beam.beamline.duplicate()
         beamline.append_beamline_element(element)
 
-        output_beam = ShadowData(oe_number=0, beam=beam1, beamline=beamline)
+        output_beam = ShadowData(beam=beam1, beamline=beamline)
 
         self._set_plot_quality()
 
@@ -1100,7 +1102,7 @@ if __name__ == "__main__":
         light_source.set_energy_distribution_uniform(value_min=7990.000000, value_max=8010.000000, unit='eV')
         light_source.set_polarization(polarization_degree=1.000000, phase_diff=0.000000, coherent_beam=0)
         beam = light_source.get_beam()
-        return ShadowData(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+        return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

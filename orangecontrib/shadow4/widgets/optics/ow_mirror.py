@@ -892,6 +892,7 @@ class OWMirror(GenericElement, WidgetDecorator):
 
         optical_element.set_optical_element(self.get_optical_element_instance())
         optical_element.set_coordinates(self.get_coordinates())
+        optical_element.set_input_beam(self.input_beam.beam)
 
         return optical_element
 
@@ -913,16 +914,17 @@ class OWMirror(GenericElement, WidgetDecorator):
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         element = self.get_beamline_element_instance()
+
         print(element.info())
 
         self.progressBarInit()
 
-        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam.beam)
+        beam1, mirr1 = element.trace_beam()
 
         beamline = self.input_beam.beamline.duplicate()
         beamline.append_beamline_element(element)
 
-        output_beam = ShadowData(oe_number=0, beam=beam1, beamline=beamline)
+        output_beam = ShadowData(beam=beam1, beamline=beamline)
 
         self._set_plot_quality()
 
@@ -977,7 +979,7 @@ if __name__ == "__main__":
 
         beam = light_source.get_beam_in_gaussian_approximation()
 
-        return ShadowData(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+        return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

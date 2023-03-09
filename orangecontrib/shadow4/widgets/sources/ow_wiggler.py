@@ -306,7 +306,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         # plots
         #
         beamline = S4Beamline(light_source=light_source)
-        output_beam = ShadowData(beam=beam, oe_number=0, number_of_rays=self.number_of_rays, beamline=beamline)
+        output_beam = ShadowData(beam=beam, number_of_rays=self.number_of_rays, beamline=beamline)
         self._plot_results(output_beam, progressBarValue=80)
         self.refresh_specific_wiggler_plots(light_source, photon_energy, flux, spectral_power)
 

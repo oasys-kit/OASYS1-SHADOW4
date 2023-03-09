@@ -121,13 +121,10 @@ class ShadowData:
         beam = S4Beam()
         if copy_rays: beam.rays = copy.deepcopy(self.beam.rays)
 
-        new_shadow_beam = ShadowData(self.__oe_number, beam)
+        new_shadow_beam = ShadowData(beam=beam)
         new_shadow_beam.scanning_data = self.__scanning_data
         new_shadow_beam.initial_flux  = self.__initial_flux
         new_shadow_beam.beamline = self.__beamline.duplicate()
-
-        if history: 
-            for history_item in self.__history: new_shadow_beam.history.append(history_item)
 
         return new_shadow_beam
 
