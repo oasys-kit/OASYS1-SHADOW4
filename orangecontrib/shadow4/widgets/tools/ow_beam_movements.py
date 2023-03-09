@@ -172,8 +172,8 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         optical_element = S4BeamMovementElement()
         optical_element.set_optical_element(self.get_oe_instance())
         # optical_element.set_coordinates()
+        optical_element.set_input_beam(self.input_beam.beam)
         return optical_element
-
 
     def set_beam(self, input_beam):
         self.not_interactive = self._check_not_interactive_conditions(input_beam)
@@ -181,11 +181,9 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         self._on_receiving_input()
 
         if ShadowCongruence.check_empty_beam(input_beam):
-            self.input_beam = input_beam
-            self.beamline = input_beam.get_beamline()
+            self.input_beam = input_beam.duplicate()
 
-            if self.is_automatic_run:
-                self.run_shadow4()
+            if self.is_automatic_run: self.run_shadow4()
 
 
     def run_shadow4(self):
@@ -200,12 +198,12 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         self.progressBarInit()
 
 
-        beam1, mirr1 = element.trace_beam(beam_in=self.input_beam.beam)
+        beam1, mirr1 = element.trace_beam()
 
-        beamline = self.beamline.duplicate()
+        beamline = self.input_beam.beamline.duplicate()
         beamline.append_beamline_element(element)
 
-        output_beam = ShadowData(oe_number=0, beam=beam1, beamline=beamline)
+        output_beam = ShadowData(beam=beam1, beamline=beamline)
 
 
         self._set_plot_quality()
@@ -252,9 +250,9 @@ if __name__ == "__main__":
         light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
                                              magnetic_structure=sourceundulator)
 
-        beam = light_source.get_beam_in_gaussian_approximation(NRAYS=5000, SEED=5676561)
+        beam = light_source.get_beam_in_gaussian_approximation()
 
-        return ShadowData(oe_number=0, beam=beam, beamline=S4Beamline(light_source=light_source))
+        return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
 
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
