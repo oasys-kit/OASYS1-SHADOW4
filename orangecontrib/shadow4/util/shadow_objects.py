@@ -174,8 +174,5 @@ class ShadowData:
 
     @classmethod
     def initialize_from_beam(cls, input_beam):
-        shadow_beam = input_beam.duplicate()
-        shadow_beam.oe_number = input_beam.oe_number + 1
-
-        return shadow_beam
+        return input_beam.duplicate()
 
