@@ -32,7 +32,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
     inputs = []
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"Beam4",
+    outputs = [{"name":"ShadowData",
                 "type":ShadowData,
                 "doc":"",}]
 
@@ -158,7 +158,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         #
         # send beam
         #
-        self.send("Beam4", output_beam)
+        self.send("ShadowData", output_beam)
 
 
     def receive_syned_data(self, data):

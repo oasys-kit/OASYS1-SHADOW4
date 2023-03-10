@@ -32,7 +32,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
     inputs = []
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"Beam4",
+    outputs = [{"name":"ShadowData",
                 "type":ShadowData,
                 "doc":"",}]
 
@@ -733,7 +733,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         #
         # send beam
         #
-        self.send("Beam4", output_beam)
+        self.send("ShadowData", output_beam)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

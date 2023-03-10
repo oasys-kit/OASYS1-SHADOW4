@@ -25,7 +25,7 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
     category = ""
     keywords = ["shadow3", "shadow4"]
 
-    inputs = [("Beam4", ShadowBeam4, "set_input")]
+    inputs = [("ShadowData", ShadowBeam4, "set_input")]
 
     outputs = [{"name":"Beam",
                 "type":ShadowBeam3,
