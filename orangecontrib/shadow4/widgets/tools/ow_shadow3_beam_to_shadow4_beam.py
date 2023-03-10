@@ -28,9 +28,9 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
     category = ""
     keywords = ["shadow3", "shadow4"]
 
-    inputs = [("Beam", ShadowBeam3, "set_input")]
+    inputs = [("Shadow3 Beam", ShadowBeam3, "set_input")]
 
-    outputs = [{"name":"ShadowData",
+    outputs = [{"name":"Shadow Data",
                 "type":ShadowBeam4,
                 "doc":"",}]
 
@@ -83,7 +83,7 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
         print(">>beam3: ", beam3)
         beam4 = ShadowBeam4(oe_number=0, beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
         print(beam4)
-        self.send("ShadowData", beam4)
+        self.send("Shadow Data", beam4)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

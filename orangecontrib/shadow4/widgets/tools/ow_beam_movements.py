@@ -29,14 +29,12 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
     icon = "icons/beam_movement.png"
     priority = 5
 
-    inputs = [("Input Beam", ShadowData, "set_beam")]
+    inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"ShadowData",
+    outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
-
-
 
     #########################################################
     # Position
@@ -49,7 +47,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
     rotation_y     = Setting(0.0)
     rotation_z     = Setting(0.0)
 
-    input_beam = None
+    input_data = None
     beamline = None
 
 
@@ -93,7 +91,6 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
 
         self.tab_movement = oasysgui.createTabPage(self.tabs_control_area, "Movement")           # to be populated
-
 
         #
         # populate tabs with widgets
@@ -172,22 +169,20 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         optical_element = S4BeamMovementElement()
         optical_element.set_optical_element(self.get_oe_instance())
         # optical_element.set_coordinates()
-        optical_element.set_input_beam(self.input_beam.beam)
+        optical_element.set_input_beam(self.input_data.beam)
         return optical_element
 
-    def set_beam(self, input_beam):
-        self.not_interactive = self._check_not_interactive_conditions(input_beam)
+    def set_shadow_data(self, input_data):
+        self.not_interactive = self._check_not_interactive_conditions(input_data)
 
         self._on_receiving_input()
 
-        if ShadowCongruence.check_empty_beam(input_beam):
-            self.input_beam = input_beam.duplicate()
-
+        if ShadowCongruence.check_empty_data(input_data):
+            self.input_data = input_data.duplicate()
             if self.is_automatic_run: self.run_shadow4()
 
 
     def run_shadow4(self):
-
         self.shadow_output.setText("")
 
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
@@ -197,14 +192,10 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
         self.progressBarInit()
 
+        output_beam, _ = element.trace_beam()
 
-        beam1, mirr1 = element.trace_beam()
-
-        beamline = self.input_beam.beamline.duplicate()
+        beamline = self.input_data.beamline.duplicate()
         beamline.append_beamline_element(element)
-
-        output_beam = ShadowData(beam=beam1, beamline=beamline)
-
 
         self._set_plot_quality()
 
@@ -223,7 +214,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         #
         # send beam
         #
-        self.send("ShadowData", output_beam)
+        self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline))
 
 
 if __name__ == "__main__":
@@ -237,18 +228,18 @@ if __name__ == "__main__":
 
         # Gaussian undulator
         from shadow4.sources.undulator.s4_undulator import S4Undulator
-        sourceundulator = S4Undulator(
+        undulator_source = S4Undulator(
             period_length=0.0159999,
             number_of_periods=100,
             emin=2700.136,
             emax=2700.136,
             flag_emittance=1,  # Use emittance (0=No, 1=Yes)
         )
-        sourceundulator.set_energy_monochromatic(2700.14)
+        undulator_source.set_energy_monochromatic(2700.14)
 
         from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
         light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                             magnetic_structure=sourceundulator)
+                                             magnetic_structure=undulator_source)
 
         beam = light_source.get_beam_in_gaussian_approximation()
 

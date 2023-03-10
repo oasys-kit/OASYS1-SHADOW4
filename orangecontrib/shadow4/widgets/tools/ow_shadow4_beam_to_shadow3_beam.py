@@ -7,8 +7,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets.widget import AutomaticWidget
 from orangewidget.settings import Setting
 
-
-from orangecontrib.shadow4.util.shadow_objects import ShadowData as ShadowBeam4
+from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
 try:
     import Shadow
@@ -25,9 +24,9 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
     category = ""
     keywords = ["shadow3", "shadow4"]
 
-    inputs = [("ShadowData", ShadowBeam4, "set_input")]
+    inputs = [("Shadow Data", ShadowData, "set_input")]
 
-    outputs = [{"name":"Beam",
+    outputs = [{"name":"Shadow3 Beam",
                 "type":ShadowBeam3,
                 "doc":"",
                 "id":"Beam"}]
@@ -41,7 +40,7 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
     pixels_h = Setting(100)
     pixels_v = Setting(100)
 
-    shadow_beam = None
+    shadow_data = None
 
     def __init__(self):
         super().__init__()
@@ -71,28 +70,28 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
         self.setStatusMessage("")
 
         if not input_data is None:
-            self.shadow_beam = input_data
+            self.shadow_data = input_data
 
             if self.is_automatic_execution:
                 self.convert_beam()
 
     def convert_beam(self):
-        beam4 = self.shadow_beam.beam
+        beam4 = self.shadow_data.beam
         print(">>beam4: ", beam4)
-        beam3 = Shadow.Beam(N=self.shadow_beam.get_number_of_rays())
+        beam3 = Shadow.Beam(N=self.shadow_data.get_number_of_rays())
         beam3.rays = beam4.rays.copy()
         print(">>beam3: ", beam3)
         print(beam4.get_number_of_rays(), beam3.nrays())
-        output_beam3 = ShadowBeam3(oe_number=0, beam=beam3, number_of_rays=self.shadow_beam.get_number_of_rays())
+        output_beam3 = ShadowBeam3(oe_number=0, beam=beam3, number_of_rays=self.shadow_data.get_number_of_rays())
         print(output_beam3)
-        self.send("Beam", output_beam3)
+        self.send("Shadow3 Beam", output_beam3)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     import sys
     a = QApplication(sys.argv)
     ow = OW_beam_converter_4_to_3()
-    ow.set_input(ShadowBeam4())
+    ow.set_input(ShadowData())
     ow.show()
     a.exec_()
     #ow.saveSettings()

@@ -32,7 +32,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
     inputs = []
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"ShadowData",
+    outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
 
@@ -702,17 +702,14 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
 
         t00 = time.time()
         # beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
-        beam = light_source.get_beam()
+        output_beam = light_source.get_beam()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         #
         # beam plots
         #
-        beamline = S4Beamline(light_source=light_source)
-
-        output_beam = ShadowData(beam=beam, number_of_rays=self.number_of_rays, beamline=beamline)
-        self._plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, None, progressBarValue=80)
 
         #
         # script
@@ -733,8 +730,9 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
         #
         # send beam
         #
-        self.send("ShadowData", output_beam)
-
+        self.send("Shadow Data", ShadowData(beam=output_beam,
+                                           number_of_rays=self.number_of_rays,
+                                           beamline=S4Beamline(light_source=light_source)))
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

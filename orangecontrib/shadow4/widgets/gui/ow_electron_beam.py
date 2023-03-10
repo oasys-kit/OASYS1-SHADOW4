@@ -50,12 +50,10 @@ class OWElectronBeam(GenericElement):
     electron_beam_etap_h = Setting(0.0)
     electron_beam_etap_v = Setting(0.0)
 
-
     type_of_properties = Setting(1)
 
-
     def __init__(self):
-        super().__init__(show_automatic_box=False)
+        super().__init__(show_automatic_box=False, has_footprint=False)
 
         self.runaction = widget.OWAction("Run Shadow4/Source", self)
         self.runaction.triggered.connect(self.run_shadow4)

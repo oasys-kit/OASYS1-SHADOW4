@@ -29,11 +29,10 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
     icon = "icons/undulator.png"
     priority = 50
 
-
     inputs = []
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"ShadowData",
+    outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
 
@@ -252,7 +251,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         #
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = light_source.get_beam()
+        output_beam = light_source.get_beam()
         # todo:
         # photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
@@ -262,9 +261,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         #
         # plots
         #
-        beamline = S4Beamline(light_source=light_source)
-        output_beam = ShadowData(beam=beam, number_of_rays=self.number_of_rays, beamline=beamline)
-        self._plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, None, progressBarValue=80)
         #todo:
         # self.refresh_specific_undulator_plots(light_source, photon_energy, flux, spectral_power)
 
@@ -285,8 +282,9 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         #
         # send beam
         #
-        self.send("ShadowData", output_beam)
-
+        self.send("Shadow Data", ShadowData(beam=output_beam,
+                                           number_of_rays=self.number_of_rays,
+                                           beamline=S4Beamline(light_source=light_source)))
 
     def refresh_specific_undulator_plots(self, lightsource=None, e=None, f=None, w=None):
         pass

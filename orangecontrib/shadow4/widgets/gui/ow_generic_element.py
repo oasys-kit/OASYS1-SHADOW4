@@ -8,6 +8,7 @@ from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
 from oasys.util.oasys_util import TriggerIn
 
+from shadow4.beam.s4_beam import S4Beam
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
@@ -19,11 +20,13 @@ class GenericElement(AutomaticElement):
 
     view_type = Setting(0)
 
-    plotted_beam = None
-    #footprint_beam = None
+    plotted_beam   = None
+    footprint_beam = None
+    has_footprint  = True
 
-    def __init__(self, show_automatic_box=True):
+    def __init__(self, show_automatic_box=True, has_footprint=True):
         super().__init__(show_automatic_box)
+        self.has_footprint = has_footprint
 
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
         plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots")
@@ -51,8 +54,6 @@ class GenericElement(AutomaticElement):
 
         self._initialize_tabs()
 
-        #self.enableFootprint(False)
-
         self.shadow_output = oasysgui.textArea(height=580, width=800)
 
         out_box = gui.widgetBox(out_tab, "System Output", addSpace=True, orientation="horizontal")
@@ -61,69 +62,39 @@ class GenericElement(AutomaticElement):
     def _initialize_tabs(self):
         current_tab = self.tabs.currentIndex()
 
-        #enabled = self.isFootprintEnabled()
-
         size = len(self.tab)
         indexes = range(0, size)
         for index in indexes:
             self.tabs.removeTab(size-1-index)
 
         titles = self._get_titles()
-        self.plot_canvas = [None]*len(titles)
+        if self.has_footprint: self.plot_canvas = [None]*(len(titles) + 1)
+        else:                  self.plot_canvas = [None]*len(titles)
         self.tab = []
 
-        for title in titles:
-            self.tab.append(oasysgui.createTabPage(self.tabs, title))
+        for title in titles: self.tab.append(oasysgui.createTabPage(self.tabs, title))
+        if self.has_footprint: self.tab.append(gui.createTabPage(self.tabs, "Footprint"))
 
         for tab in self.tab:
             tab.setFixedHeight(self.IMAGE_HEIGHT)
             tab.setFixedWidth(self.IMAGE_WIDTH)
 
-        #self.enableFootprint(enabled)
-
         self.tabs.setCurrentIndex(current_tab)
 
-    def _check_not_interactive_conditions(self, input_beam : ShadowData):
+    def _check_not_interactive_conditions(self, input_data : ShadowData):
         not_interactive = False
 
-        if not (input_beam is None or \
-                input_beam.scanning_data is None):
-            not_interactive = input_beam.scanning_data.has_additional_parameter("total_power")
+        if not (input_data is None or input_data.scanning_data is None):
+            not_interactive = input_data.scanning_data.has_additional_parameter("total_power")
 
         return not_interactive
 
     def _send_empty_beam(self):
-        empty_beam = self.input_beam.duplicate()
-        empty_beam.beam.rays = numpy.array([])
-        empty_beam.oe_number += 1
+        empty_beam      = S4Beam(N=1)
+        empty_beam.rays = numpy.array([])
 
-        self.send("Beam", empty_beam)
-        self.send("Trigger", TriggerIn(new_object=True))
-
-    # TODO: restore functionality
-    ''' 
-    def isFootprintEnabled(self):
-        return self.tabs.count() == 6
-
-    def enableFootprint(self, enabled=False):
-        if enabled:
-            if self.tabs.count() == 5:
-                self.tab.append(gui.createTabPage(self.tabs, "Footprint"))
-                self.plot_canvas.append(None)
-        else:
-            if self.tabs.count() == 6:
-                self.tabs.removeTab(5)
-                self.tab = [self.tab[0],
-                            self.tab[1],
-                            self.tab[2],
-                            self.tab[3],
-                            self.tab[4],]
-                self.plot_canvas = [self.plot_canvas[0],
-                                    self.plot_canvas[1],
-                                    self.plot_canvas[2],
-                                    self.plot_canvas[3],
-                                    self.plot_canvas[4],]
-    '''
+        self.send("Shadow Data", ShadowData(beam=empty_beam))
+        self.send("Trigger",    TriggerIn(new_object=True))
 
     def _set_plot_quality(self):
         self.progressBarInit()
@@ -132,13 +103,13 @@ class GenericElement(AutomaticElement):
             try:
                 self._initialize_tabs()
 
-                self._plot_results(self.plotted_beam, progressBarValue=80)
+                self._plot_results(self.plotted_beam, self.footprint_beam, progressBarValue=80)
             except Exception as exception:
                 self.prompt_exception(exception)
 
         self.progressBarFinished()
 
-    def _plot_xy_preview(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, is_footprint=False):
+    def _plot_xy_preview(self, beam, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, is_footprint=False):
         if self.plot_canvas[plot_canvas_index] is None:
             self.plot_canvas[plot_canvas_index] = oasysgui.plotWindow(roi=False, control=False, position=True)
             self.plot_canvas[plot_canvas_index].setDefaultPlotLines(False)
@@ -146,20 +117,20 @@ class GenericElement(AutomaticElement):
 
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        ShadowPlot.plotxy_preview(self.plot_canvas[plot_canvas_index], beam_out, var_x, var_y, nolost=1, title=title, xtitle=xtitle, ytitle=ytitle, is_footprint=is_footprint)
+        ShadowPlot.plotxy_preview(self.plot_canvas[plot_canvas_index], beam, var_x, var_y, nolost=1, title=title, xtitle=xtitle, ytitle=ytitle, is_footprint=is_footprint)
 
         self.progressBarSet(progressBarValue)
 
-    def _plot_xy_detailed(self, beam_out, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, xum="", yum="", is_footprint=False):
+    def _plot_xy_detailed(self, beam, progressBarValue, var_x, var_y, plot_canvas_index, title, xtitle, ytitle, xum="", yum="", is_footprint=False):
         if self.plot_canvas[plot_canvas_index] is None:
             self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedPlotWidget()
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        self.plot_canvas[plot_canvas_index].plot_xy(beam_out, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, is_footprint=is_footprint)
+        self.plot_canvas[plot_canvas_index].plot_xy(beam, var_x, var_y, title, xtitle, ytitle, xum=xum, yum=yum, is_footprint=is_footprint)
 
         self.progressBarSet(progressBarValue)
 
-    def _plot_histo_preview(self, beam_out, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle):
+    def _plot_histo_preview(self, beam, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle):
         if self.plot_canvas[plot_canvas_index] is None:
             self.plot_canvas[plot_canvas_index] = oasysgui.plotWindow(roi=False, control=False, position=True)
             self.plot_canvas[plot_canvas_index].setDefaultPlotLines(True)
@@ -167,36 +138,26 @@ class GenericElement(AutomaticElement):
 
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        ShadowPlot.plot_histo_preview(self.plot_canvas[plot_canvas_index], beam_out, var, 1, 23, title, xtitle, ytitle)
+        ShadowPlot.plot_histo_preview(self.plot_canvas[plot_canvas_index], beam, var, 1, 23, title, xtitle, ytitle)
 
         self.progressBarSet(progressBarValue)
 
-    def _plot_histo_detailed(self, beam_out, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle, xum=""):
+    def _plot_histo_detailed(self, beam, progressBarValue, var, plot_canvas_index, title, xtitle, ytitle, xum=""):
         if self.plot_canvas[plot_canvas_index] is None:
             self.plot_canvas[plot_canvas_index] = ShadowPlot.DetailedHistoWidget()
             self.tab[plot_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-        self.plot_canvas[plot_canvas_index].plot_histo(beam_out, var, 1, None, 23, title, xtitle, ytitle, xum=xum)
+        self.plot_canvas[plot_canvas_index].plot_histo(beam, var, 1, None, 23, title, xtitle, ytitle, xum=xum)
 
         self.progressBarSet(progressBarValue)
 
-
-    #def plot_results(self, beam_out, footprint_beam=None, progressBarValue=80):
-    def _plot_results(self, beam_out, progressBarValue=80):
+    def _plot_results(self, output_beam, footprint, progressBarValue=80):
         if not self.view_type == 2:
-            if ShadowCongruence.check_empty_beam(beam_out):
-                if ShadowCongruence.check_good_beam(beam_out):
+            if ShadowCongruence.check_empty_beam(output_beam):
+                if ShadowCongruence.check_good_beam(output_beam):
                     self.view_type_combo.setEnabled(False)
 
                     ShadowPlot.set_conversion_active(self._is_conversion_active())
-
-                    # TODO: restore footprint functionality like Shadow3
-                    #if self.isFootprintEnabled() and footprint_beam is None:
-                    #        footprint_beam = ShadowBeam()
-                    #        if beam_out._oe_number < 10:
-                    #            footprint_beam.loadFromFile(file_name="mirr.0" + str(beam_out._oe_number))
-                    #        else:
-                    #            footprint_beam.loadFromFile(file_name="mirr." + str(beam_out._oe_number))
 
                     variables = self._get_variables_to_plot()
                     titles    = self._get_titles()
@@ -207,26 +168,21 @@ class GenericElement(AutomaticElement):
 
                     try:
                         if self.view_type == 1:
-                            self._plot_xy_preview(beam_out.beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0])
-                            self._plot_xy_preview(beam_out.beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
-                            self._plot_xy_preview(beam_out.beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
-                            self._plot_xy_preview(beam_out.beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
-                            self._plot_histo_preview(beam_out.beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
-
-                            #if self.isFootprintEnabled():
-                            #    self.plot_xy_fast(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", is_footprint=True)
+                            self._plot_xy_preview(output_beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0])
+                            self._plot_xy_preview(output_beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
+                            self._plot_xy_preview(output_beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
+                            self._plot_xy_preview(output_beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
+                            self._plot_histo_preview(output_beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
+                            if self.has_footprint: self._plot_xy_preview(footprint, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", is_footprint=True)
 
 
                         elif self.view_type == 0:
-                            self._plot_xy_detailed(beam_out.beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0], xum=xums[0], yum=yums[0])
-                            self._plot_xy_detailed(beam_out.beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
-                            self._plot_xy_detailed(beam_out.beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
-                            self._plot_xy_detailed(beam_out.beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
-                            self._plot_histo_detailed(beam_out.beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4])
-
-                            #if self.isFootprintEnabled():
-                            #    self.plot_xy(footprint_beam, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]",
-                            #                 xum=("Y [m]"), yum=("X [m]"), is_footprint=True)
+                            self._plot_xy_detailed(output_beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0], xum=xums[0], yum=yums[0])
+                            self._plot_xy_detailed(output_beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
+                            self._plot_xy_detailed(output_beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
+                            self._plot_xy_detailed(output_beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
+                            self._plot_histo_detailed(output_beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4])
+                            if self.has_footprint: self._plot_xy_detailed(footprint, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", xum=("Y [m]"), yum=("X [m]"), is_footprint=True)
 
                     except Exception as e:
                         self.view_type_combo.setEnabled(True)
@@ -239,7 +195,8 @@ class GenericElement(AutomaticElement):
             else:
                 raise Exception("Empty Beam")
 
-        self.plotted_beam = beam_out
+        self.plotted_beam   = output_beam
+        self.footprint_beam = footprint
 
     def _write_stdout(self, text):
         cursor = self.shadow_output.textCursor()

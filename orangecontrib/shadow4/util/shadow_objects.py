@@ -162,7 +162,7 @@ class ShadowData:
                             history_element_2 =  beam_2.get_oe_history(index)
 
                             merged_history_element = merged_beam.get_oe_history(index)
-                            merged_history_element.input_beam = ShadowData.merge_beams(history_element_1.input_beam, history_element_2.input_beam, which_flux, merge_history=(merge_history != 1))
+                            merged_history_element.input_data = ShadowData.merge_beams(history_element_1.input_data, history_element_2.input_data, which_flux, merge_history=(merge_history != 1))
                     else:
                         raise ValueError("Histories must have the same path to be merged")
                 else:

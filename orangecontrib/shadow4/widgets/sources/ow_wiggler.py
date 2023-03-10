@@ -32,7 +32,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     inputs = []
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"ShadowData",
+    outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
 
@@ -94,10 +94,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
         orangegui.button(file_box, self, "...", callback=self.select_file_with_harmonics)
 
-
         # Electron initial conditions Box
         left_box_10 = oasysgui.widgetBox(tab_wiggler, "Electron Initial Condition", addSpace=False, orientation="vertical", height=200)
-
 
         orangegui.comboBox(left_box_10, self, "shift_betax_flag", label="Shift Transversal Velocity", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_beta_X_flag, labelWidth=260, orientation="horizontal")
         self.shift_betax_value_box = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
@@ -112,8 +110,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         self.set_shift_X_flag()
         self.set_shift_beta_X_flag()
 
-
-
         # Calculation Box
         left_box_11 = oasysgui.widgetBox(tab_wiggler, "Sampling rays", addSpace=False, orientation="vertical", height=200)
 
@@ -125,7 +121,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         self.set_shift_X_flag()
         self.set_shift_beta_X_flag()
 
-
         # wiggler plots
         self.add_specific_wiggler_plots()
 
@@ -133,9 +128,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
         orangegui.rubber(self.controlArea)
 
-
     def add_specific_wiggler_plots(self):
-
         wiggler_plot_tab = oasysgui.widgetBox(self.main_tabs, addToLayout=0, margin=4)
 
         self.main_tabs.insertTab(1, wiggler_plot_tab, "Wiggler Plots")
@@ -267,7 +260,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
         print(">>>>>> \n\n S4Wiggler info: ", sourcewiggler.info())
 
-
         # S4WigglerLightSource
         lightsource = S4WigglerLightSource(name='wiggler',
                                            electron_beam=electron_beam,
@@ -281,7 +273,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
 
     def run_shadow4(self):
-
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()
@@ -296,20 +287,16 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         #
         t00 = time.time()
         print(">>>> starting calculation...")
-        beam = light_source.get_beam()
+        output_beam = light_source.get_beam()
         photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
         print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
-
         #
         # plots
         #
-        beamline = S4Beamline(light_source=light_source)
-        output_beam = ShadowData(beam=beam, number_of_rays=self.number_of_rays, beamline=beamline)
-        self._plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, None, progressBarValue=80)
         self.refresh_specific_wiggler_plots(light_source, photon_energy, flux, spectral_power)
-
 
         #
         # script
@@ -326,8 +313,9 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         #
         # send beam
         #
-        self.send("ShadowData", output_beam)
-
+        self.send("Shadow Data", ShadowData(beam=output_beam,
+                                           number_of_rays=self.number_of_rays,
+                                           beamline=S4Beamline(light_source=light_source)))
 
     def refresh_specific_wiggler_plots(self, lightsource=None, e=None, f=None, w=None):
 

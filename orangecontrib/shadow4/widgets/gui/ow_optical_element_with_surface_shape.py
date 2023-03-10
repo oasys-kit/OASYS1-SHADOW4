@@ -61,12 +61,7 @@ from syned.widget.widget_decorator import WidgetDecorator
 
 from syned.beamline.element_coordinates import ElementCoordinates
 from syned.beamline.shape import Rectangle
-from syned.beamline.shape import Convexity  #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-from syned.beamline.shape import Direction  #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
-
-from shadow4.beamline.s4_optical_element import SurfaceCalculation # INTERNAL = 0  EXTERNAL = 1
-
+from syned.beamline.shape import Ellipse
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
@@ -75,12 +70,11 @@ from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 from orangecanvas.resources import icon_loader
 from orangecanvas.scheme.node import SchemeNode
 
-
 class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
-    inputs = [("Input Beam", ShadowData, "set_beam")]
+    inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"ShadowData",
+    outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
 
@@ -126,14 +120,13 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     # dimensions
     #########################################################
     is_infinite  = Setting(0)
-    mirror_shape = Setting(0)
+    oe_shape = Setting(0)
     dim_x_plus   = Setting(1.0)
     dim_x_minus  = Setting(1.0)
     dim_y_plus   = Setting(1.0)
     dim_y_minus  = Setting(1.0)
 
-    input_beam = None
-    beamline   = None
+    input_data = None
 
     def createdFromNode(self, node):
         super(OWOpticalElementWithSurfaceShape, self).createdFromNode(node)
@@ -278,9 +271,9 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     def populate_tab_position(self, tab_position):
         self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True, orientation="vertical")
 
-        oasysgui.lineEdit(self.orientation_box, self, "source_plane_distance", "Source Plane Distance", labelWidth=260,
+        oasysgui.lineEdit(self.orientation_box, self, "source_plane_distance", "Source Plane Distance [m]", labelWidth=260,
                           valueType=float, orientation="horizontal", tooltip="source_plane_distance")
-        oasysgui.lineEdit(self.orientation_box, self, "image_plane_distance", "Image Plane Distance", labelWidth=260,
+        oasysgui.lineEdit(self.orientation_box, self, "image_plane_distance", "Image Plane Distance [m]", labelWidth=260,
                           valueType=float, orientation="horizontal", tooltip="image_plane_distance")
 
         gui.comboBox(self.orientation_box, self, "angles_respect_to", label="Angles in [deg] with respect to the",
@@ -365,12 +358,12 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         self.object_side_focal_distance_box = oasysgui.widgetBox(self.focusing_internal_box, "", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(self.object_side_focal_distance_box, self,
                                                               "object_side_focal_distance",
-                                                              "Object Side Focal Distance", labelWidth=260,
+                                                              "Object Side Focal Distance [m]", labelWidth=260,
                                                               valueType=float, orientation="horizontal", tooltip="object_side_focal_distance")
 
         self.image_side_focal_distance_box = oasysgui.widgetBox(self.focusing_internal_box, "", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(self.image_side_focal_distance_box, self, "image_side_focal_distance",
-                                                             "Image Side Focal Distance", labelWidth=260,
+                                                             "Image Side Focal Distance [m]", labelWidth=260,
                                                              valueType=float, orientation="horizontal", tooltip="image_side_focal_distance")
 
         gui.comboBox(self.image_side_focal_distance_box, self, "incidence_angle_respect_to_normal_type", label="Incidence Angle",
@@ -401,19 +394,19 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         self.focusing_external_sphere = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
         self.le_spherical_radius = oasysgui.lineEdit(self.focusing_external_sphere, self, "spherical_radius",
-                                                     "Spherical Radius", labelWidth=260, valueType=float,
+                                                     "Spherical Radius [m]", labelWidth=260, valueType=float,
                                                      orientation="horizontal", tooltip="spherical_radius")
         # ellipsoid or hyperboloid
         self.focusing_external_ellipsoir_or_hyperboloid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
         self.le_ellipse_hyperbola_semi_major_axis = oasysgui.lineEdit(self.focusing_external_ellipsoir_or_hyperboloid, self,
                                                                       "ellipse_hyperbola_semi_major_axis",
-                                                                      "Ellipse/Hyperbola semi-major Axis",
+                                                                      "Ellipse/Hyperbola semi-major Axis [m]",
                                                                       labelWidth=260, valueType=float,
                                                                       orientation="horizontal", tooltip="ellipse_hyperbola_semi_major_axis")
         self.le_ellipse_hyperbola_semi_minor_axis = oasysgui.lineEdit(self.focusing_external_ellipsoir_or_hyperboloid, self,
                                                                       "ellipse_hyperbola_semi_minor_axis",
-                                                                      "Ellipse/Hyperbola semi-minor Axis",
+                                                                      "Ellipse/Hyperbola semi-minor Axis [m]",
                                                                       labelWidth=260, valueType=float,
                                                                       orientation="horizontal", tooltip="ellipse_hyperbola_semi_minor_axis")
         oasysgui.lineEdit(self.focusing_external_ellipsoir_or_hyperboloid, self, "angle_of_majax_and_pole",
@@ -424,17 +417,17 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         self.focusing_external_paraboloid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
         self.le_paraboloid_parameter = oasysgui.lineEdit(self.focusing_external_paraboloid, self, "paraboloid_parameter",
-                                                         "Paraboloid parameter", labelWidth=260, valueType=float,
+                                                         "Paraboloid parameter [m]", labelWidth=260, valueType=float,
                                                          orientation="horizontal", tooltip="float")
 
         # toroid
         self.focusing_external_toroid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
         self.le_torus_major_radius = oasysgui.lineEdit(self.focusing_external_toroid, self, "torus_major_radius",
-                                                       "Torus Major Radius", labelWidth=260, valueType=float,
+                                                       "Torus Major Radius [m]", labelWidth=260, valueType=float,
                                                        orientation="horizontal", tooltip="torus_major_radius")
         self.le_torus_minor_radius = oasysgui.lineEdit(self.focusing_external_toroid, self, "torus_minor_radius",
-                                                       "Torus Minor Radius", labelWidth=260, valueType=float,
+                                                       "Torus Minor Radius [m]", labelWidth=260, valueType=float,
                                                        orientation="horizontal", tooltip="torus_minor_radius")
 
 
@@ -477,17 +470,17 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
         self.dimdet_box = oasysgui.widgetBox(dimension_box, "", addSpace=False, orientation="vertical")
 
-        gui.comboBox(self.dimdet_box, self, "mirror_shape", label="Shape selected", labelWidth=260,
-                     items=["Rectangular", "Full ellipse", "Ellipse with hole"],
-                     sendSelectedValue=False, orientation="horizontal", tooltip="mirror_shape")
+        gui.comboBox(self.dimdet_box, self, "oe_shape", label="Shape selected", labelWidth=260,
+                     items=["Rectangular", "Elliptical"],
+                     sendSelectedValue=False, orientation="horizontal", tooltip="oe_shape")
 
-        self.le_dim_x_plus = oasysgui.lineEdit(self.dimdet_box, self, "dim_x_plus", "X(+) Half Width / Int Maj Ax",
+        self.le_dim_x_plus = oasysgui.lineEdit(self.dimdet_box, self, "dim_x_plus", "X(+) Half Width / Int Maj Ax [m]",
                                                labelWidth=260, valueType=float, orientation="horizontal", tooltip="dim_x_plus")
-        self.le_dim_x_minus = oasysgui.lineEdit(self.dimdet_box, self, "dim_x_minus", "X(-) Half Width / Int Maj Ax",
+        self.le_dim_x_minus = oasysgui.lineEdit(self.dimdet_box, self, "dim_x_minus", "X(-) Half Width / Int Maj Ax [m]",
                                                 labelWidth=260, valueType=float, orientation="horizontal", tooltip="dim_x_minus")
-        self.le_dim_y_plus = oasysgui.lineEdit(self.dimdet_box, self, "dim_y_plus", "Y(+) Half Width / Int Min Ax",
+        self.le_dim_y_plus = oasysgui.lineEdit(self.dimdet_box, self, "dim_y_plus", "Y(+) Half Width / Int Min Ax [m]",
                                                labelWidth=260, valueType=float, orientation="horizontal", tooltip="dim_y_plus")
-        self.le_dim_y_minus = oasysgui.lineEdit(self.dimdet_box, self, "dim_y_minus", "Y(-) Half Width / Int Min Ax",
+        self.le_dim_y_minus = oasysgui.lineEdit(self.dimdet_box, self, "dim_y_minus", "Y(-) Half Width / Int Min Ax [m]",
                                                 labelWidth=260, valueType=float, orientation="horizontal", tooltip="dim_y_minus")
 
         self.dimensions_tab_visibility()
@@ -521,35 +514,15 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         if self.angles_respect_to == 0: self.incidence_angle_mrad = round(numpy.radians(90-self.incidence_angle_deg)*1000, digits)
         else:                           self.incidence_angle_mrad = round(numpy.radians(self.incidence_angle_deg)*1000, digits)
 
-        # if self.graphical_options.is_curved and not self.graphical_options.is_conic_coefficients:
-        #     if self.incidence_angle_respect_to_normal_type == 0:
-        #         if self.angles_respect_to == 0: self.incidence_angle_respect_to_normal = self.incidence_angle_deg
-        #         else:                           self.incidence_angle_respect_to_normal = round(90 - self.incidence_angle_deg, 10)
-        #
-        if True: # self.graphical_options.is_mirror:
-            self.reflection_angle_deg  = self.incidence_angle_deg
-            self.reflection_angle_mrad = self.incidence_angle_mrad
-
     def calculate_reflection_angle_mrad(self):
         digits = 7
-
         if self.angles_respect_to == 0: self.reflection_angle_mrad = round(numpy.radians(90 - self.reflection_angle_deg)*1000, digits)
         else:                           self.reflection_angle_mrad = round(numpy.radians(self.reflection_angle_deg)*1000, digits)
 
     def calculate_incidence_angle_deg(self):
         digits = 10
-
         if self.angles_respect_to == 0: self.incidence_angle_deg = round(numpy.degrees(0.5 * numpy.pi - (self.incidence_angle_mrad / 1000)), digits)
         else:                           self.incidence_angle_deg = round(numpy.degrees(self.incidence_angle_mrad / 1000), digits)
-
-        if True: #self.graphical_options.is_mirror:
-            self.reflection_angle_deg = self.incidence_angle_deg
-            self.reflection_angle_mrad = self.incidence_angle_mrad
-        #
-        # if self.graphical_options.is_curved and not self.graphical_options.is_conic_coefficients:
-        #     if self.incidence_angle_respect_to_normal_type == 0:
-        #         if self.angles_respect_to == 0: self.incidence_angle_respect_to_normal = self.incidence_angle_deg
-        #         else:                           self.incidence_angle_respect_to_normal = round(90 - self.incidence_angle_deg, digits)
 
     def calculate_reflection_angle_deg(self):
         digits = 10
@@ -558,29 +531,20 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         else:                           self.reflection_angle_deg = round(numpy.degrees(self.reflection_angle_mrad/1000), digits)
 
     def oe_orientation_angle_user(self):
-
-        if self.oe_orientation_angle < 4:
-            self.oe_orientation_angle_user_value_le.setVisible(False)
-        else:
-            self.oe_orientation_angle_user_value_le.setVisible(True)
+        if self.oe_orientation_angle < 4: self.oe_orientation_angle_user_value_le.setVisible(False)
+        else:                             self.oe_orientation_angle_user_value_le.setVisible(True)
 
     def get_oe_orientation_angle(self):
-        if self.oe_orientation_angle == 0:
-            return 0.0
-        elif self.oe_orientation_angle == 1:
-            return 90.0
-        elif self.oe_orientation_angle == 2:
-            return 180.0
-        elif self.oe_orientation_angle == 3:
-            return 270.0
-        elif self.oe_orientation_angle == 4:
-            return self.oe_orientation_angle_user_value
+        if self.oe_orientation_angle == 0:   return 0.0
+        elif self.oe_orientation_angle == 1: return 90.0
+        elif self.oe_orientation_angle == 2: return 180.0
+        elif self.oe_orientation_angle == 3: return 270.0
+        elif self.oe_orientation_angle == 4: return self.oe_orientation_angle_user_value
 
     #########################################################
     # Surface Shape Methods
     #########################################################
     def surface_shape_tab_visibility(self, is_init=False):
-
         self.focusing_box.setVisible(False)
 
         self.focusing_internal_box.setVisible(False)
@@ -588,7 +552,6 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         self.image_side_focal_distance_box.setVisible(False)
         self.incidence_angle_respect_to_normal_box.setVisible(False)
         self.focus_location_box.setVisible(False)
-
 
         self.focusing_external_sphere.setVisible(False)
         self.focusing_external_ellipsoir_or_hyperboloid.setVisible(False)
@@ -635,61 +598,55 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
     def dimensions_tab_visibility(self):
 
-        if self.is_infinite:
-            self.dimdet_box.setVisible(True)
-        else:
-            self.dimdet_box.setVisible(False)
+        if self.is_infinite: self.dimdet_box.setVisible(True)
+        else:                self.dimdet_box.setVisible(False)
 
     #########################################################
     # S4 objects
     #########################################################
 
     def get_focusing_grazing_angle(self):
-        if self.focii_and_continuation_plane == 0:
-            return numpy.radians(90.0 - self.incidence_angle_deg)
+        if self.focii_and_continuation_plane == 0: return numpy.radians(90.0 - self.incidence_angle_deg)
         else:
-            if self.incidence_angle_respect_to_normal_type:
-                return numpy.radians(90.0 - self.incidence_angle_deg)
-            else:
-                return numpy.radians(self.incidence_angle_respect_to_normal)
+            if self.incidence_angle_respect_to_normal_type == 0: return numpy.radians(90.0 - self.incidence_angle_deg)
+            else:                                                return numpy.radians(self.incidence_angle_respect_to_normal)
 
     def get_focusing_p(self):
-        if self.focii_and_continuation_plane == 0:
-            return self.source_plane_distance
-        else:
-            return self.object_side_focal_distance
+        if self.focii_and_continuation_plane == 0: return self.source_plane_distance
+        else:                                      return self.object_side_focal_distance
 
     def get_focusing_q(self):
-        if self.focii_and_continuation_plane == 0:
-            return self.image_plane_distance
-        else:
-            return self.image_side_focal_distance
+        if self.focii_and_continuation_plane == 0: return self.image_plane_distance
+        else:                                      return self.image_side_focal_distance
 
     def get_boundary_shape(self):
-        return None
-
+        if self.is_infinite: return None
+        else:
+            if self.oe_shape == 0: # Rectangular
+                return Rectangle(x_left=-self.dim_x_minus, x_right=self.dim_x_plus,
+                                 y_bottom=-self.dim_y_minus, y_top=self.dim_y_plus)
+            elif self.oe_shape == 1: # Ellispe
+                return Ellipse(a_axis_min=-self.dim_x_minus, a_axis_max=self.dim_x_plus,
+                               b_axis_min=-self.dim_y_minus, b_axis_max=self.dim_y_plus)
 
     def get_coordinates(self):
-        print(">>>>>>inc ref m.o.a. in deg:",self.incidence_angle_deg,self.reflection_angle_deg,self.get_oe_orientation_angle())
+        print(">>>>>>inc ref m.o.a. in deg:",self.incidence_angle_deg,self.reflection_angle_deg, self.get_oe_orientation_angle())
         return ElementCoordinates(
                 p=self.source_plane_distance,
                 q=self.image_plane_distance,
                 angle_radial=numpy.radians(self.incidence_angle_deg),
-                angle_azimuthal=numpy.radians(self.oe_orientation_angle()),
+                angle_azimuthal=numpy.radians(self.get_oe_orientation_angle()),
                 angle_radial_out=numpy.radians(self.reflection_angle_deg),
                 )
 
 
-    def set_beam(self, input_beam):
-        self.not_interactive = self._check_not_interactive_conditions(input_beam)
-
+    def set_shadow_data(self, input_data):
+        self.not_interactive = self._check_not_interactive_conditions(input_data)
         self._on_receiving_input()
 
-        if ShadowCongruence.check_empty_beam(input_beam):
-            self.input_beam = input_beam.duplicate()
-
+        if ShadowCongruence.check_empty_data(input_data):
+            self.input_data = input_data.duplicate()
             if self.is_automatic_run: self.run_shadow4()
-
 
     def run_shadow4(self):
         self.shadow_output.setText("")
@@ -699,7 +656,7 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         element = self.get_beamline_element_instance()
         element.set_optical_element(self.get_optical_element_instance())
         element.set_coordinates(self.get_coordinates())
-        element.set_input_beam(self.input_beam.beam)
+        element.set_input_beam(self.input_data.beam)
 
         print(element.info())
 
@@ -707,14 +664,12 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
         output_beam, footprint = element.trace_beam()
 
-        beamline = self.input_beam.beamline.duplicate()
+        beamline = self.input_data.beamline.duplicate()
         beamline.append_beamline_element(element)
-
-        output_beam = ShadowData(beam=output_beam, beamline=beamline)
 
         self._set_plot_quality()
 
-        self._plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, footprint, progressBarValue=80)
 
         self.progressBarFinished()
 
@@ -733,7 +688,8 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         #
         # send beam
         #
-        self.send("ShadowData", output_beam)
+        self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline)
+)
 
     def receive_syned_data(self, data):
         raise Exception("Not yet implemented")

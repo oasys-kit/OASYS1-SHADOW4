@@ -169,7 +169,6 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
                 refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
             )
-
         elif self.surface_shape_type == 2:
             mirror = S4EllipsoidMirror(
                 name="Ellipsoid Mirror",
@@ -273,6 +272,17 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
 
         return optical_element
 
+    def calculate_incidence_angle_mrad(self):
+        super().calculate_incidence_angle_mrad()
+
+        self.reflection_angle_deg = self.incidence_angle_deg
+        self.reflection_angle_mrad = self.incidence_angle_mrad
+
+    def calculate_incidence_angle_deg(self):
+        super().calculate_incidence_angle_deg()
+
+        self.reflection_angle_deg = self.incidence_angle_deg
+        self.reflection_angle_mrad = self.incidence_angle_mrad
 
 
 if __name__ == "__main__":
