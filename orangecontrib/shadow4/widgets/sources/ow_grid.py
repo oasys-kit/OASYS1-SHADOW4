@@ -17,15 +17,18 @@ from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 
 from shadow4.beamline.s4_beamline import S4Beamline
+
 from shadow4.sources.source_geometrical.source_geometrical import SourceGeometrical
+from shadow4.sources.source_geometrical.source_grid_polar import SourceGridPolar
+
 
 from syned.widget.widget_decorator import WidgetDecorator
 
 
-class OWGeometrical(GenericElement, WidgetDecorator):
+class OWGrid(GenericElement, WidgetDecorator):
 
-    name = "Geometrical Source"
-    description = "Shadow Source: Geometrical Source"
+    name = "Grid Source"
+    description = "Shadow Source: Grid Source"
     icon = "icons/geometrical.png"
     priority = 1
 
@@ -36,41 +39,54 @@ class OWGeometrical(GenericElement, WidgetDecorator):
                 "type":ShadowData,
                 "doc":"",}]
 
-    number_of_rays = Setting(5000)
-    seed = Setting(5676561)
 
-    spatial_type = Setting(1)
+    # number_of_rays = Setting(5000)
+    # seed = Setting(5676561)
+    # spatial_type = Setting(1)
+    # rect_width = Setting(0.1)
+    # rect_height = Setting(0.2)
+    # ell_semiaxis_x = Setting(0.1)
+    # ell_semiaxis_z = Setting(0.2)
+    # gauss_sigma_x = Setting(0.001)
+    # gauss_sigma_z = Setting(0.001)
+    # angular_distribution = Setting(0)
+    # horizontal_div_x_plus = Setting(5.0e-7)
+    # horizontal_div_x_minus = Setting(5.0e-7)
+    # vertical_div_z_plus = Setting(5.0e-6)
+    # vertical_div_z_minus = Setting(5.0e-6)
+    # angular_distribution_limits = Setting(0)
+    # horizontal_lim_x_plus = Setting(1.0e-5)
+    # horizontal_lim_x_minus = Setting(1.0e-5)
+    # vertical_lim_z_plus = Setting(1.0e-5)
+    # vertical_lim_z_minus = Setting(1.0e-5)
+    # horizontal_sigma_x = Setting(0.001)
+    # vertical_sigma_z = Setting(0.0001)
+    # cone_internal_half_aperture = Setting(0.001)
+    # cone_external_half_aperture = Setting(0.002)
+    # depth = Setting(0)
+    # source_depth_y = Setting(0.2)
+    # sigma_y = Setting(0.001)
 
-    rect_width = Setting(0.1)
-    rect_height = Setting(0.2)
-    ell_semiaxis_x = Setting(0.1)
-    ell_semiaxis_z = Setting(0.2)
-    gauss_sigma_x = Setting(0.001)
-    gauss_sigma_z = Setting(0.001)
+    #######################################################
+    coordinates = Setting(1)
 
-    angular_distribution = Setting(0)
+    real_space_width_x = Setting(2e-3)
+    real_space_width_z = Setting(2e-3)
+    real_space_center_x = Setting(0.0)
+    real_space_center_z = Setting(0.0)
+    real_space_points_r = Setting(2)
+    real_space_points_theta = Setting(8)
 
-    horizontal_div_x_plus = Setting(5.0e-7)
-    horizontal_div_x_minus = Setting(5.0e-7)
-    vertical_div_z_plus = Setting(5.0e-6)
-    vertical_div_z_minus = Setting(5.0e-6)
 
-    angular_distribution_limits = Setting(0)
+    direction_space_width_x = Setting(20e-3)
+    direction_space_width_z = Setting(20e-3)
+    direction_space_center_x = Setting(0.0)
+    direction_space_center_z = Setting(0.0)
+    direction_space_points_r = Setting(3)
+    direction_space_points_theta = Setting(359)
 
-    horizontal_lim_x_plus = Setting(1.0e-5)
-    horizontal_lim_x_minus = Setting(1.0e-5)
-    vertical_lim_z_plus = Setting(1.0e-5)
-    vertical_lim_z_minus = Setting(1.0e-5)
-    horizontal_sigma_x = Setting(0.001)
-    vertical_sigma_z = Setting(0.0001)
 
-    cone_internal_half_aperture = Setting(0.001)
-    cone_external_half_aperture = Setting(0.002)
-
-    depth = Setting(0)
-
-    source_depth_y = Setting(0.2)
-    sigma_y = Setting(0.001)
+    #############################################
 
     photon_energy_distribution = Setting(0)
 
@@ -166,138 +182,118 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         tab_energy = oasysgui.createTabPage(tabs_setting, "Energy/Polarization Setting")
 
         ##############################
-        # MONTECARLO
+        # BASIC
 
-        left_box_1 = oasysgui.widgetBox(tab_basic, "Montecarlo", addSpace=True, orientation="vertical", height=100)
+        left_box_1 = oasysgui.widgetBox(tab_basic, "Coordinates", addSpace=True, orientation="vertical", height=100)
+        gui.comboBox(left_box_1, self, "coordinates", label="Coordinates", labelWidth=355,
+                     items=["Cartesian **NYI**", "Polar"], orientation="horizontal",
+                     callback=self.set_SpatialType)
 
-        gui.separator(left_box_1)
-
-        self.sample_box_1 = oasysgui.widgetBox(left_box_1, "", addSpace=False, orientation="vertical")
-
-        oasysgui.lineEdit(self.sample_box_1, self, "number_of_rays", "Number of Random Rays", labelWidth=260,
-                          valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(self.sample_box_1, self, "seed", "Seed (0=clock)", labelWidth=260, valueType=int,
-                          orientation="horizontal")
 
         ##############################
         # GEOMETRY
 
         left_box_2 = oasysgui.widgetBox(tab_geometry, "", addSpace=True, orientation="vertical", height=550)
 
-        gui.separator(left_box_2)
 
-        ######
+        ###### real space
 
-        spatial_type_box = oasysgui.widgetBox(left_box_2, "Spatial Type", addSpace=True, orientation="vertical",
-                                              height=120)
+        # real_space_width_x = Setting(2e-3)
+        # real_space_width_z = Setting(2e-3)
+        # real_space_center_x = Setting(0.0)
+        # real_space_center_z = Setting(0.0)
+        # real_space_points_r = Setting(2)
+        # real_space_points_theta = Setting(8)
 
-        items = SourceGeometrical.spatial_type_list() # ["Point", "Rectangle", "Ellipse", "Gaussian"]
-        gui.comboBox(spatial_type_box, self, "spatial_type", label="Spatial Type", labelWidth=355,
-                     items=items, orientation="horizontal",
-                     callback=self.set_SpatialType)
 
-        gui.separator(spatial_type_box)
-
-        self.spatial_type_box_1 = oasysgui.widgetBox(spatial_type_box, "", addSpace=False, orientation="vertical")
-
-        self.le_rect_width = oasysgui.lineEdit(self.spatial_type_box_1, self, "rect_width", "Width", labelWidth=260,
-                                               valueType=float, orientation="horizontal")
-        self.le_rect_height = oasysgui.lineEdit(self.spatial_type_box_1, self, "rect_height", "Height", labelWidth=260,
-                                                valueType=float, orientation="horizontal")
-
-        self.spatial_type_box_2 = oasysgui.widgetBox(spatial_type_box, "", addSpace=False, orientation="vertical")
-
-        self.le_ell_semiaxis_x = oasysgui.lineEdit(self.spatial_type_box_2, self, "ell_semiaxis_x", "Semi-Axis X",
-                                                   labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_ell_semiaxis_z = oasysgui.lineEdit(self.spatial_type_box_2, self, "ell_semiaxis_z", "Semi-Axis Z",
-                                                   labelWidth=260, valueType=float, orientation="horizontal")
-
-        self.spatial_type_box_3 = oasysgui.widgetBox(spatial_type_box, "", addSpace=False, orientation="vertical")
-
-        self.le_gauss_sigma_x = oasysgui.lineEdit(self.spatial_type_box_3, self, "gauss_sigma_x", "Sigma X",
-                                                  labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_gauss_sigma_z = oasysgui.lineEdit(self.spatial_type_box_3, self, "gauss_sigma_z", "Sigma Z",
-                                                  labelWidth=260, valueType=float, orientation="horizontal")
-
-        self.set_SpatialType()
-
-        angular_distribution_box = oasysgui.widgetBox(left_box_2, "Angular Distribution", addSpace=True,
+        real_distribution_box = oasysgui.widgetBox(left_box_2, "Real space", addSpace=True,
                                                       orientation="vertical", height=260)
 
-        items = SourceGeometrical.angular_distribution_list() # ["Flat", "Uniform", "Gaussian", "Conical","Collimated"]
-        gui.comboBox(angular_distribution_box, self, "angular_distribution", label="Angular Distribution",
-                     labelWidth=355, items=items, orientation="horizontal", callback=self.set_AngularDistribution)
+        oasysgui.lineEdit(real_distribution_box, self, "real_space_width_x",
+                          "Width in X [m]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        gui.separator(angular_distribution_box)
+        oasysgui.lineEdit(real_distribution_box, self, "real_space_width_z",
+                          "Width in Z [m]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        self.angular_distribution_box_1 = oasysgui.widgetBox(angular_distribution_box, "", addSpace=False,
-                                                             orientation="vertical")
-
-        oasysgui.lineEdit(self.angular_distribution_box_1, self, "horizontal_div_x_plus",
-                          "Horizontal Divergence X(+) [rad]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.angular_distribution_box_1, self, "horizontal_div_x_minus",
-                          "Horizontal Divergence X(-) [rad]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.angular_distribution_box_1, self, "vertical_div_z_plus",
-                          "Vertical Divergence Z(+) [rad]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.angular_distribution_box_1, self, "vertical_div_z_minus",
-                          "Vertical Divergence Z(-) [rad]", labelWidth=260, valueType=float, orientation="horizontal")
-
-        self.angular_distribution_box_2 = oasysgui.widgetBox(angular_distribution_box, "", addSpace=False,
-                                                             orientation="vertical")
-
-        gui.comboBox(self.angular_distribution_box_2, self, "angular_distribution_limits",
-                     label="Angular Distribution Limits", labelWidth=355,
-                     items=["No Limits", "Horizontal", "Vertical", "Both"], orientation="horizontal",
-                     callback=self.set_AngularDistributionLimits)
-
-        self.le_horizontal_lim_x_plus = oasysgui.lineEdit(self.angular_distribution_box_2, self,
-                                                          "horizontal_lim_x_plus", "Horizontal Limit X(+) [rad]",
-                                                          labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_horizontal_lim_x_minus = oasysgui.lineEdit(self.angular_distribution_box_2, self,
-                                                           "horizontal_lim_x_minus", "Horizontal Limit X(-) [rad]",
-                                                           labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_vertical_lim_z_plus = oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_lim_z_plus",
-                                                        "Vertical Limit Z(+) [rad]", labelWidth=260, valueType=float,
-                                                        orientation="horizontal")
-        self.le_vertical_lim_z_minus = oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_lim_z_minus",
-                                                         "Vertical Limit Z(-) [rad]", labelWidth=260, valueType=float,
-                                                         orientation="horizontal")
-
-        oasysgui.lineEdit(self.angular_distribution_box_2, self, "horizontal_sigma_x", "Horizontal Sigma (X) [rad]",
-                          labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_sigma_z", "Vertical Sigma (Z) [rad]",
-                          labelWidth=260, valueType=float, orientation="horizontal")
-
-        self.angular_distribution_box_3 = oasysgui.widgetBox(angular_distribution_box, "", addSpace=False,
-                                                             orientation="vertical")
-
-        oasysgui.lineEdit(self.angular_distribution_box_3, self, "cone_internal_half_aperture",
-                          "Cone Internal Half-Aperture [rad]", labelWidth=260, valueType=float,
-                          orientation="horizontal")
-        oasysgui.lineEdit(self.angular_distribution_box_3, self, "cone_external_half_aperture",
-                          "Cone External Half-Aperture [rad]", labelWidth=260, valueType=float,
+        oasysgui.lineEdit(real_distribution_box, self, "real_space_center_x",
+                          "Center in X [m]", labelWidth=260, valueType=float,
                           orientation="horizontal")
 
-        self.set_AngularDistribution()
+        oasysgui.lineEdit(real_distribution_box, self, "real_space_center_z",
+                          "Center in Z [m]", labelWidth=260, valueType=float,
+                          orientation="horizontal")
 
-        depth_box = oasysgui.widgetBox(left_box_2, "Depth", addSpace=True, orientation="vertical", height=100)
+        oasysgui.lineEdit(real_distribution_box, self, "real_space_points_r",
+                          "Radial points", labelWidth=260, valueType=int,
+                          orientation="horizontal")
 
-        gui.comboBox(depth_box, self, "depth", label="Depth", labelWidth=355,
-                     items=["Off", "Uniform", "Gaussian"], orientation="horizontal", callback=self.set_Depth)
+        oasysgui.lineEdit(real_distribution_box, self, "real_space_points_theta",
+                          "Azimuthal points", labelWidth=260, valueType=int,
+                          orientation="horizontal")
 
-        gui.separator(depth_box, 1)
 
-        self.depth_box_1 = oasysgui.widgetBox(depth_box, "", addSpace=False, orientation="vertical")
 
-        self.le_source_depth_y = oasysgui.lineEdit(self.depth_box_1, self, "source_depth_y", "Source Depth (Y)",
-                                                   labelWidth=260, valueType=float, orientation="horizontal")
+        gui.separator(left_box_2)
 
-        self.depth_box_2 = oasysgui.widgetBox(depth_box, "", addSpace=False, orientation="vertical")
 
-        self.le_sigma_y = oasysgui.lineEdit(self.depth_box_2, self, "sigma_y", "Sigma Y", labelWidth=260,
-                                            valueType=float, orientation="horizontal")
 
-        self.set_Depth()
+        ###### direction space
+        #
+        # direction_space_width_x = Setting(20e-3)
+        # direction_space_width_z = Setting(20e-3)
+        # direction_space_center_x = Setting(0.0)
+        # direction_space_center_z = Setting(0.0)
+        # direction_space_points_r = Setting(3)
+        # direction_space_points_theta = Setting(359)
+
+
+
+        angular_distribution_box = oasysgui.widgetBox(left_box_2, "Direction space (divergences)", addSpace=True,
+                                                      orientation="vertical", height=260)
+
+        oasysgui.lineEdit(angular_distribution_box, self, "direction_space_width_x",
+                          "Width in X' [rad]", labelWidth=260, valueType=float, orientation="horizontal")
+
+        oasysgui.lineEdit(angular_distribution_box, self, "direction_space_width_z",
+                          "Width in Z' [rad]", labelWidth=260, valueType=float, orientation="horizontal")
+
+        oasysgui.lineEdit(angular_distribution_box, self, "direction_space_center_x",
+                          "Center in X' [rad]", labelWidth=260, valueType=float,
+                          orientation="horizontal")
+
+        oasysgui.lineEdit(angular_distribution_box, self, "direction_space_center_z",
+                          "Center in Z' [rad]", labelWidth=260, valueType=float,
+                          orientation="horizontal")
+
+        oasysgui.lineEdit(angular_distribution_box, self, "direction_space_points_r",
+                          "Radial points", labelWidth=260, valueType=int,
+                          orientation="horizontal")
+
+        oasysgui.lineEdit(angular_distribution_box, self, "direction_space_points_theta",
+                          "Azimuthal points", labelWidth=260, valueType=int,
+                          orientation="horizontal")
+
+
+
+        #### Depth
+        depth_box = oasysgui.widgetBox(left_box_2, "Depth **NYI** ", addSpace=True, orientation="vertical", height=100)
+
+        # gui.comboBox(depth_box, self, "depth", label="Depth", labelWidth=355,
+        #              items=["Off", "Uniform", "Gaussian"], orientation="horizontal", callback=self.set_Depth)
+        #
+        # gui.separator(depth_box, 1)
+        #
+        # self.depth_box_1 = oasysgui.widgetBox(depth_box, "", addSpace=False, orientation="vertical")
+        #
+        # self.le_source_depth_y = oasysgui.lineEdit(self.depth_box_1, self, "source_depth_y", "Source Depth (Y)",
+        #                                            labelWidth=260, valueType=float, orientation="horizontal")
+        #
+        # self.depth_box_2 = oasysgui.widgetBox(depth_box, "", addSpace=False, orientation="vertical")
+        #
+        # self.le_sigma_y = oasysgui.lineEdit(self.depth_box_2, self, "sigma_y", "Sigma Y", labelWidth=260,
+        #                                     valueType=float, orientation="horizontal")
+        #
+        # self.set_Depth()
 
         ##############################
         # ENERGY
@@ -306,7 +302,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
         ######
 
-        energy_wavelength_box = oasysgui.widgetBox(left_box_3, "Energy/Wavelength", addSpace=False,
+        energy_wavelength_box = oasysgui.widgetBox(left_box_3, "Energy/Wavelength **NYI*", addSpace=False,
                                                    orientation="vertical", height=430)
 
         items = SourceGeometrical.energy_distribution_list() # ["Single Line", "Several Lines", "Uniform", "Relative Intensities", "Gaussian", "User Defined"]
@@ -445,26 +441,26 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
         ##############################
 
-        left_box_4 = oasysgui.widgetBox(tab_basic, "Reject Rays", addSpace=True, orientation="vertical", height=130)
-
-        gui.comboBox(left_box_4, self, "optimize_source", label="Optimize Source",
-                     items=["No", "Using file with phase/space volume)", "Using file with slit/acceptance"],
-                     labelWidth=120, callback=self.set_OptimizeSource, orientation="horizontal")
-        self.optimize_file_name_box = oasysgui.widgetBox(left_box_4, "", addSpace=False, orientation="vertical")
-
-        file_box = oasysgui.widgetBox(self.optimize_file_name_box, "", addSpace=True, orientation="horizontal",
-                                      height=25)
-
-        self.le_optimize_file_name = oasysgui.lineEdit(file_box, self, "optimize_file_name", "File Name",
-                                                       labelWidth=100, valueType=str, orientation="horizontal")
-
-        gui.button(file_box, self, "...", callback=self.selectOptimizeFile)
-
-        oasysgui.lineEdit(self.optimize_file_name_box, self, "max_number_of_rejected_rays",
-                          "Max number of rejected rays (set 0 for infinity)", labelWidth=280, valueType=int,
-                          orientation="horizontal")
-
-        self.set_OptimizeSource()
+        # left_box_4 = oasysgui.widgetBox(tab_basic, "Reject Rays", addSpace=True, orientation="vertical", height=130)
+        #
+        # gui.comboBox(left_box_4, self, "optimize_source", label="Optimize Source",
+        #              items=["No", "Using file with phase/space volume)", "Using file with slit/acceptance"],
+        #              labelWidth=120, callback=self.set_OptimizeSource, orientation="horizontal")
+        # self.optimize_file_name_box = oasysgui.widgetBox(left_box_4, "", addSpace=False, orientation="vertical")
+        #
+        # file_box = oasysgui.widgetBox(self.optimize_file_name_box, "", addSpace=True, orientation="horizontal",
+        #                               height=25)
+        #
+        # self.le_optimize_file_name = oasysgui.lineEdit(file_box, self, "optimize_file_name", "File Name",
+        #                                                labelWidth=100, valueType=str, orientation="horizontal")
+        #
+        # gui.button(file_box, self, "...", callback=self.selectOptimizeFile)
+        #
+        # oasysgui.lineEdit(self.optimize_file_name_box, self, "max_number_of_rejected_rays",
+        #                   "Max number of rejected rays (set 0 for infinity)", labelWidth=280, valueType=int,
+        #                   orientation="horizontal")
+        #
+        # self.set_OptimizeSource()
 
         # adv_other_box = oasysgui.widgetBox(tab_basic, "Optional file output", addSpace=False, orientation="vertical")
         # gui.comboBox(adv_other_box, self, "file_to_write_out", label="Files to write out", labelWidth=120,
@@ -477,41 +473,42 @@ class OWGeometrical(GenericElement, WidgetDecorator):
     def is_scanning_enabled(self):
         return True
 
-    def call_reset_settings(self):
-        super().call_reset_settings()
-
-        self.set_Sampling()
-        self.set_SpatialType()
-        self.set_AngularDistribution()
-        self.set_Depth()
-        self.set_PhotonEnergyDistribution()
-        # self.set_Polarization()
-
-    def set_OptimizeSource(self):
-        self.optimize_file_name_box.setVisible(self.optimize_source != 0)
-
+    # def call_reset_settings(self):
+    #     super().call_reset_settings()
+    #
+    #     self.set_Sampling()
+    #     self.set_SpatialType()
+    #     self.set_AngularDistribution()
+    #     self.set_Depth()
+    #     self.set_PhotonEnergyDistribution()
+    #     # self.set_Polarization()
+    #
+    # def set_OptimizeSource(self):
+    #     self.optimize_file_name_box.setVisible(self.optimize_source != 0)
+    #
     def set_SpatialType(self):
-        self.spatial_type_box_1.setVisible(self.spatial_type == 1)
-        self.spatial_type_box_2.setVisible(self.spatial_type == 2)
-        self.spatial_type_box_3.setVisible(self.spatial_type == 3)
+        pass
+    #     self.spatial_type_box_1.setVisible(self.spatial_type == 1)
+    #     self.spatial_type_box_2.setVisible(self.spatial_type == 2)
+    #     self.spatial_type_box_3.setVisible(self.spatial_type == 3)
+    #
+    # def set_AngularDistributionLimits(self):
+    #     self.le_horizontal_lim_x_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
+    #     self.le_horizontal_lim_x_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
+    #     self.le_vertical_lim_z_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
+    #     self.le_vertical_lim_z_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
+    #
+    # def set_AngularDistribution(self):
+    #     self.angular_distribution_box_1.setVisible(self.angular_distribution == 0 or self.angular_distribution == 1)
+    #     self.angular_distribution_box_2.setVisible(self.angular_distribution == 2)
+    #     self.angular_distribution_box_3.setVisible(self.angular_distribution == 3)
+    #
+    #     if self.angular_distribution == 2:
+    #         self.set_AngularDistributionLimits()
 
-    def set_AngularDistributionLimits(self):
-        self.le_horizontal_lim_x_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
-        self.le_horizontal_lim_x_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
-        self.le_vertical_lim_z_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
-        self.le_vertical_lim_z_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
-
-    def set_AngularDistribution(self):
-        self.angular_distribution_box_1.setVisible(self.angular_distribution == 0 or self.angular_distribution == 1)
-        self.angular_distribution_box_2.setVisible(self.angular_distribution == 2)
-        self.angular_distribution_box_3.setVisible(self.angular_distribution == 3)
-
-        if self.angular_distribution == 2:
-            self.set_AngularDistributionLimits()
-
-    def set_Depth(self):
-        self.depth_box_1.setVisible(self.depth == 1)
-        self.depth_box_2.setVisible(self.depth == 2)
+    # def set_Depth(self):
+    #     self.depth_box_1.setVisible(self.depth == 1)
+    #     self.depth_box_2.setVisible(self.depth == 2)
 
     def set_PhotonEnergyDistribution(self):
         self.ewp_box_1.setVisible(self.photon_energy_distribution == 0)
@@ -590,99 +587,67 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
     def get_lightsource(self):
 
-        gs = SourceGeometrical(name="SourceGeometrical", nrays=self.number_of_rays, seed=self.seed)
+        gs = SourceGridPolar(
+            real_space_width=[self.real_space_width_x, 0.0, self.real_space_width_z],
+            real_space_points=[self.real_space_points_r, self.real_space_points_theta],
+            real_space_center=[self.real_space_center_x, 0.0, self.real_space_center_z],
+            direction_space_width=[self.direction_space_width_x, self.direction_space_width_z],
+            direction_space_points=[self.direction_space_points_r, self.direction_space_points_theta],
+            direction_space_center=[self.direction_space_center_x, self.direction_space_center_z])
 
-        if self.spatial_type == 0: # point
-            gs.set_spatial_type_point()
-        elif self.spatial_type == 1: # rectangle
-            gs.set_spatial_type_rectangle(width=self.rect_width,
-                                          height=self.rect_height,
-                                          )
-        elif self.spatial_type == 2: # ellipse
-            gs.set_spatial_type_ellipse(width=2*self.ell_semiaxis_x,
-                                        height=2*self.ell_semiaxis_z,
-                                        )
-        elif self.spatial_type == 3: # Gaussian
-            gs.set_spatial_type_gaussian(sigma_h=self.gauss_sigma_x,
-                                         sigma_v=self.gauss_sigma_z,
-                                         )
-
-        if self.angular_distribution == 0: # flat
-            gs.set_angular_distribution_flat(hdiv1=-self.horizontal_div_x_minus,
-                                             hdiv2=self.horizontal_div_x_plus,
-                                             vdiv1=-self.vertical_div_z_minus,
-                                             vdiv2=self.vertical_div_z_plus,
-                                               )
-        elif self.angular_distribution == 1: # Uniform
-            gs.set_angular_distribution_uniform(hdiv1=-self.horizontal_div_x_minus,
-                                                hdiv2=self.horizontal_div_x_plus,
-                                                vdiv1=-self.vertical_div_z_minus,
-                                                vdiv2=self.vertical_div_z_plus,
-                                               )
-        elif self.angular_distribution == 2:  # Gaussian
-            if self.angular_distribution_limits != 0:
-                raise Exception("Not yet implemented")
-
-            gs.set_angular_distribution_gaussian(sigdix=self.gauss_sigma_x,
-                                                 sigdiz=self.gauss_sigma_z,
-                                                 )
-        elif self.angular_distribution == 3:  # cone
-            gs.set_angular_distribution_conical(cone_max=self.cone_external_half_aperture,
-                                                cone_min=self.cone_internal_half_aperture,
-                                                )
-
-        elif self.angular_distribution == 4:  # Zero (collimated) - New in shadow4
-            gs.set_angular_distribution_collimated()
+        #
+        #     SourceGeometrical(name="SourceGeometrical", nrays=self.number_of_rays, seed=self.seed)
+        #
 
 
-        # photon energy
-        values = [self.line_value_1,
-                  self.line_value_2,
-                  self.line_value_3,
-                  self.line_value_4,
-                  self.line_value_5,
-                  self.line_value_6,
-                  self.line_value_7,
-                  self.line_value_8,
-                  self.line_value_9,
-                  self.line_value_10,
-                  ]
-
-        weights = [self.line_int_1,
-                  self.line_int_2,
-                  self.line_int_3,
-                  self.line_int_4,
-                  self.line_int_5,
-                  self.line_int_6,
-                  self.line_int_7,
-                  self.line_int_8,
-                  self.line_int_9,
-                  self.line_int_10,
-                  ]
-
-        values = values[0:(self.number_of_lines+1)]
-        weights = weights[0:(self.number_of_lines+1)]
-        unit = ['eV','A'][self.units]
-
-        if self.photon_energy_distribution == 0: # "Single line":
-            gs.set_energy_distribution_singleline(self.single_line_value, unit=unit)
-        elif self.photon_energy_distribution == 1: #"Several lines":
-            gs.set_energy_distribution_severallines(values=values, unit=unit)
-        elif self.photon_energy_distribution == 2: # "Uniform":
-            gs.set_energy_distribution_uniform(value_min=self.uniform_minimum,value_max=self.uniform_maximum,unit=unit)
-        elif self.photon_energy_distribution == 3: # "Relative intensities":
-            gs.set_energy_distribution_relativeintensities(values=values,weights=weights,unit=unit)
-        elif self.photon_energy_distribution == 4: # "Gaussian":
-            gs.set_energy_distribution_gaussian(center=self.gaussian_central_value,sigma=self.gaussian_sigma,unit=unit)
-        elif self.photon_energy_distribution == 5: # "User defined":
-            a = numpy.loadtxt(self.user_defined_file)
-            gs.set_energy_distribution_userdefined(a[:,0],a[:,1],unit=unit)
-
-
-        # polarization / coherence
-        gs.set_polarization(polarization_degree=self.polarization_degree,
-                            phase_diff=self.phase_diff,
-                            coherent_beam=self.coherent_beam)
+        # # photon energy
+        # values = [self.line_value_1,
+        #           self.line_value_2,
+        #           self.line_value_3,
+        #           self.line_value_4,
+        #           self.line_value_5,
+        #           self.line_value_6,
+        #           self.line_value_7,
+        #           self.line_value_8,
+        #           self.line_value_9,
+        #           self.line_value_10,
+        #           ]
+        #
+        # weights = [self.line_int_1,
+        #           self.line_int_2,
+        #           self.line_int_3,
+        #           self.line_int_4,
+        #           self.line_int_5,
+        #           self.line_int_6,
+        #           self.line_int_7,
+        #           self.line_int_8,
+        #           self.line_int_9,
+        #           self.line_int_10,
+        #           ]
+        #
+        # values = values[0:(self.number_of_lines+1)]
+        # weights = weights[0:(self.number_of_lines+1)]
+        # unit = ['eV','A'][self.units]
+        #
+        # if self.photon_energy_distribution == 0: # "Single line":
+        #     gs.set_energy_distribution_singleline(self.single_line_value, unit=unit)
+        # elif self.photon_energy_distribution == 1: #"Several lines":
+        #     gs.set_energy_distribution_severallines(values=values, unit=unit)
+        # elif self.photon_energy_distribution == 2: # "Uniform":
+        #     gs.set_energy_distribution_uniform(value_min=self.uniform_minimum,value_max=self.uniform_maximum,unit=unit)
+        # elif self.photon_energy_distribution == 3: # "Relative intensities":
+        #     gs.set_energy_distribution_relativeintensities(values=values,weights=weights,unit=unit)
+        # elif self.photon_energy_distribution == 4: # "Gaussian":
+        #     gs.set_energy_distribution_gaussian(center=self.gaussian_central_value,sigma=self.gaussian_sigma,unit=unit)
+        # elif self.photon_energy_distribution == 5: # "User defined":
+        #     a = numpy.loadtxt(self.user_defined_file)
+        #     gs.set_energy_distribution_userdefined(a[:,0],a[:,1],unit=unit)
+        #
+        #
+        # # polarization / coherence
+        # gs.set_polarization(polarization_degree=self.polarization_degree,
+        #                     phase_diff=self.phase_diff,
+        #                     coherent_beam=self.coherent_beam)
 
         return gs
 
@@ -704,7 +669,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         # beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
         output_beam = light_source.get_beam()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+        # print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         #
         # beam plots
@@ -731,12 +696,12 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         # send beam
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
-                                           number_of_rays=self.number_of_rays,
+                                           number_of_rays=output_beam.get_number_of_rays(),
                                            beamline=S4Beamline(light_source=light_source)))
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
-    ow = OWGeometrical()
+    ow = OWGrid()
     ow.show()
     a.exec_()
     ow.saveSettings()
