@@ -355,8 +355,9 @@ class OWCrystal(OWOpticalElementWithSurfaceShape, WidgetDecorator):
     #########################################################
 
     def get_optical_element_instance(self):
+
         if self.surface_shape_type == 0:
-            mirror = S4PlaneCrystal(
+            crystal = S4PlaneCrystal(
                 name="Plane Crystal",
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
@@ -395,7 +396,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         else:
             raise NotImplementedError
 
-        return mirror
+        return crystal
 
     def get_beamline_element_instance(self):
 
@@ -429,7 +430,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = OWCrystal()
-    ow.set_beam(get_test_beam())
+    ow.set_shadow_data(get_test_beam())
     ow.show()
     a.exec_()
     ow.saveSettings()

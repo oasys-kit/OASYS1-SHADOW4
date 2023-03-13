@@ -316,7 +316,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = OWMirror()
-    ow.set_beam(get_test_beam())
+    ow.set_shadow_data(get_test_beam())
     ow.show()
     a.exec_()
     ow.saveSettings()
