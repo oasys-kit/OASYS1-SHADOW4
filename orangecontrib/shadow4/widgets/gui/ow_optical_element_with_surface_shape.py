@@ -1,50 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# ----------------------------------------------------------------------- #
-# Copyright (c) 2022, UChicago Argonne, LLC. All rights reserved.         #
-#                                                                         #
-# Copyright 2022. UChicago Argonne, LLC. This software was produced       #
-# under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
-# Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
-# U.S. Department of Energy. The U.S. Government has rights to use,       #
-# reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR    #
-# UChicago Argonne, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR        #
-# ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is     #
-# modified to produce derivative works, such modified software should     #
-# be clearly marked, so as not to confuse it with the version available   #
-# from ANL.                                                               #
-#                                                                         #
-# Additionally, redistribution and use in source and binary forms, with   #
-# or without modification, are permitted provided that the following      #
-# conditions are met:                                                     #
-#                                                                         #
-#     * Redistributions of source code must retain the above copyright    #
-#       notice, this list of conditions and the following disclaimer.     #
-#                                                                         #
-#     * Redistributions in binary form must reproduce the above copyright #
-#       notice, this list of conditions and the following disclaimer in   #
-#       the documentation and/or other materials provided with the        #
-#       distribution.                                                     #
-#                                                                         #
-#     * Neither the name of UChicago Argonne, LLC, Argonne National       #
-#       Laboratory, ANL, the U.S. Government, nor the names of its        #
-#       contributors may be used to endorse or promote products derived   #
-#       from this software without specific prior written permission.     #
-#                                                                         #
-# THIS SOFTWARE IS PROVIDED BY UChicago Argonne, LLC AND CONTRIBUTORS     #
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT       #
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS       #
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL UChicago     #
-# Argonne, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,        #
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,    #
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;        #
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER        #
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT      #
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN       #
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
-# POSSIBILITY OF SUCH DAMAGE.                                             #
-# ----------------------------------------------------------------------- #
-
 import numpy
 import sys
 
@@ -116,6 +69,17 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     is_cylinder                             = Setting(1)
     cylinder_orientation                    = Setting(0)
 
+    conic_coefficient_0 = Setting(0.0)
+    conic_coefficient_1 = Setting(0.0)
+    conic_coefficient_2 = Setting(0.0)
+    conic_coefficient_3 = Setting(0.0)
+    conic_coefficient_4 = Setting(0.0)
+    conic_coefficient_5 = Setting(0.0)
+    conic_coefficient_6 = Setting(0.0)
+    conic_coefficient_7 = Setting(0.0)
+    conic_coefficient_8 = Setting(-1.0)
+    conic_coefficient_9 = Setting(0.0)
+
     #########################################################
     # dimensions
     #########################################################
@@ -156,7 +120,8 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
                 2 : "icons/ellipsoid_" + type + ".png",
                 3 : "icons/hyperboloid_" + type + ".png",
                 4 : "icons/paraboloid_" + type + ".png",
-                5 : "icons/toroidal_" + type + ".png",}
+                5 : "icons/toroidal_" + type + ".png",
+                6 : "icons/conic_coefficients_" + type + ".png",}
 
     @property
     def oe_names(self):
@@ -167,7 +132,8 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
                 "Elliptical " + name,
                 "Hyperbolical " + name,
                 "Parabolical " + name,
-                "Toroidal " + name]
+                "Toroidal " + name,
+                "Conic coefficients " + name]
     @property
     def title_for_shape(self):
         return {0 : self.oe_names[1],
@@ -175,7 +141,8 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
                 2 : self.oe_names[3],
                 3 : self.oe_names[4],
                 4 : self.oe_names[5],
-                5 : self.oe_names[6]}
+                5 : self.oe_names[6],
+                6 : self.oe_names[7]}
 
     def __init__(self):
         super().__init__()
@@ -327,7 +294,7 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
         gui.comboBox(box_1, self, "surface_shape_type", label="Figure",
                      labelWidth=390,
-                     items=["Plane", "Sphere", "Ellipsoid", "Hyperboloid", "Paraboloid", "Toroid"],
+                     items=["Plane", "Sphere", "Ellipsoid", "Hyperboloid", "Paraboloid", "Toroid", "Conic coefficients"],
                      valueType=int,
                      sendSelectedValue=False, orientation="horizontal", callback=self.surface_shape_tab_visibility,
                      tooltip="surface_shape_type")
@@ -439,7 +406,22 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
                             "upper/outer (convex/convex)"],
                      sendSelectedValue=False, orientation="horizontal", tooltip="toroidal_mirror_pole_location")
 
-        #
+        # conic coefficients
+        self.ccc_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical",
+                                                         height=250)
+
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_0", "c[0]=Cxx=", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_1", "c[1]=Cyy=", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_2", "c[2]=Czz=", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_3", "c[3]=Cxy=", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_4", "c[4]=Cyz=", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_5", "c[5]=Cxz=", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_6", "c[6]=Cx=",  labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_7", "c[7]=Cy=",  labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_8", "c[8]=Cz=",  labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_9", "c[9]=C0=",  labelWidth=60, valueType=float, orientation="horizontal")
+
+        # flat or invert
         gui.comboBox(self.focusing_box, self, "surface_curvature", label="Surface Curvature",
                      items=["Concave", "Convex"], labelWidth=280, sendSelectedValue=False, orientation="horizontal",
                      tooltip="surface_curvature")
@@ -560,7 +542,9 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
         self.cylinder_orientation_box.setVisible(False)
 
-        if self.surface_shape_type > 0: # not plane
+        self.ccc_box.setVisible(False)
+
+        if self.surface_shape_type in (1,2,3,4,5): # not plane
             self.focusing_box.setVisible(True)
 
             if self.surface_shape_parameters == 0:
@@ -589,6 +573,8 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
             if self.is_cylinder:
                 self.cylinder_orientation_box.setVisible(True)
+        elif self.surface_shape_type == 6:
+            self.ccc_box.setVisible(True)
 
         if not is_init: self.__change_icon_from_surface_type()
 

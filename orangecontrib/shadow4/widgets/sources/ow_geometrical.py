@@ -126,7 +126,7 @@ class OWUGeometrical(GenericElement, WidgetDecorator):
 
 
     def __init__(self):
-        super().__init__(show_automatic_box=False)
+        super().__init__(show_automatic_box=False, has_footprint=False)
 
 
         self.runaction = widget.OWAction("Run Shadow4/Source", self)

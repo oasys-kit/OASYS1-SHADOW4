@@ -52,7 +52,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
 
     def __init__(self):
-        super().__init__()
+        super().__init__(show_automatic_box=True, has_footprint=False)
 
         #
         # main buttons
@@ -199,7 +199,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
         self._set_plot_quality()
 
-        self._plot_results(output_beam, progressBarValue=80)
+        self._plot_results(output_beam, None, progressBarValue=80)
 
         self.progressBarFinished()
 
@@ -248,7 +248,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = OWBeamMovement()
-    ow.set_beam(get_test_beam())
+    ow.set_shadow_data(get_test_beam())
     ow.show()
     a.exec_()
     ow.saveSettings()

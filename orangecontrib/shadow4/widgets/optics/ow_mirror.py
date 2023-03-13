@@ -9,6 +9,7 @@ from syned.widget.widget_decorator import WidgetDecorator
 from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
 from shadow4.beamline.optical_elements.mirrors.s4_toroidal_mirror import S4ToroidalMirror, S4ToroidalMirrorElement
+from shadow4.beamline.optical_elements.mirrors.s4_conic_mirror import S4ConicMirror, S4ConicMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirror, S4PlaneMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_ellipsoid_mirror import S4EllipsoidMirror, S4EllipsoidMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_hyperboloid_mirror import S4HyperboloidMirror, S4HyperboloidMirrorElement
@@ -259,6 +260,25 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
                 refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
             )
+        elif self.surface_shape_type == 6:
+            mirror = S4ConicMirror(
+                name="Conic coefficients Mirror",
+                boundary_shape=self.get_boundary_shape(),
+                conic_coefficients=[
+                     self.conic_coefficient_0,self.conic_coefficient_1,self.conic_coefficient_2,
+                     self.conic_coefficient_3,self.conic_coefficient_4,self.conic_coefficient_5,
+                     self.conic_coefficient_6,self.conic_coefficient_7,self.conic_coefficient_8,
+                     self.conic_coefficient_9],
+                # inputs related to mirror reflectivity
+                f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
+                f_refl=self.reflectivity_source,  # 0=prerefl file
+                # 1=electric susceptibility
+                # 2=user defined file (1D reflectivity vs angle)
+                # 3=user defined file (1D reflectivity vs energy)
+                # 4=user defined file (2D reflectivity vs energy and angle)
+                file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+            )
 
         return mirror
 
@@ -269,6 +289,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         elif self.surface_shape_type == 3: optical_element = S4HyperboloidMirrorElement()
         elif self.surface_shape_type == 4: optical_element = S4ParaboloidMirrorElement()
         elif self.surface_shape_type == 5: optical_element = S4ToroidalMirrorElement()
+        elif self.surface_shape_type == 6: optical_element = S4ConicMirrorElement()
 
         return optical_element
 
