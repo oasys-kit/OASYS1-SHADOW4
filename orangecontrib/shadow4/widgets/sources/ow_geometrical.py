@@ -622,9 +622,8 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         elif self.angular_distribution == 2:  # Gaussian
             if self.angular_distribution_limits != 0:
                 raise Exception("Not yet implemented")
-
-            gs.set_angular_distribution_gaussian(sigdix=self.gauss_sigma_x,
-                                                 sigdiz=self.gauss_sigma_z,
+            gs.set_angular_distribution_gaussian(sigdix=self.horizontal_sigma_x,
+                                                 sigdiz=self.vertical_sigma_z,
                                                  )
         elif self.angular_distribution == 3:  # cone
             gs.set_angular_distribution_conical(cone_max=self.cone_external_half_aperture,
