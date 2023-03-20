@@ -82,7 +82,7 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
         beam3.rays = beam4.rays.copy()
         print(">>beam3: ", beam3)
         print(beam4.get_number_of_rays(), beam3.nrays())
-        output_beam3 = ShadowBeam3(oe_number=0, beam=beam3, number_of_rays=self.shadow_data.get_number_of_rays())
+        output_beam3 = ShadowBeam3(beam=beam3, number_of_rays=self.shadow_data.get_number_of_rays())
         print(output_beam3)
         self.send("Shadow3 Beam", output_beam3)
 

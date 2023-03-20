@@ -81,7 +81,7 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
     def convert_beam(self):
         beam3 = self.shadow_beam._beam
         print(">>beam3: ", beam3)
-        beam4 = ShadowBeam4(oe_number=0, beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
+        beam4 = ShadowBeam4(beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
         print(beam4)
         self.send("Shadow Data", beam4)
 
