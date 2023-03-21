@@ -407,8 +407,7 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
                      sendSelectedValue=False, orientation="horizontal", tooltip="toroidal_mirror_pole_location")
 
         # conic coefficients
-        self.ccc_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical",
-                                                         height=250)
+        self.ccc_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical", height=250)
 
         oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_0", "c[0]=Cxx=", labelWidth=60, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_1", "c[1]=Cyy=", labelWidth=60, valueType=float, orientation="horizontal")
