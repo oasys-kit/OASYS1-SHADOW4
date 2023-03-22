@@ -83,7 +83,7 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     #########################################################
     # dimensions
     #########################################################
-    is_infinite  = Setting(0)
+    is_infinite  = Setting(1)
     oe_shape = Setting(0)
     dim_x_plus   = Setting(1.0)
     dim_x_minus  = Setting(1.0)
@@ -445,7 +445,7 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         dimension_box = oasysgui.widgetBox(subtab_dimensions, "Dimensions", addSpace=True, orientation="vertical")
 
         gui.comboBox(dimension_box, self, "is_infinite", label="Limits Check",
-                     items=["Infinite o.e. dimensions", "Finite o.e. dimensions"],
+                     items=["Finite o.e. dimensions", "Infinite o.e. dimensions"],
                      callback=self.dimensions_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="is_infinite")
 
@@ -583,8 +583,8 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
     def dimensions_tab_visibility(self):
 
-        if self.is_infinite: self.dimdet_box.setVisible(True)
-        else:                self.dimdet_box.setVisible(False)
+        if self.is_infinite: self.dimdet_box.setVisible(False)
+        else:                self.dimdet_box.setVisible(True)
 
     #########################################################
     # S4 objects
