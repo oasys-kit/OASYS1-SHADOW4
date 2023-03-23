@@ -615,13 +615,26 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
                                b_axis_min=-self.dim_y_minus, b_axis_max=self.dim_y_plus)
 
     def get_coordinates(self):
-        print(">>>>>>inc ref m.o.a. in deg:",self.incidence_angle_deg,self.reflection_angle_deg, self.get_oe_orientation_angle())
+
+        # if self.angles_respect_to == 0: # respect to normal
+        #     angle_radial = self.incidence_angle_mrad * 1e-3
+        #     angle_radial_out = self.reflection_angle_mrad * 1e-3
+        # else:
+        angle_radial = numpy.pi / 2 - self.incidence_angle_mrad * 1e-3
+        angle_radial_out = numpy.pi / 2 - self.reflection_angle_mrad * 1e-3
+
+        print(">>>>>>normal inc ref [deg]:", numpy.degrees(angle_radial), numpy.degrees(angle_radial_out),
+              self.get_oe_orientation_angle())
+        print(">>>>>>grazing inc ref [mrad]:", 1e3 * angle_radial, 1e3 * angle_radial_out,
+              self.get_oe_orientation_angle())
+        print(">>>>>>m.o.a. [deg]:", self.get_oe_orientation_angle())
+
         return ElementCoordinates(
                 p=self.source_plane_distance,
                 q=self.image_plane_distance,
-                angle_radial=numpy.radians(self.incidence_angle_deg),
+                angle_radial=angle_radial,
                 angle_azimuthal=numpy.radians(self.get_oe_orientation_angle()),
-                angle_radial_out=numpy.radians(self.reflection_angle_deg),
+                angle_radial_out=angle_radial_out,
                 )
 
 
