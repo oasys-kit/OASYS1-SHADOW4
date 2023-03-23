@@ -90,6 +90,14 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     dim_y_plus   = Setting(1.0)
     dim_y_minus  = Setting(1.0)
 
+    #########################################################
+    # modified surface
+    #########################################################
+
+    modified_surface = Setting(0)
+    ms_defect_file_name = Setting("<none>.hdf5")
+
+
     input_data = None
 
     def createdFromNode(self, node):
@@ -467,7 +475,30 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         self.dimensions_tab_visibility()
 
     def populate_tab_modified_surface(self, subtab_modified_surface):
-        box = oasysgui.widgetBox(subtab_modified_surface, "Not yet implemented", addSpace=True, orientation="vertical")
+        box = oasysgui.widgetBox(subtab_modified_surface, "Modified Surface Parameters", addSpace=True, orientation="vertical")
+
+        # mod_surf_box = oasysgui.widgetBox(tab_adv_mod_surf, "Modified Surface Parameters", addSpace=False,
+        #                                   orientation="vertical", height=390)
+
+        gui.comboBox(box, self, "modified_surface", label="Modification Type", labelWidth=260,
+                     items=["None", "Surface Error (numeric mesh)"],
+                     callback=self.modified_surface_tab_visibility, sendSelectedValue=False, orientation="horizontal")
+
+        gui.separator(box, height=10)
+
+
+        self.mod_surf_err_box_1 = oasysgui.widgetBox(box, "", addSpace=False,
+                                                     orientation="horizontal")
+
+        self.le_ms_defect_file_name = oasysgui.lineEdit(self.mod_surf_err_box_1, self, "ms_defect_file_name",
+                                                        "File name", labelWidth=80, valueType=str,
+                                                        orientation="horizontal")
+
+        gui.button(self.mod_surf_err_box_1, self, "...", callback=self.select_defect_file_name)
+        # gui.button(self.mod_surf_err_box_1, self, "View", callback=self.viewDefectFileName)
+
+        self.modified_surface_tab_visibility()
+
 
     def populate_tab_oe_movement(self, subtab_oe_movement):
         box = oasysgui.widgetBox(subtab_oe_movement, "Not yet implemented", addSpace=True, orientation="vertical")
@@ -585,6 +616,19 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
         if self.is_infinite: self.dimdet_box.setVisible(False)
         else:                self.dimdet_box.setVisible(True)
+
+    #########################################################
+    # Modified surface
+    #########################################################
+
+    def modified_surface_tab_visibility(self):
+        if self.modified_surface: self.mod_surf_err_box_1.setVisible(True)
+        else:                     self.mod_surf_err_box_1.setVisible(False)
+
+
+    def select_defect_file_name(self):
+        self.le_ms_defect_file_name.setText(oasysgui.selectFileFromDialog(self, self.ms_defect_file_name, "Select Defect File Name", file_extension_filter="Data Files (*.h5 *.hdf5)"))
+
 
     #########################################################
     # S4 objects

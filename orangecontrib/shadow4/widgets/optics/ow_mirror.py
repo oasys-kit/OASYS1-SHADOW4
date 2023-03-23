@@ -16,6 +16,11 @@ from shadow4.beamline.optical_elements.mirrors.s4_hyperboloid_mirror import S4Hy
 from shadow4.beamline.optical_elements.mirrors.s4_paraboloid_mirror import S4ParaboloidMirror, S4ParaboloidMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_sphere_mirror import S4SphereMirror, S4SphereMirrorElement
 
+from shadow4.beamline.optical_elements.mirrors.s4_numerical_mesh_mirror import S4NumericalMeshMirror
+from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirror
+from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirrorElement
+
+
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
@@ -280,18 +285,31 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
             )
 
-        return mirror
+        # if error is selected...
+
+        if self.modified_surface:
+            # todo: check congruence of limits
+            return S4AdditionalNumericalMeshMirror(name="ideal + error Mirror",
+                                                   ideal_mirror=mirror,
+                                                   numerical_mesh_mirror=S4NumericalMeshMirror(
+                                                       surface_data_file=self.ms_defect_file_name,
+                                                       boundary_shape=None),
+                                                   )
+        else:
+            return mirror
 
     def get_beamline_element_instance(self):
-        if self.surface_shape_type == 0:   optical_element = S4PlaneMirrorElement()
-        elif self.surface_shape_type == 1: optical_element = S4SphereMirrorElement()
-        elif self.surface_shape_type == 2: optical_element = S4EllipsoidMirrorElement()
-        elif self.surface_shape_type == 3: optical_element = S4HyperboloidMirrorElement()
-        elif self.surface_shape_type == 4: optical_element = S4ParaboloidMirrorElement()
-        elif self.surface_shape_type == 5: optical_element = S4ToroidalMirrorElement()
-        elif self.surface_shape_type == 6: optical_element = S4ConicMirrorElement()
+        if self.modified_surface:
+            return S4AdditionalNumericalMeshMirrorElement()
+        else:
+            if self.surface_shape_type == 0:   return S4PlaneMirrorElement()
+            elif self.surface_shape_type == 1: return S4SphereMirrorElement()
+            elif self.surface_shape_type == 2: return S4EllipsoidMirrorElement()
+            elif self.surface_shape_type == 3: return S4HyperboloidMirrorElement()
+            elif self.surface_shape_type == 4: return S4ParaboloidMirrorElement()
+            elif self.surface_shape_type == 5: return S4ToroidalMirrorElement()
+            elif self.surface_shape_type == 6: return S4ConicMirrorElement()
 
-        return optical_element
 
     def calculate_incidence_angle_mrad(self):
         super().calculate_incidence_angle_mrad()
