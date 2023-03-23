@@ -200,23 +200,23 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
         self.spatial_type_box_1 = oasysgui.widgetBox(spatial_type_box, "", addSpace=False, orientation="vertical")
 
-        self.le_rect_width = oasysgui.lineEdit(self.spatial_type_box_1, self, "rect_width", "Width", labelWidth=260,
+        self.le_rect_width = oasysgui.lineEdit(self.spatial_type_box_1, self, "rect_width", "Width X [m]", labelWidth=260,
                                                valueType=float, orientation="horizontal")
-        self.le_rect_height = oasysgui.lineEdit(self.spatial_type_box_1, self, "rect_height", "Height", labelWidth=260,
+        self.le_rect_height = oasysgui.lineEdit(self.spatial_type_box_1, self, "rect_height", "Height Z [m]", labelWidth=260,
                                                 valueType=float, orientation="horizontal")
 
         self.spatial_type_box_2 = oasysgui.widgetBox(spatial_type_box, "", addSpace=False, orientation="vertical")
 
-        self.le_ell_semiaxis_x = oasysgui.lineEdit(self.spatial_type_box_2, self, "ell_semiaxis_x", "Semi-Axis X",
+        self.le_ell_semiaxis_x = oasysgui.lineEdit(self.spatial_type_box_2, self, "ell_semiaxis_x", "Semi-Axis X [m]",
                                                    labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_ell_semiaxis_z = oasysgui.lineEdit(self.spatial_type_box_2, self, "ell_semiaxis_z", "Semi-Axis Z",
+        self.le_ell_semiaxis_z = oasysgui.lineEdit(self.spatial_type_box_2, self, "ell_semiaxis_z", "Semi-Axis Z [m]",
                                                    labelWidth=260, valueType=float, orientation="horizontal")
 
         self.spatial_type_box_3 = oasysgui.widgetBox(spatial_type_box, "", addSpace=False, orientation="vertical")
 
-        self.le_gauss_sigma_x = oasysgui.lineEdit(self.spatial_type_box_3, self, "gauss_sigma_x", "Sigma X",
+        self.le_gauss_sigma_x = oasysgui.lineEdit(self.spatial_type_box_3, self, "gauss_sigma_x", "Sigma X [m]",
                                                   labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_gauss_sigma_z = oasysgui.lineEdit(self.spatial_type_box_3, self, "gauss_sigma_z", "Sigma Z",
+        self.le_gauss_sigma_z = oasysgui.lineEdit(self.spatial_type_box_3, self, "gauss_sigma_z", "Sigma Z [m]",
                                                   labelWidth=260, valueType=float, orientation="horizontal")
 
         self.set_SpatialType()
@@ -224,7 +224,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         angular_distribution_box = oasysgui.widgetBox(left_box_2, "Angular Distribution", addSpace=True,
                                                       orientation="vertical", height=260)
 
-        items = SourceGeometrical.angular_distribution_list() # ["Flat", "Uniform", "Gaussian", "Conical","Collimated"]
+        items = SourceGeometrical.angular_distribution_list() # ["Flat", "Uniform", "Gaussian", "Cone","Collimated"]
         gui.comboBox(angular_distribution_box, self, "angular_distribution", label="Angular Distribution",
                      labelWidth=355, items=items, orientation="horizontal", callback=self.set_AngularDistribution)
 
@@ -626,7 +626,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
                                                  sigdiz=self.vertical_sigma_z,
                                                  )
         elif self.angular_distribution == 3:  # cone
-            gs.set_angular_distribution_conical(cone_max=self.cone_external_half_aperture,
+            gs.set_angular_distribution_cone(cone_max=self.cone_external_half_aperture,
                                                 cone_min=self.cone_internal_half_aperture,
                                                 )
 
