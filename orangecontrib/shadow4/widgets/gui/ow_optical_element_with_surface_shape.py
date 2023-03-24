@@ -1,14 +1,15 @@
 import numpy
-import sys
+import sys, os
 
 from PyQt5.QtGui import QPalette, QColor, QFont
+from PyQt5 import QtWidgets
 
 from orangewidget import widget
 from orangewidget import gui
 from orangewidget.settings import Setting
 
 from oasys.widgets import gui as oasysgui
-from oasys.util.oasys_util import EmittingStream
+from oasys.util.oasys_util import EmittingStream, read_surface_file
 
 from syned.widget.widget_decorator import WidgetDecorator
 
@@ -22,6 +23,7 @@ from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
 from orangecanvas.resources import icon_loader
 from orangecanvas.scheme.node import SchemeNode
+
 
 class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
@@ -607,6 +609,48 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
             self.ccc_box.setVisible(True)
 
         if not is_init: self.__change_icon_from_surface_type()
+
+    def congruence_surface_data_file(self):
+
+        # check congruence of limits and ask for corrections
+        surface_data_file = self.ms_defect_file_name
+
+        if not os.path.isfile(surface_data_file):
+            raise Exception("File %s not found." % surface_data_file)
+
+        ask_for_fix = False
+        if self.is_infinite:
+            ask_for_fix = True
+        else:
+            if self.oe_shape != 0:
+                ask_for_fix = True
+
+        if ask_for_fix:
+            xx, yy, zz = read_surface_file(surface_data_file)
+
+            print(">>>> File limits: ", xx.min(), xx.max(), yy.min(), yy.max())
+            print(">>>> Current limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
+
+            if (xx.min() > -self.dim_x_minus) or \
+                    (xx.max() > self.dim_x_plus) or \
+                    (yy.min() > -self.dim_y_minus) or \
+                    (y.max() > self.dim_y_plus):
+                if QtWidgets.QMessageBox.information(self, "Confirm Modification",
+                                                     "Dimensions of this O.E. must be changed in order to ensure congruence with the error profile surface, accept?",
+                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes:
+                    self.is_infinite = 0
+                    self.oe_shape = 0
+                    self.dim_x_minus = numpy.min((-xx.min(), self.dim_x_minus))
+                    self.dim_x_plus = numpy.min((xx.max(), self.dim_x_plus))
+                    self.dim_y_minus = numpy.min((-yy.min(), self.dim_y_minus))
+                    self.dim_y_plus = numpy.min((yy.max(), self.dim_y_plus))
+
+                    print(">>>> NEW limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
+
+                    self.dimensions_tab_visibility()
+                else:
+                    print(">>>> **NOT CHANGED** limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
+
 
     #########################################################
     # Dimensions Methods

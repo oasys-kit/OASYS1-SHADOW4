@@ -151,9 +151,15 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
     #########################################################
 
     def get_optical_element_instance(self):
+
+        # possible change of limits to match with the surface data file (must be done before creating mirror)
+        if self.modified_surface: self.congruence_surface_data_file()
+
+
         #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
         #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
         #  Side:  SOURCE = 0  IMAGE = 1
+
         if self.surface_shape_type == 0:
             mirror = S4PlaneMirror(
                 name="Plane Mirror",
@@ -204,8 +210,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
                 refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
                 # refraction index (complex) for f_refl=1
-                coating_material=self.coating_material,  # string with coating material formula for f_refl=5,6
-                coating_density=self.coating_density,  # coating material density for f_refl=5,6
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
                 coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 2:
@@ -351,7 +357,6 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         # if error is selected...
 
         if self.modified_surface:
-            # todo: check congruence of limits
             return S4AdditionalNumericalMeshMirror(name="ideal + error Mirror",
                                                    ideal_mirror=mirror,
                                                    numerical_mesh_mirror=S4NumericalMeshMirror(
@@ -419,6 +424,10 @@ if __name__ == "__main__":
     a = QApplication(sys.argv)
     ow = OWMirror()
     ow.set_shadow_data(get_test_beam())
+    ow.modified_surface = 1
+    ow.ms_defect_file_name = "/users/srio/Oasys/lens_profile_2D.h5"
+    ow.modified_surface_tab_visibility()
+
     ow.show()
     a.exec_()
     ow.saveSettings()
