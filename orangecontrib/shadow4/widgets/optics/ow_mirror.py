@@ -45,6 +45,10 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
     refraction_index_delta        = Setting(1e-5)
     refraction_index_beta         = Setting(1e-3)
 
+    coating_material = Setting("Si")
+    coating_density = Setting(2.33)
+    coating_roughness = Setting(0.0)
+
     def __init__(self):
         super(OWMirror, self).__init__()
 
@@ -69,10 +73,10 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         # # file_refl = "",  # preprocessor file fir f_refl=0,2,3,4
         # # refraction_index = 1.0,  # refraction index (complex) for f_refl=1
 
-        box_1 = oasysgui.widgetBox(subtab_reflectivity, "Reflectivity Parameter", addSpace=True, orientation="vertical")
+        box_1 = oasysgui.widgetBox(subtab_reflectivity, "Mirror Reflectivity", addSpace=True, orientation="vertical")
 
         gui.comboBox(box_1, self, "reflectivity_flag", label="Reflectivity", labelWidth=150,
-                     items=["Not considered", "Full polarization"],
+                     items=["Not considered", "Yes"],
                      callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="reflectivity_flag")
 
@@ -83,6 +87,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                             "file 1D: (reflectivity vs angle)",
                             "file 1D: (reflectivity vs energy)",
                             "file 2D: (reflectivity vs energy and angle)",
+                            "Internal (using xraylib)",
+                            "Internal (using Dabax)",
                             ],
                      callback=self.reflectivity_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="reflectivity_source")
@@ -94,15 +100,27 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         gui.button(self.file_refl_box, self, "...", callback=self.select_file_refl)
 
 
-        self.refraction_index_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
+        self.refraction_index_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical", height=50)
         oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_delta",
-                          "n=1-delta+i beta; delta: ", labelWidth=110, valueType=float,
+                          "n=1-delta+i beta; delta: ", labelWidth=180, valueType=float,
                           orientation="horizontal", tooltip="refraction_index_delta")
 
         oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_beta",
-                          "beta: ", labelWidth=30, valueType=float,
+                          "                  beta: ", labelWidth=180, valueType=float,
                           orientation="horizontal", tooltip="refraction_index_beta")
 
+        self.material_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical", height=150)
+        oasysgui.lineEdit(self.material_refl_box, self, "coating_material",
+                          "Coating material (formula): ", labelWidth=180, valueType=str,
+                          orientation="horizontal", tooltip="coating_material")
+
+        oasysgui.lineEdit(self.material_refl_box, self, "coating_density",
+                          "Coating density [g/cm^3]: ", labelWidth=180, valueType=float,
+                          orientation="horizontal", tooltip="coating_density")
+
+        oasysgui.lineEdit(self.material_refl_box, self, "coating_roughness",
+                          "Coating rouughness rms [A]: ", labelWidth=180, valueType=float,
+                          orientation="horizontal", tooltip="coating_roughness")
         self.reflectivity_tab_visibility()
 
     #########################################################
@@ -112,14 +130,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         self.reflectivity_flag_box.setVisible(False)
         self.file_refl_box.setVisible(False)
         self.refraction_index_box.setVisible(False)
+        self.material_refl_box.setVisible(False)
 
         if self.reflectivity_flag == 1:
             self.reflectivity_flag_box.setVisible(True)
 
+        if self.reflectivity_source == 1: self.refraction_index_box.setVisible(True)
+
         if self.reflectivity_source in [0, 2, 3, 4]:
             self.file_refl_box.setVisible(True)
-        else:
-            self.refraction_index_box.setVisible(True)
+
+        if self.reflectivity_source in [5,6]:
+            self.material_refl_box.setVisible(True)
 
     def select_file_refl(self):
         self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
@@ -139,12 +161,17 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta,  # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 1:
             print("FOCUSING DISTANCES: convexity:  ", numpy.logical_not(self.surface_curvature).astype(int))
@@ -168,12 +195,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+                # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,  # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,  # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 2:
             mirror = S4EllipsoidMirror(
@@ -191,12 +224,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+                # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 3:
             mirror = S4HyperboloidMirror(
@@ -214,12 +253,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+                # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 4:
             mirror = S4ParaboloidMirror(
@@ -238,12 +283,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+                # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 5:
             mirror = S4ToroidalMirror(
@@ -258,12 +309,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+                # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 6:
             mirror = S4ConicMirror(
@@ -277,12 +334,18 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
                 f_refl=self.reflectivity_source,  # 0=prerefl file
-                # 1=electric susceptibility
-                # 2=user defined file (1D reflectivity vs angle)
-                # 3=user defined file (1D reflectivity vs energy)
-                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 1=electric susceptibility
+                                                # 2=user defined file (1D reflectivity vs angle)
+                                                # 3=user defined file (1D reflectivity vs energy)
+                                                # 4=user defined file (2D reflectivity vs energy and angle)
+                                                # 5=direct calculation using xraylib
+                                                # 6=direct calculation using dabax
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
-                refraction_index=1-self.refraction_index_delta+1j*self.refraction_index_beta  # refraction index (complex) for f_refl=1
+                refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+                # refraction index (complex) for f_refl=1
+                coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+                coating_density=self.coating_density,      # coating material density for f_refl=5,6
+                coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
 
         # if error is selected...
