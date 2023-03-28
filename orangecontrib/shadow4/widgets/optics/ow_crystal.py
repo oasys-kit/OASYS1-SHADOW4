@@ -64,13 +64,13 @@ class OWCrystal(OWOpticalElementWithSurfaceShape, WidgetDecorator):
     def __init__(self):
         super(OWCrystal, self).__init__()
 
-    def create_specific_subtabs(self, tabs_basic_setting):
+    def create_basic_settings_specific_subtabs(self, tabs_basic_setting):
         subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Xtal Diff")    # to be populated
         subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Xtal Geom")    # to be populated
 
         return subtab_crystal_diffraction, subtab_crystal_geometry
 
-    def populate_specific_subtabs(self, specific_subtabs):
+    def populate_basic_settings_specific_subtabs(self, specific_subtabs):
         subtab_crystal_diffraction, subtab_crystal_geometry = specific_subtabs
 
         #########################################################

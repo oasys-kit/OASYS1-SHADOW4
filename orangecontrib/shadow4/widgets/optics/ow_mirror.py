@@ -53,9 +53,9 @@ class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
         super(OWMirror, self).__init__()
 
 
-    def create_specific_subtabs(self, tabs_basic_setting): return oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")
+    def create_basic_settings_specific_subtabs(self, tabs_basic_setting): return oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")
 
-    def populate_specific_subtabs(self, specific_subtabs):
+    def populate_basic_settings_specific_subtabs(self, specific_subtabs):
         subtab_reflectivity = specific_subtabs
 
         #########################################################
@@ -414,7 +414,7 @@ if __name__ == "__main__":
 
         from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
         light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
-                                             magnetic_structure=sourceundulator, nrays=5000, seed=5676561)
+                                              magnetic_structure=sourceundulator, nrays=5000, seed=5676561)
 
         beam = light_source.get_beam_in_gaussian_approximation()
 

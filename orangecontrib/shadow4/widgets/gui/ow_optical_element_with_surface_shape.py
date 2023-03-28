@@ -11,13 +11,11 @@ from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
 from oasys.util.oasys_util import EmittingStream, read_surface_file
 
-from syned.widget.widget_decorator import WidgetDecorator
-
 from syned.beamline.element_coordinates import ElementCoordinates
 from syned.beamline.shape import Rectangle
 from syned.beamline.shape import Ellipse
 
-from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
+from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
@@ -25,26 +23,7 @@ from orangecanvas.resources import icon_loader
 from orangecanvas.scheme.node import SchemeNode
 
 
-class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
-    inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
-    WidgetDecorator.append_syned_input_data(inputs)
-
-    outputs = [{"name":"Shadow Data",
-                "type":ShadowData,
-                "doc":"",}]
-
-    #########################################################
-    # Position
-    #########################################################
-    source_plane_distance           = Setting(1.0)
-    image_plane_distance            = Setting(1.0)
-    angles_respect_to               = Setting(0)
-    incidence_angle_deg             = Setting(88.8)
-    incidence_angle_mrad            = Setting(0.0)
-    reflection_angle_deg            = Setting(85.0)
-    reflection_angle_mrad           = Setting(0.0)
-    oe_orientation_angle            = Setting(1)
-    oe_orientation_angle_user_value = Setting(0.0)
+class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
     #########################################################
     # surface shape
@@ -107,7 +86,7 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         self.__change_icon_from_surface_type()
 
     def widgetNodeAdded(self, node_item : SchemeNode):
-        super(GenericElement, self).widgetNodeAdded(node_item)
+        super(OWOpticalElementWithSurfaceShape, self).widgetNodeAdded(node_item)
         self.__change_icon_from_surface_type()
 
     def __change_icon_from_surface_type(self):
@@ -157,62 +136,20 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
     def __init__(self):
         super().__init__()
 
-        #
-        # main buttons
-        #
-        self.runaction = widget.OWAction("Run Shadow4/Trace", self)
-        self.runaction.triggered.connect(self.run_shadow4)
-        self.addAction(self.runaction)
+    def create_basic_settings_subtabs(self, tabs_basic_settings):
+        subtab_surface_shape            = oasysgui.createTabPage(tabs_basic_settings, "Surface Shape")  # to be populated
+        specific_basic_settings_subtabs = self.create_basic_settings_specific_subtabs(tabs_basic_settings)
+        subtab_dimensions               = oasysgui.createTabPage(tabs_basic_settings, "Dimensions")        # to be populated
 
-        button_box = oasysgui.widgetBox(self.controlArea, "", addSpace=False, orientation="horizontal")
+        return subtab_surface_shape, specific_basic_settings_subtabs, subtab_dimensions
 
-        button = gui.button(button_box, self, "Run shadow4/trace", callback=self.run_shadow4)
-        font = QFont(button.font())
-        font.setBold(True)
-        button.setFont(font)
-        palette = QPalette(button.palette()) # make a copy of the palette
-        palette.setColor(QPalette.ButtonText, QColor('Dark Blue'))
-        button.setPalette(palette) # assign new palette
-        button.setFixedHeight(45)
+    def create_advanced_settings_subtabs(self, tabs_advanced_settings):
+        subtab_modified_surface = oasysgui.createTabPage(tabs_advanced_settings, "Modified Surface")  # to be populated
 
-        button = gui.button(button_box, self, "Reset Fields", callback=self.call_reset_settings)
-        font = QFont(button.font())
-        font.setItalic(True)
-        button.setFont(font)
-        palette = QPalette(button.palette()) # make a copy of the palette
-        palette.setColor(QPalette.ButtonText, QColor('Dark Red'))
-        button.setPalette(palette) # assign new palette
-        button.setFixedHeight(45)
-        button.setFixedWidth(150)
+        return subtab_modified_surface
 
-        #
-        # tabs
-        #
-        self.tabs_control_area = oasysgui.tabWidget(self.controlArea)
-        self.tabs_control_area.setFixedHeight(self.TABS_AREA_HEIGHT)
-        self.tabs_control_area.setFixedWidth(self.CONTROL_AREA_WIDTH-5)
-
-        tab_position         = oasysgui.createTabPage(self.tabs_control_area, "Position")           # to be populated
-        tab_basic_settings   = oasysgui.createTabPage(self.tabs_control_area, "Basic Settings")
-        tabs_basic_setting   = oasysgui.tabWidget(tab_basic_settings)
-        subtab_surface_shape = oasysgui.createTabPage(tabs_basic_setting, "Surface Shape")  # to be populated
-        specific_subtabs     = self.create_specific_subtabs(tabs_basic_setting)
-        subtab_dimensions    = oasysgui.createTabPage(tabs_basic_setting, "Dimensions")        # to be populated
-        
-        tab_advanced_settings = oasysgui.createTabPage(self.tabs_control_area, "Advanced Settings")
-        tabs_advanced_settings = oasysgui.tabWidget(tab_advanced_settings)
-        subtab_modified_surface = oasysgui.createTabPage(tabs_advanced_settings, "Modified Surface") # to be populated
-        subtab_oe_movement= oasysgui.createTabPage(tabs_advanced_settings, "O.E. Movement")          # to be populated        
-        # subtab_output_files = oasysgui.createTabPage(tabs_advanced_settings, "Output Files")
-
-        #
-        # populate tabs with widgets
-        #
-
-        #########################################################
-        # Position
-        #########################################################
-        self.populate_tab_position(tab_position)
+    def populate_basic_setting_subtabs(self, basic_setting_subtabs):
+        subtab_surface_shape, specific_basic_settings_subtabs, subtab_dimensions = basic_setting_subtabs
 
         #########################################################
         # Basic Settings / Surface Shape
@@ -222,81 +159,23 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
         #########################################################
         # Specific SubTabs
         #########################################################
-        self.populate_specific_subtabs(specific_subtabs)
+        self.populate_basic_settings_specific_subtabs(specific_basic_settings_subtabs)
 
         #########################################################
         # Basic Settings / Dimensions
         #########################################################
         self.populate_tab_dimensions(subtab_dimensions)
-    
+
+    def populate_advanced_setting_subtabs(self, advanced_setting_subtabs):
+        subtab_modified_surface = advanced_setting_subtabs
+
         #########################################################
         # Advanced Settings / Modified Surface
         #########################################################
         self.populate_tab_modified_surface(subtab_modified_surface)
-    
-        #########################################################
-        # Advanced Settings / Modified Surface
-        #########################################################
-        self.populate_tab_oe_movement(subtab_oe_movement)
 
-        gui.rubber(self.controlArea)
-        gui.rubber(self.mainArea)
-
-    def create_specific_subtabs(self, tabs_basic_setting): pass
-    def populate_specific_subtabs(self, specific_subtabs): pass
-    
-    def populate_tab_position(self, tab_position):
-        self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True, orientation="vertical")
-
-        oasysgui.lineEdit(self.orientation_box, self, "source_plane_distance", "Source Plane Distance [m]", labelWidth=260,
-                          valueType=float, orientation="horizontal", tooltip="source_plane_distance")
-        oasysgui.lineEdit(self.orientation_box, self, "image_plane_distance", "Image Plane Distance [m]", labelWidth=260,
-                          valueType=float, orientation="horizontal", tooltip="image_plane_distance")
-
-        gui.comboBox(self.orientation_box, self, "angles_respect_to", label="Angles in [deg] with respect to the",
-                     labelWidth=250, items=["Normal", "Surface"], callback=self.set_angles_respect_to,
-                     sendSelectedValue=False, orientation="horizontal", tooltip="angles_respect_to")
-
-        self.incidence_angle_deg_le = oasysgui.lineEdit(self.orientation_box, self, "incidence_angle_deg",
-                                                        "Incident Angle\nwith respect to the Normal [deg]",
-                                                        labelWidth=220, callback=self.calculate_incidence_angle_mrad,
-                                                        valueType=float, orientation="horizontal", tooltip="incidence_angle_deg")
-        self.incidence_angle_rad_le = oasysgui.lineEdit(self.orientation_box, self, "incidence_angle_mrad",
-                                                        "Incident Angle\nwith respect to the surface [mrad]",
-                                                        labelWidth=220, callback=self.calculate_incidence_angle_deg,
-                                                        valueType=float, orientation="horizontal", tooltip="incidence_angle_mrad")
-        self.reflection_angle_deg_le = oasysgui.lineEdit(self.orientation_box, self, "reflection_angle_deg",
-                                                         "Reflection Angle\nwith respect to the Normal [deg]",
-                                                         labelWidth=220, callback=self.calculate_reflection_angle_mrad,
-                                                         valueType=float, orientation="horizontal", tooltip="reflection_angle_deg")
-        self.reflection_angle_rad_le = oasysgui.lineEdit(self.orientation_box, self, "reflection_angle_mrad",
-                                                         "Reflection Angle\nwith respect to the surface [mrad]",
-                                                         labelWidth=220, callback=self.calculate_reflection_angle_deg,
-                                                         valueType=float, orientation="horizontal", tooltip="reflection_angle_mrad")
-
-        self.set_angles_respect_to()
-
-        self.calculate_incidence_angle_mrad()
-        self.calculate_reflection_angle_mrad()
-
-        if True: # self.graphical_options.is_mirror:
-            self.reflection_angle_deg_le.setEnabled(False)
-            self.reflection_angle_rad_le.setEnabled(False)
-
-        gui.comboBox(self.orientation_box, self, "oe_orientation_angle", label="O.E. Orientation Angle [deg]",
-                     labelWidth=390,
-                     items=[0, 90, 180, 270, "Other value..."],
-                     valueType=float,
-                     sendSelectedValue=False, orientation="horizontal", callback=self.oe_orientation_angle_user,
-                     tooltip="oe_orientation_angle" )
-        self.oe_orientation_angle_user_value_le = oasysgui.widgetBox(self.orientation_box, "", addSpace=False,
-                                                                         orientation="vertical")
-        oasysgui.lineEdit(self.oe_orientation_angle_user_value_le, self, "oe_orientation_angle_user_value",
-                          "O.E. Orientation Angle [deg]",
-                          labelWidth=220,
-                          valueType=float, orientation="horizontal", tooltip="oe_orientation_angle_user_value")
-
-        self.oe_orientation_angle_user()
+    def create_basic_settings_specific_subtabs(self, tabs_basic_setting): return None
+    def populate_basic_settings_specific_subtabs(self, specific_basic_settings_subtabs): pass
 
     def populate_tab_surface_shape(self, subtab_surface_shape):
 
@@ -501,59 +380,6 @@ class OWOpticalElementWithSurfaceShape(GenericElement, WidgetDecorator):
 
         self.modified_surface_tab_visibility()
 
-
-    def populate_tab_oe_movement(self, subtab_oe_movement):
-        box = oasysgui.widgetBox(subtab_oe_movement, "Not yet implemented", addSpace=True, orientation="vertical")
-
-    #########################################################
-    # Position Methods
-    #########################################################
-    def set_angles_respect_to(self):
-        label_1 = self.incidence_angle_deg_le.parent().layout().itemAt(0).widget()
-        label_2 = self.reflection_angle_deg_le.parent().layout().itemAt(0).widget()
-
-        if self.angles_respect_to == 0:
-            label_1.setText("Incident Angle\nwith respect to the normal [deg]")
-            label_2.setText("Reflection Angle\nwith respect to the normal [deg]")
-        else:
-            label_1.setText("Incident Angle\nwith respect to the surface [deg]")
-            label_2.setText("Reflection Angle\nwith respect to the surface [deg]")
-
-        self.calculate_incidence_angle_mrad()
-        self.calculate_reflection_angle_mrad()
-
-    def calculate_incidence_angle_mrad(self):
-        digits = 7
-
-        if self.angles_respect_to == 0: self.incidence_angle_mrad = round(numpy.radians(90-self.incidence_angle_deg)*1000, digits)
-        else:                           self.incidence_angle_mrad = round(numpy.radians(self.incidence_angle_deg)*1000, digits)
-
-    def calculate_reflection_angle_mrad(self):
-        digits = 7
-        if self.angles_respect_to == 0: self.reflection_angle_mrad = round(numpy.radians(90 - self.reflection_angle_deg)*1000, digits)
-        else:                           self.reflection_angle_mrad = round(numpy.radians(self.reflection_angle_deg)*1000, digits)
-
-    def calculate_incidence_angle_deg(self):
-        digits = 10
-        if self.angles_respect_to == 0: self.incidence_angle_deg = round(numpy.degrees(0.5 * numpy.pi - (self.incidence_angle_mrad / 1000)), digits)
-        else:                           self.incidence_angle_deg = round(numpy.degrees(self.incidence_angle_mrad / 1000), digits)
-
-    def calculate_reflection_angle_deg(self):
-        digits = 10
-
-        if self.angles_respect_to == 0: self.reflection_angle_deg = round(numpy.degrees(0.5*numpy.pi-(self.reflection_angle_mrad/1000)), digits)
-        else:                           self.reflection_angle_deg = round(numpy.degrees(self.reflection_angle_mrad/1000), digits)
-
-    def oe_orientation_angle_user(self):
-        if self.oe_orientation_angle < 4: self.oe_orientation_angle_user_value_le.setVisible(False)
-        else:                             self.oe_orientation_angle_user_value_le.setVisible(True)
-
-    def get_oe_orientation_angle(self):
-        if self.oe_orientation_angle == 0:   return 0.0
-        elif self.oe_orientation_angle == 1: return 90.0
-        elif self.oe_orientation_angle == 2: return 180.0
-        elif self.oe_orientation_angle == 3: return 270.0
-        elif self.oe_orientation_angle == 4: return self.oe_orientation_angle_user_value
 
     #########################################################
     # Surface Shape Methods
