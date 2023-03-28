@@ -217,7 +217,24 @@ class OWScreenSlits(OWOpticalElement):
                 angle_radial_out=numpy.pi,
                 )
 
-    def get_optical_element_instance(self): pass
-        #return S4Screen(name=self.getNode().title, )
+    def get_optical_element_instance(self):
+        boundary_shape = None
 
-    def get_beamline_element_instance(self): pass # TODO
+        if self.aperturing == 1:
+            if self.aperture_shape == 0:   boundary_shape = Rectangle(x_left=self.slit_center_xaxis - self.slit_width_xaxis*0.5,
+                                                                      x_right=self.slit_center_xaxis + self.slit_width_xaxis*0.5,
+                                                                      y_bottom=self.slit_center_zaxis - self.slit_height_zaxis*0.5,
+                                                                      y_top=self.slit_center_zaxis + self.slit_height_zaxis*0.5)
+            elif self.aperture_shape == 1: boundary_shape = Ellipse(a_axis_min=self.slit_center_xaxis - self.slit_width_xaxis*0.5,
+                                                                    a_axis_max=self.slit_center_xaxis + self.slit_width_xaxis*0.5,
+                                                                    b_axis_min=self.slit_center_zaxis - self.slit_height_zaxis*0.5,
+                                                                    b_axis_max=self.slit_center_zaxis + self.slit_height_zaxis*0.5)
+
+        return S4Screen(name=self.getNode().title,
+                        boundary_shape=boundary_shape,
+                        i_abs=self.absorption==1,
+                        i_stop=self.open_slit_solid_stop==1,
+                        thick=self.thickness,
+                        file_abs=self.opt_const_file_name)
+
+    def get_beamline_element_instance(self): return S4ScreenElement()
