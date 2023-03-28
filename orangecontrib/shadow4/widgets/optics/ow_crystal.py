@@ -6,7 +6,6 @@ from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
 
-from syned.widget.widget_decorator import WidgetDecorator
 from syned.beamline.optical_elements.crystals.crystal import DiffractionGeometry
 
 from shadow4.beamline.optical_elements.crystals.s4_plane_crystal import S4PlaneCrystal, S4PlaneCrystalElement
@@ -14,7 +13,7 @@ from shadow4.beamline.optical_elements.crystals.s4_plane_crystal import S4PlaneC
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 
-class OWCrystal(OWOpticalElementWithSurfaceShape, WidgetDecorator):
+class OWCrystal(OWOpticalElementWithSurfaceShape):
     name = "Generic Crystal"
     description = "Shadow Crystal"
     icon = "icons/plane_crystal.png"

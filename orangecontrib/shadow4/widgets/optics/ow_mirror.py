@@ -5,7 +5,6 @@ from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
 
-from syned.widget.widget_decorator import WidgetDecorator
 from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
 from shadow4.beamline.optical_elements.mirrors.s4_toroidal_mirror import S4ToroidalMirror, S4ToroidalMirrorElement
@@ -24,7 +23,7 @@ from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirr
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
-class OWMirror(OWOpticalElementWithSurfaceShape, WidgetDecorator):
+class OWMirror(OWOpticalElementWithSurfaceShape):
     name        = "Generic Mirror"
     description = "Shadow Mirror"
     icon        = "icons/plane_mirror.png"

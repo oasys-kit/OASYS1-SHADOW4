@@ -49,28 +49,22 @@ import numpy
 import sys, os
 
 from PyQt5.QtGui import QPalette, QColor, QFont
-from PyQt5 import QtWidgets
 
 from orangewidget import widget
 from orangewidget import gui
 from orangewidget.settings import Setting
 
 from oasys.widgets import gui as oasysgui
-from oasys.util.oasys_util import EmittingStream, read_surface_file
+from oasys.util.oasys_util import EmittingStream
 
 from syned.widget.widget_decorator import WidgetDecorator
-
 from syned.beamline.element_coordinates import ElementCoordinates
-from syned.beamline.shape import Rectangle
-from syned.beamline.shape import Ellipse
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
-from orangecanvas.resources import icon_loader
-from orangecanvas.scheme.node import SchemeNode
-
+NO_FILE_SPECIFIED = "<specify file name>"
 
 class OWOpticalElement(GenericElement, WidgetDecorator):
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
@@ -275,3 +269,83 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         elif self.oe_orientation_angle == 2: return 180.0
         elif self.oe_orientation_angle == 3: return 270.0
         elif self.oe_orientation_angle == 4: return self.oe_orientation_angle_user_value
+
+    def get_coordinates(self):
+
+        # if self.angles_respect_to == 0: # respect to normal
+        #     angle_radial = self.incidence_angle_mrad * 1e-3
+        #     angle_radial_out = self.reflection_angle_mrad * 1e-3
+        # else:
+        angle_radial = numpy.pi / 2 - self.incidence_angle_mrad * 1e-3
+        angle_radial_out = numpy.pi / 2 - self.reflection_angle_mrad * 1e-3
+
+        print(">>>>>>normal inc ref [deg]:", numpy.degrees(angle_radial), numpy.degrees(angle_radial_out),
+              self.get_oe_orientation_angle())
+        print(">>>>>>grazing inc ref [mrad]:", 1e3 * angle_radial, 1e3 * angle_radial_out,
+              self.get_oe_orientation_angle())
+        print(">>>>>>m.o.a. [deg]:", self.get_oe_orientation_angle())
+
+        return ElementCoordinates(
+                p=self.source_plane_distance,
+                q=self.image_plane_distance,
+                angle_radial=angle_radial,
+                angle_azimuthal=numpy.radians(self.get_oe_orientation_angle()),
+                angle_radial_out=angle_radial_out,
+                )
+
+
+    def set_shadow_data(self, input_data):
+        self.not_interactive = self._check_not_interactive_conditions(input_data)
+        self._on_receiving_input()
+
+        if ShadowCongruence.check_empty_data(input_data):
+            self.input_data = input_data.duplicate()
+            if self.is_automatic_run: self.run_shadow4()
+
+    def run_shadow4(self):
+        self.shadow_output.setText("")
+
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
+
+        element = self.get_beamline_element_instance()
+        element.set_optical_element(self.get_optical_element_instance())
+        element.set_coordinates(self.get_coordinates())
+        element.set_input_beam(self.input_data.beam)
+
+        print(element.info())
+
+        self.progressBarInit()
+
+        output_beam, footprint = element.trace_beam()
+
+        beamline = self.input_data.beamline.duplicate()
+        beamline.append_beamline_element(element)
+
+        self._set_plot_quality()
+
+        self._plot_results(output_beam, footprint, progressBarValue=80)
+
+        self.progressBarFinished()
+
+        #
+        # script
+        #
+        script = beamline.to_python_code()
+        script += "\n\n\n# test plot"
+        script += "\nif True:"
+        script += "\n   from srxraylib.plot.gol import plot_scatter"
+        script += "\n   plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
+        script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
+        self.shadow4_script.set_code(script)
+
+        #
+        # send beam
+        #
+        self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline)
+)
+
+    def receive_syned_data(self, data):
+        raise Exception("Not yet implemented")
+
+    def get_optical_element_instance(self): raise NotImplementedError()
+    def get_beamline_element_instance(self): raise NotImplementedError()
