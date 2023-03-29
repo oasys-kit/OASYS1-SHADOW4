@@ -51,6 +51,9 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
     def __init__(self):
         super(OWMirror, self).__init__()
 
+        self.reflection_angle_deg_le.setEnabled(False)
+        self.reflection_angle_rad_le.setEnabled(False)
+
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting): return oasysgui.createTabPage(tabs_basic_setting, "Reflectivity")
 

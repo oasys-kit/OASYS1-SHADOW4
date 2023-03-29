@@ -85,7 +85,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
     incidence_angle_mrad            = Setting(0.0)
     reflection_angle_deg            = Setting(85.0)
     reflection_angle_mrad           = Setting(0.0)
-    oe_orientation_angle            = Setting(1)
+    oe_orientation_angle            = Setting(0)
     oe_orientation_angle_user_value = Setting(0.0)
 
     def __init__(self, show_automatic_box=True, has_footprint=False):
@@ -197,10 +197,6 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
 
         self.calculate_incidence_angle_mrad()
         self.calculate_reflection_angle_mrad()
-
-        if True: # self.graphical_options.is_mirror:
-            self.reflection_angle_deg_le.setEnabled(False)
-            self.reflection_angle_rad_le.setEnabled(False)
 
         gui.comboBox(self.orientation_box, self, "oe_orientation_angle", label="O.E. Orientation Angle [deg]",
                      labelWidth=390,
