@@ -12,7 +12,7 @@ from oasys.util.oasys_util import read_surface_file
 from syned.beamline.shape import Rectangle
 from syned.beamline.shape import Ellipse
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
+from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement, SUBTAB_INNER_BOX_WIDTH
 
 from orangecanvas.resources import icon_loader
 from orangecanvas.scheme.node import SchemeNode
@@ -126,8 +126,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 5 : self.oe_names[6],
                 6 : self.oe_names[7]}
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, show_automatic_box=True, has_footprint=True):
+        super().__init__(show_automatic_box=show_automatic_box, has_footprint=has_footprint)
 
     def create_basic_settings_subtabs(self, tabs_basic_settings):
         subtab_surface_shape            = oasysgui.createTabPage(tabs_basic_settings, "Surface Shape")  # to be populated
@@ -324,7 +324,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.surface_shape_tab_visibility(is_init=True)
 
     def populate_tab_dimensions(self, subtab_dimensions):
-        dimension_box = oasysgui.widgetBox(subtab_dimensions, "Dimensions", addSpace=True, orientation="vertical")
+        dimension_box = oasysgui.widgetBox(subtab_dimensions, "Dimensions", addSpace=True, orientation="vertical", width=SUBTAB_INNER_BOX_WIDTH)
 
         gui.comboBox(dimension_box, self, "is_infinite", label="Limits Check",
                      items=["Finite o.e. dimensions", "Infinite o.e. dimensions"],
@@ -422,15 +422,13 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 elif self.surface_shape_type == 5: # toroid
                     self.focusing_external_toroid.setVisible(True)
 
-            if self.is_cylinder:
-                self.cylinder_orientation_box.setVisible(True)
+            self.cylinder_orientation_box.setVisible(self.is_cylinder==1)
         elif self.surface_shape_type == 6:
             self.ccc_box.setVisible(True)
 
         if not is_init: self.__change_icon_from_surface_type()
 
     def congruence_surface_data_file(self):
-
         # check congruence of limits and ask for corrections
         surface_data_file = self.ms_defect_file_name
 
@@ -438,7 +436,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             raise Exception("File %s not found." % surface_data_file)
 
         ask_for_fix = False
-        if self.is_infinite:
+        if self.is_infinite == 1:
             ask_for_fix = True
         else:
             if self.oe_shape != 0:
@@ -453,7 +451,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             if (xx.min() > -self.dim_x_minus) or \
                     (xx.max() > self.dim_x_plus) or \
                     (yy.min() > -self.dim_y_minus) or \
-                    (y.max() > self.dim_y_plus):
+                    (yy.max() > self.dim_y_plus):
                 if QtWidgets.QMessageBox.information(self, "Confirm Modification",
                                                      "Dimensions of this O.E. must be changed in order to ensure congruence with the error profile surface, accept?",
                                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes:
@@ -476,18 +474,14 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     #########################################################
 
     def dimensions_tab_visibility(self):
-
-        if self.is_infinite: self.dimdet_box.setVisible(False)
-        else:                self.dimdet_box.setVisible(True)
+        self.dimdet_box.setVisible(self.is_infinite==0)
 
     #########################################################
     # Modified surface
     #########################################################
 
     def modified_surface_tab_visibility(self):
-        if self.modified_surface: self.mod_surf_err_box_1.setVisible(True)
-        else:                     self.mod_surf_err_box_1.setVisible(False)
-
+        self.mod_surf_err_box_1.setVisible(self.modified_surface == 1)
 
     def select_defect_file_name(self):
         self.le_ms_defect_file_name.setText(oasysgui.selectFileFromDialog(self, self.ms_defect_file_name, "Select Defect File Name", file_extension_filter="Data Files (*.h5 *.hdf5)"))

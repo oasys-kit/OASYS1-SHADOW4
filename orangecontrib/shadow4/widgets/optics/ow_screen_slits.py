@@ -46,9 +46,6 @@
 # ----------------------------------------------------------------------- #
 
 import numpy
-import sys, os
-
-from PyQt5 import QtWidgets
 
 from orangewidget import gui
 from orangewidget.settings import Setting
@@ -84,9 +81,6 @@ class OWScreenSlits(OWOpticalElement):
     slit_center_zaxis    = Setting(0.0)
     thickness            = Setting(0.0)
     opt_const_file_name  = Setting(NO_FILE_SPECIFIED)
-
-
-    input_data = None
 
     def createdFromNode(self, node):
         super(OWScreenSlits, self).createdFromNode(node)
@@ -125,7 +119,7 @@ class OWScreenSlits(OWOpticalElement):
                 else:                              return self.oe_names[6], "icons/obstruction_absorber.png"
 
     def __init__(self):
-        super().__init__()
+        super().__init__(has_footprint=False)
 
     def populate_tab_position(self, tab_position):
         self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True, orientation="vertical")

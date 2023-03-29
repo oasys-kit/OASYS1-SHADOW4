@@ -65,6 +65,7 @@ from orangecontrib.shadow4.util.shadow_objects import ShadowData
 from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
 
 NO_FILE_SPECIFIED = "<specify file name>"
+SUBTAB_INNER_BOX_WIDTH = 375
 
 class OWOpticalElement(GenericElement, WidgetDecorator):
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
@@ -87,9 +88,8 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
     oe_orientation_angle            = Setting(1)
     oe_orientation_angle_user_value = Setting(0.0)
 
-
-    def __init__(self):
-        super().__init__()
+    def __init__(self, show_automatic_box=True, has_footprint=False):
+        super().__init__(show_automatic_box=show_automatic_box, has_footprint=has_footprint)
 
         #
         # main buttons

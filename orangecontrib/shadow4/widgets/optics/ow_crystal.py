@@ -59,13 +59,12 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     planes_angle = Setting(0.0)
     below_onto_bragg_planes = Setting(-1)
 
-
     def __init__(self):
         super(OWCrystal, self).__init__()
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting):
-        subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Xtal Diff")    # to be populated
-        subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Xtal Geom")    # to be populated
+        subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Diffraction")    # to be populated
+        subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Geometry")    # to be populated
 
         return subtab_crystal_diffraction, subtab_crystal_geometry
 
@@ -90,7 +89,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                      sendSelectedValue=False, orientation="horizontal", callback=self.crystal_diffraction_tab_visibility)
 
 
-        gui.comboBox(crystal_box, self, "diffraction_calculation", label="Diffraction Profile", labelWidth=250,
+        gui.comboBox(crystal_box, self, "diffraction_calculation", label="Diffraction Profile", labelWidth=120,
                      items=["Calculated internally with xraylib",
                             "Calculated internally with dabax *NYI*",
                             "bragg preprocessor file v1",
@@ -112,7 +111,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                                                             "File (preprocessor)",
                                                             labelWidth=150, valueType=str, orientation="horizontal")
 
-        gui.button(file_box, self, "...", callback=self.selectFileCrystalParameters)
+        gui.button(file_box, self, "...", callback=self.select_file_crystal_parameters)
 
         ## xoppy file
         self.crystal_box_2 = oasysgui.widgetBox(crystal_box, "", addSpace=False, orientation="vertical")
@@ -124,7 +123,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                                                              "File (user Diff Profile)", labelWidth=120,
                                                              valueType=str,
                                                              orientation="horizontal")
-        gui.button(crystal_box_2_1, self, "...", callback=self.selectFileDiffractionProfile)
+        gui.button(crystal_box_2_1, self, "...", callback=self.select_file_diffraction_profile)
 
         oasysgui.lineEdit(self.crystal_box_2, self, "user_defined_bragg_angle",
                           "Bragg Angle respect to the surface [deg]", labelWidth=260, valueType=float,
@@ -252,14 +251,14 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
 
     def crystal_diffraction_tab_visibility(self):
         # self.set_BraggLaue()  #todo: to be deleted
-        self.set_DiffractionCalculation()
-        self.set_Autosetting()
-        self.set_UnitsInUse()
+        self.set_diffraction_calculation()
+        self.set_autosetting()
+        self.set_units_in_use()
 
     def crystal_geometry_tab_visibility(self):
-        self.set_Mosaic()
-        self.set_AsymmetricCut()
-        self.set_JohanssonGeometry()
+        self.set_mosaic()
+        self.set_asymmetric_cut()
+        self.set_johansson_geometry()
 
 
     # todo: change next methods name from CamelCase to undercore...
@@ -272,7 +271,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     #     else:
     #         self.asymmetric_cut_combo.setEnabled(True)
 
-    def set_DiffractionCalculation(self):
+    def set_diffraction_calculation(self):
         self.crystal_box_1.setVisible(False)
         self.crystal_box_2.setVisible(False)
         self.crystal_box_3.setVisible(False)
@@ -296,10 +295,10 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
             self.reflection_angle_deg_le.setEnabled(True)
             self.reflection_angle_rad_le.setEnabled(True)
 
-    def selectFileCrystalParameters(self):
+    def select_file_crystal_parameters(self):
         self.le_file_crystal_parameters.setText(oasysgui.selectFileFromDialog(self, self.file_crystal_parameters, "Select File With Crystal Parameters"))
 
-    def set_Autosetting(self):
+    def set_autosetting(self):
         self.autosetting_box_empty.setVisible(self.crystal_auto_setting == 0)
         self.autosetting_box.setVisible(self.crystal_auto_setting == 1)
 
@@ -313,41 +312,31 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
             self.incidence_angle_rad_le.setEnabled(False)
             self.reflection_angle_deg_le.setEnabled(False)
             self.reflection_angle_rad_le.setEnabled(False)
-            self.set_UnitsInUse()
+            self.set_units_in_use()
 
-    def set_UnitsInUse(self):
+    def set_units_in_use(self):
         self.autosetting_box_units_1.setVisible(self.units_in_use == 0)
         self.autosetting_box_units_2.setVisible(self.units_in_use == 1)
 
-    def selectFileDiffractionProfile(self):
+    def select_file_diffraction_profile(self):
         self.le_file_diffraction_profile.setText(oasysgui.selectFileFromDialog(self, self.file_diffraction_profile, "Select File With User Defined Diffraction Profile"))
 
-    def set_Mosaic(self):
+    def set_mosaic(self):
         self.mosaic_box_1.setVisible(self.mosaic_crystal == 0)
         self.mosaic_box_2.setVisible(self.mosaic_crystal == 1)
 
         if self.mosaic_crystal == 0:
-            self.set_AsymmetricCut()
-            self.set_JohanssonGeometry()
+            self.set_asymmetric_cut()
+            self.set_johansson_geometry()
 
-    def set_AsymmetricCut(self):
+    def set_asymmetric_cut(self):
         self.asymmetric_cut_box_1.setVisible(self.asymmetric_cut == 1)
         self.asymmetric_cut_box_1_empty.setVisible(self.asymmetric_cut == 0)
 
-    def set_JohanssonGeometry(self):
+    def set_johansson_geometry(self):
         self.johansson_box_1.setVisible(self.johansson_geometry == 1)
         self.johansson_box_1_empty.setVisible(self.johansson_geometry == 0)
 
-    #########################################################
-    # Dimensions Methods
-    #########################################################
-
-    def dimensions_tab_visibility(self):
-
-        if self.is_infinite:
-            self.dimdet_box.setVisible(True)
-        else:
-            self.dimdet_box.setVisible(False)
 
     #########################################################
     # S4 objects

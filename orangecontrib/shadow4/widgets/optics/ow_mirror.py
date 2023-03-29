@@ -20,7 +20,7 @@ from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirr
 from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirrorElement
 
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
+from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape, SUBTAB_INNER_BOX_WIDTH
 from orangecontrib.shadow4.util.shadow_objects import ShadowData
 
 class OWMirror(OWOpticalElementWithSurfaceShape):
@@ -72,7 +72,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
         # # file_refl = "",  # preprocessor file fir f_refl=0,2,3,4
         # # refraction_index = 1.0,  # refraction index (complex) for f_refl=1
 
-        box_1 = oasysgui.widgetBox(subtab_reflectivity, "Mirror Reflectivity", addSpace=True, orientation="vertical")
+        box_1 = oasysgui.widgetBox(subtab_reflectivity, "Mirror Reflectivity", addSpace=True, orientation="vertical", width=SUBTAB_INNER_BOX_WIDTH)
 
         gui.comboBox(box_1, self, "reflectivity_flag", label="Reflectivity", labelWidth=150,
                      items=["Not considered", "Yes"],
