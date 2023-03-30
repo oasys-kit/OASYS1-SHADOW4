@@ -207,8 +207,11 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
         # script
         #
         script = beamline.to_python_code()
-        script += "\n\n\n# run shadow4"
-        script += "\nbeamline.run_beamline()"
+        script += "\n\n\n# test plot"
+        script += "\nif True:"
+        script += "\n   from srxraylib.plot.gol import plot_scatter"
+        script += "\n   # plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
+        script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
         self.shadow4_script.set_code(script)
 
         #
