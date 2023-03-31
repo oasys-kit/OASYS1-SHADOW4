@@ -172,7 +172,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
                         self.delta_e = 0.0
                         self.undulator_length = light_source.get_magnetic_structure().length()
 
-                        self.populate_fields_from_syned_electron_beam(light_source.get_electron_beam())
+                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
 
                     else:
                         raise ValueError("Syned light source not congruent")
