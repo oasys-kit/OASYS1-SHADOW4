@@ -65,8 +65,8 @@ from orangecanvas.scheme.node import SchemeNode
 
 
 class OWScreenSlits(OWOpticalElement):
-    name        = "Generic Beam Stopper"
-    description = "Shadow Screen/Slits"
+    name        = "Generic Beam Screen/Slit/Stopper/Attenuator"
+    description = "Shadow Screen/Slit/Stopper/Attenuator"
     icon        = "icons/generic_beam_stopper.png"
 
     priority = 2.0
@@ -81,6 +81,8 @@ class OWScreenSlits(OWOpticalElement):
     slit_center_zaxis    = Setting(0.0)
     thickness            = Setting(0.0)
     opt_const_file_name  = Setting(NO_FILE_SPECIFIED)
+    material             = Setting("Au")
+    density              = Setting(19.3)
 
     def createdFromNode(self, node):
         super(OWScreenSlits, self).createdFromNode(node)
@@ -160,24 +162,34 @@ class OWScreenSlits(OWOpticalElement):
         oasysgui.lineEdit(box_aperturing_shape, self, "slit_center_xaxis", "Slit center/x-axis [m]", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(box_aperturing_shape, self, "slit_center_zaxis", "Slit center/z-axis [m]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        box_absorption = oasysgui.widgetBox(tab_beam_stopper_type, "Absorption Parameters", addSpace=False, orientation="vertical", height=130)
+        box_absorption = oasysgui.widgetBox(tab_beam_stopper_type, "Absorption Parameters", addSpace=False, orientation="vertical", height=200)
 
         gui.comboBox(box_absorption, self, "absorption", label="Absorption", labelWidth=350,
-                     items=["No", "Yes"],
+                     items=["No", "Yes (using preprocessor file)", "Yes (using xraylib)", "Yes (using dabax)"],
                      callback=self.set_absorption, sendSelectedValue=False, orientation="horizontal")
 
         gui.separator(box_absorption)#, width=self.INNER_BOX_WIDTH_L0)
+        self.box_thickness = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
+
+        oasysgui.lineEdit(self.box_thickness, self, "thickness", "Thickness [m]", labelWidth=180, valueType=float, orientation="horizontal")
 
         self.box_absorption       = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
-        #self.box_absorption_empty = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
-
-        oasysgui.lineEdit(self.box_absorption, self, "thickness", "Thickness [m]", labelWidth=300, valueType=float, orientation="horizontal")
 
         file_box = oasysgui.widgetBox(self.box_absorption, "", addSpace=False, orientation="horizontal", height=25)
 
-        self.le_opt_const_file_name = oasysgui.lineEdit(file_box, self, "opt_const_file_name", "Opt. const. file name", labelWidth=130, valueType=str, orientation="horizontal")
+        self.le_opt_const_file_name = oasysgui.lineEdit(file_box, self, "opt_const_file_name", "prerefl file", labelWidth=130, valueType=str, orientation="horizontal")
 
         gui.button(file_box, self, "...", callback=self.select_opt_const_file_name)
+
+        self.box_material = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
+        oasysgui.lineEdit(self.box_material, self, "material",
+                          "material (formula): ", labelWidth=180, valueType=str,
+                          orientation="horizontal", tooltip="material")
+
+
+        oasysgui.lineEdit(self.box_material, self, "density",
+                          "density [g/cm^3]: ", labelWidth=180, valueType=float,
+                          orientation="horizontal", tooltip="density")
 
         self.set_aperturing(is_init=True)
         self.set_absorption(is_init=True)
@@ -192,7 +204,9 @@ class OWScreenSlits(OWOpticalElement):
 
     def set_absorption(self, is_init=False):
         #self.box_absorption_empty.setVisible(self.absorption == 0)
+        self.box_thickness.setVisible(self.absorption >= 1)
         self.box_absorption.setVisible(self.absorption == 1)
+        self.box_material.setVisible(self.absorption in (2,3))
 
         if not is_init: self.__change_icon_from_oe_type()
 
@@ -226,9 +240,20 @@ class OWScreenSlits(OWOpticalElement):
 
         return S4Screen(name=self.getNode().title,
                         boundary_shape=boundary_shape,
-                        i_abs=self.absorption==1,
+                        i_abs=self.absorption,
                         i_stop=self.open_slit_solid_stop==1,
                         thick=self.thickness,
-                        file_abs=self.opt_const_file_name)
+                        file_abs=self.opt_const_file_name,
+                        material=self.material,
+                        density=self.density)
 
     def get_beamline_element_instance(self): return S4ScreenElement()
+
+if __name__ == "__main__":
+    from PyQt5.QtWidgets import QApplication
+    import sys
+    a = QApplication(sys.argv)
+    ow = OWScreenSlits()
+    ow.show()
+    a.exec_()
+    ow.saveSettings()
