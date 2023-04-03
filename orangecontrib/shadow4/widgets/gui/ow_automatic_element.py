@@ -41,7 +41,7 @@ class AutomaticElement(OWWidget):
             except: pass
 
     def prompt_exception(self, exception: Exception):
-        MessageDialog(self, str(exception), "Exception occured in OASYS", "critical").message()
+        MessageDialog.message(self, str(exception), "Exception occured in OASYS", "critical")
         if self.IS_DEVELOP: raise exception
 
 
