@@ -473,7 +473,6 @@ try:
                     palette.setColor(QPalette.Base, QColor(243, 240, 160))
                     self.centroid_v.setPalette(palette)
 
-
             def set_flux(self, flux=None):
                 if flux is None:
                     self.flux.setText("0.0")
@@ -522,7 +521,6 @@ try:
                 self.setLayout(layout)
 
             def plot_histo(self, beam, col, nolost, xrange, ref, title, xtitle, ytitle, nbins = 100, xum="", ticket_to_add=None, flux=None):
-
                 ticket = beam.histo1(col, nbins=nbins, xrange=xrange, nolost=nolost, ref=ref)
                 if ref in [24, 25]: ticket['intensity'] = beam.get_column(ref, nolost=nolost).sum()
 
@@ -530,37 +528,38 @@ try:
                 if not ticket_to_add is None:
                     last_ticket = copy.deepcopy(ticket)
 
-                    ticket['histogram'] += ticket_to_add['histogram']
-                    ticket['histogram_path'] += ticket_to_add['histogram_path']
+                    if ticket['histogram'].size == ticket_to_add['histogram'].size:
+                        ticket['histogram'] += ticket_to_add['histogram']
+                        ticket['histogram_path'] += ticket_to_add['histogram_path']
 
-                    ticket['intensity'] += ticket_to_add['intensity']
-                    ticket['nrays'] += ticket_to_add['nrays']
-                    ticket['good_rays'] += ticket_to_add['good_rays']
+                        ticket['intensity'] += ticket_to_add['intensity']
+                        ticket['nrays'] += ticket_to_add['nrays']
+                        ticket['good_rays'] += ticket_to_add['good_rays']
 
-                ticket['fwhm'], ticket['fwhm_quote'], ticket['fwhm_coordinates'] = get_fwhm(ticket['histogram'], ticket['bin_center'])
-                ticket['sigma']    = get_sigma(ticket['histogram'], ticket['bin_center'])
-                ticket['centroid'] = get_average(ticket['histogram'], ticket['bin_center'])
+                ticket['fwhm'], ticket['fwhm_quote'], ticket['fwhm_coordinates'] = get_fwhm(ticket['histogram'], ticket['bin_center'], ret0=None)
+                ticket['sigma']    = get_sigma(ticket['histogram'], ticket['bin_center'], ret0=numpy.nan)
+                ticket['centroid'] = get_average(ticket['histogram'], ticket['bin_center'], ret0=numpy.nan)
 
                 # factor=ShadowPlot.get_factor(col, conv)
-                if col in [1,2,3,4,5,6]:
-                    factor = 1e6
-                else:
-                    factor = 1.0
+                if col in [1,2,3,4,5,6]: factor = 1e6
+                else: factor = 1.0
 
                 if ref != 0 and not ytitle is None:  ytitle = ytitle + ' weighted by ' + ShadowPlot.get_shadow_label(ref)
 
                 histogram = ticket['histogram_path']
-                bins = ticket['bin_path']*factor
+                bins      = ticket['bin_path']*factor
 
-                self.plot_canvas.addCurve(bins, histogram, title, symbol='', color='blue', replace=True) #'+', '^', ','
+                if histogram.size > 1: self.plot_canvas.addCurve(bins, histogram, title, symbol='', color='blue', replace=True) #'+', '^', ','
+                else:                  self.plot_canvas.clear()
+
                 if not xtitle is None: self.plot_canvas.setGraphXLabel(xtitle)
                 if not ytitle is None: self.plot_canvas.setGraphYLabel(ytitle)
                 if not title is None: self.plot_canvas.setGraphTitle(title)
                 self.plot_canvas.setInteractiveMode(mode='zoom')
 
-                if ticket['fwhm'] == None: ticket['fwhm'] = 0.0
+                if ticket['fwhm'] is None: ticket['fwhm'] = 0.0
                 if not ticket_to_add is None:
-                    if last_ticket['fwhm'] == None: last_ticket['fwhm'] = 0.0
+                    if last_ticket['fwhm'] is None: last_ticket['fwhm'] = 0.0
 
                 n_patches = len(self.plot_canvas._backend.ax.patches)
                 if (n_patches > 0): self.plot_canvas._backend.ax.patches.remove(self.plot_canvas._backend.ax.patches[n_patches-1])
@@ -575,10 +574,10 @@ try:
                                                               arrowstyle=ArrowStyle.CurveAB(head_width=2, head_length=4),
                                                               color='b',
                                                               linewidth=1.5))
-                if min(histogram) < 0:
-                    self.plot_canvas.setGraphYLimits(min(histogram), max(histogram))
-                else:
-                    self.plot_canvas.setGraphYLimits(0, max(histogram))
+
+                if histogram.size > 1:
+                    if min(histogram) < 0: self.plot_canvas.setGraphYLimits(min(histogram), max(histogram))
+                    else: self.plot_canvas.setGraphYLimits(0, max(histogram))
 
                 self.plot_canvas.replot()
 
@@ -629,11 +628,10 @@ try:
                 self.setLayout(layout)
 
             def plot_xy(self, beam, var_x, var_y, title, xtitle, ytitle, xrange=None, yrange=None, nolost=1, nbins=100, nbins_h=None, nbins_v=None, xum="", yum="", ref=23, is_footprint=False, ticket_to_add=None, flux=None):
-
                 matplotlib.rcParams['axes.formatter.useoffset']='False'
 
-                if nbins_h == None: nbins_h = nbins
-                if nbins_v == None: nbins_v = nbins
+                if nbins_h is None: nbins_h = nbins
+                if nbins_v is None: nbins_v = nbins
 
                 ticket = beam.histo2(var_x, var_y, nbins=nbins, nbins_h=nbins_h, nbins_v=nbins_v, xrange=xrange, yrange=yrange, nolost=nolost, ref=ref)
                 if ref in [24, 25]: ticket['intensity'] = beam.get_column(ref, nolost=nolost).sum()
@@ -642,20 +640,21 @@ try:
                 if not ticket_to_add is None:
                     last_ticket = copy.deepcopy(ticket)
 
-                    ticket['histogram'] += ticket_to_add['histogram']
-                    ticket['histogram_h'] += ticket_to_add['histogram_h']
-                    ticket['histogram_v'] += ticket_to_add['histogram_v']
+                    if ticket['histogram'].shape == ticket_to_add['histogram'].shape:
+                        ticket['histogram'] += ticket_to_add['histogram']
+                        ticket['histogram_h'] += ticket_to_add['histogram_h']
+                        ticket['histogram_v'] += ticket_to_add['histogram_v']
 
-                    ticket['intensity'] += ticket_to_add['intensity']
-                    ticket['nrays'] += ticket_to_add['nrays']
-                    ticket['good_rays'] += ticket_to_add['good_rays']
+                        ticket['intensity'] += ticket_to_add['intensity']
+                        ticket['nrays'] += ticket_to_add['nrays']
+                        ticket['good_rays'] += ticket_to_add['good_rays']
 
-                ticket['fwhm_h'], ticket['fwhm_quote_h'], ticket['fwhm_coordinates_h'] = get_fwhm(ticket['histogram_h'], ticket['bin_h_center'])
-                ticket['fwhm_v'], ticket['fwhm_quote_v'], ticket['fwhm_coordinates_v'] = get_fwhm(ticket['histogram_v'], ticket['bin_v_center'])
-                ticket['sigma_h']    = get_sigma(ticket['histogram_h'], ticket['bin_h_center'])
-                ticket['sigma_v']    = get_sigma(ticket['histogram_v'], ticket['bin_v_center'])
-                ticket['centroid_h'] = get_average(ticket['histogram_h'], ticket['bin_h_center'])
-                ticket['centroid_v'] = get_average(ticket['histogram_v'], ticket['bin_v_center'])
+                ticket['fwhm_h'], ticket['fwhm_quote_h'], ticket['fwhm_coordinates_h'] = get_fwhm(ticket['histogram_h'], ticket['bin_h_center'], ret0=None)
+                ticket['fwhm_v'], ticket['fwhm_quote_v'], ticket['fwhm_coordinates_v'] = get_fwhm(ticket['histogram_v'], ticket['bin_v_center'], ret0=None)
+                ticket['sigma_h']    = get_sigma(ticket['histogram_h'], ticket['bin_h_center'], ret0=numpy.nan)
+                ticket['sigma_v']    = get_sigma(ticket['histogram_v'], ticket['bin_v_center'], ret0=numpy.nan)
+                ticket['centroid_h'] = get_average(ticket['histogram_h'], ticket['bin_h_center'], ret0=numpy.nan)
+                ticket['centroid_v'] = get_average(ticket['histogram_v'], ticket['bin_v_center'], ret0=numpy.nan)
 
                 if is_footprint:
                     factor1 = 1.0
@@ -667,21 +666,24 @@ try:
                 xx = ticket['bin_h_edges']
                 yy = ticket['bin_v_edges']
 
-                xmin, xmax = xx.min(), xx.max()
-                ymin, ymax = yy.min(), yy.max()
+                if ticket['histogram'].size > 1:
+                    xmin, xmax = xx.min(), xx.max()
+                    ymin, ymax = yy.min(), yy.max()
 
-                origin = (xmin*factor1, ymin*factor2)
-                scale = (abs((xmax-xmin)/nbins_h)*factor1, abs((ymax-ymin)/nbins_v)*factor2)
+                    origin = (xmin*factor1, ymin*factor2)
+                    scale = (abs((xmax-xmin)/nbins_h)*factor1, abs((ymax-ymin)/nbins_v)*factor2)
 
-                self.plot_canvas.setColormap({"name":QSettings().value("output/shadow-default-colormap", "temperature", str),
-                                              "normalization":"linear",
-                                              "autoscale":True,
-                                              "vmin":0,
-                                              "vmax":0,
-                                              "colors":256})
+                    self.plot_canvas.setColormap({"name":QSettings().value("output/shadow-default-colormap", "temperature", str),
+                                                  "normalization":"linear",
+                                                  "autoscale":True,
+                                                  "vmin":0,
+                                                  "vmax":0,
+                                                  "colors":256})
 
-                # PyMCA inverts axis!!!! histogram must be calculated reversed
-                self.plot_canvas.setImage(ticket['histogram'].T, origin=origin, scale=scale)
+                    # PyMCA inverts axis!!!! histogram must be calculated reversed
+                    self.plot_canvas.setImage(ticket['histogram'].T, origin=origin, scale=scale)
+                else:
+                    self.plot_canvas.clear()
 
                 if xtitle is None: xtitle=ShadowPlot.get_shadow_label(var_x)
                 if ytitle is None: ytitle=ShadowPlot.get_shadow_label(var_y)
@@ -706,11 +708,11 @@ try:
                     label.set_color('white')
                     label.set_fontsize(1)
 
-                if ticket['fwhm_h'] == None: ticket['fwhm_h'] = 0.0
-                if ticket['fwhm_v'] == None: ticket['fwhm_v'] = 0.0
+                if ticket['fwhm_h'] is None: ticket['fwhm_h'] = 0.0
+                if ticket['fwhm_v'] is None: ticket['fwhm_v'] = 0.0
                 if not ticket_to_add is None:
-                    if last_ticket['fwhm_h'] == None: last_ticket['fwhm_h'] = 0.0
-                    if last_ticket['fwhm_v'] == None: last_ticket['fwhm_v'] = 0.0
+                    if last_ticket['fwhm_h'] is None: last_ticket['fwhm_h'] = 0.0
+                    if last_ticket['fwhm_v'] is None: last_ticket['fwhm_v'] = 0.0
 
                 n_patches = len(self.plot_canvas._histoHPlot._backend.ax.patches)
                 if (n_patches > 0): self.plot_canvas._histoHPlot._backend.ax.patches.remove(self.plot_canvas._histoHPlot._backend.ax.patches[n_patches-1])

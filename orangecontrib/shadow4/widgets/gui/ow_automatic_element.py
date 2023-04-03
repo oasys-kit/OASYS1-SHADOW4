@@ -1,14 +1,14 @@
 import sys
 
 from oasys.widgets.widget import OWWidget
-
+from oasys.widgets.gui import MessageDialog
 from orangewidget import gui
 from orangewidget.settings import Setting
 
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QRect
 
-from oasys.widgets.gui import ConfirmDialog
+from oasys.widgets.gui import ConfirmDialog, MessageDialog
 
 class AutomaticElement(OWWidget):
     want_main_area = 1
@@ -41,8 +41,7 @@ class AutomaticElement(OWWidget):
             except: pass
 
     def prompt_exception(self, exception: Exception):
-        QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
-
+        MessageDialog(self, str(exception), "Exception occured in OASYS", "critical").message()
         if self.IS_DEVELOP: raise exception
 
 

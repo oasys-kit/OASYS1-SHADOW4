@@ -9,7 +9,6 @@ from orangewidget import gui
 from orangewidget.settings import Setting
 
 from oasys.widgets import gui as oasysgui
-from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
@@ -18,8 +17,8 @@ from syned.widget.widget_decorator import WidgetDecorator
 
 from shadow4.beamline.optical_elements.ideal_elements.s4_beam_movement import S4BeamMovement, S4BeamMovementElement
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowData
-from orangecontrib.shadow4.util.shadow_util import ShadowCongruence
+from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.s4_util import ShadowCongruence
 
 
 class OWBeamMovement(GenericElement, WidgetDecorator):
@@ -27,7 +26,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
     name = "Beam movements"
     description = "Shadow Beam Movement"
     icon = "icons/beam_movement.png"
-    priority = 5
+    priority = 2.99
 
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
     WidgetDecorator.append_syned_input_data(inputs)

@@ -69,7 +69,7 @@ class OWScreenSlits(OWOpticalElement):
     description = "Shadow Screen/Slit/Stopper/Attenuator"
     icon        = "icons/generic_beam_stopper.png"
 
-    priority = 2.0
+    priority = 1.3
 
     aperturing           = Setting(0)
     open_slit_solid_stop = Setting(0)

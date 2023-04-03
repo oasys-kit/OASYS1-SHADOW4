@@ -101,6 +101,7 @@ PACKAGE_DATA = {
     "orangecontrib.shadow4.widgets.sources":["icons/*.png", "icons/*.jpg"],
     "orangecontrib.shadow4.widgets.optics": ["icons/*.png", "icons/*.jpg"],
     "orangecontrib.shadow4.widgets.tools":["icons/*.png", "icons/*.jpg"],
+    "orangecontrib.shadow4.widgets.compatibility":["icons/*.png", "icons/*.jpg"],
     }
 
 NAMESPACE_PACAKGES = ["orangecontrib","orangecontrib.shadow4", "orangecontrib.shadow4.widgets"]
@@ -112,7 +113,8 @@ ENTRY_POINTS = {
             "SHADOW4 Sources = orangecontrib.shadow4.widgets.sources",
             "SHADOW4 Optics = orangecontrib.shadow4.widgets.optics",
             "SHADOW4 Tools = orangecontrib.shadow4.widgets.tools",
-            ),
+            "SHADOW3 \u21d4 SHADOW4 = orangecontrib.shadow4.widgets.compatibility",
+    ),
     }
 
 if __name__ == '__main__':

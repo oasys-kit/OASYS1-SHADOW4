@@ -10,7 +10,7 @@ from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
-from orangecontrib.shadow4.util.shadow_objects import ShadowData
+from orangecontrib.shadow4.util.s4_objects import ShadowData
 
 
 from syned.beamline.beamline import Beamline

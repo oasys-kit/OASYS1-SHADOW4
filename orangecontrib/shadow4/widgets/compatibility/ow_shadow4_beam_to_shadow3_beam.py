@@ -7,7 +7,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets.widget import AutomaticWidget
 from orangewidget.settings import Setting
 
-from orangecontrib.shadow4.util.shadow_objects import ShadowData
+from orangecontrib.shadow4.util.s4_objects import ShadowData
 
 try:
     import Shadow

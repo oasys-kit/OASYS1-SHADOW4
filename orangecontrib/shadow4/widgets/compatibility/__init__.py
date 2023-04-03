@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ----------------------------------------------------------------------- #
-# Copyright (c) 2022, UChicago Argonne, LLC. All rights reserved.         #
+# Copyright (c) 2023, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2022. UChicago Argonne, LLC. This software was produced       #
+# Copyright 2023. UChicago Argonne, LLC. This software was produced       #
 # under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
 # Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
 # U.S. Department of Energy. The U.S. Government has rights to use,       #
@@ -45,17 +45,12 @@
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # ----------------------------------------------------------------------- #
 
-from shadow4.beamline.optical_elements.ideal_elements.s4_empty import S4Empty, S4EmptyElement
+NAME = "Compatibility 3<->4"
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
+DESCRIPTION = "Tools for compatibility between Shadow3 and Shadow 4"
 
-class OWEmptyElement(OWOpticalElement):
-    name        = "Empty Element"
-    description = "Shadow Empty Element"
-    icon        = "icons/empty_element.png"
+BACKGROUND = "#b9d47a"
 
-    priority = 2.0
+ICON = "icons/compatibility.png"
 
-    def __init__(self): super().__init__(has_footprint=False)
-    def get_optical_element_instance(self): return S4Empty(name=self.getNode().title)
-    def get_beamline_element_instance(self): return S4EmptyElement()
+PRIORITY = 1099

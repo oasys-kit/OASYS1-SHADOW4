@@ -10,8 +10,8 @@ from oasys.util.oasys_util import TriggerIn
 
 from shadow4.beam.s4_beam import S4Beam
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
-from orangecontrib.shadow4.util.shadow_objects import ShadowData
-from orangecontrib.shadow4.util.shadow_util import ShadowPlot, ShadowCongruence
+from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.s4_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.util.python_script import PythonScript
 
 class GenericElement(AutomaticElement):
@@ -64,8 +64,7 @@ class GenericElement(AutomaticElement):
 
         size = len(self.tab)
         indexes = range(0, size)
-        for index in indexes:
-            self.tabs.removeTab(size-1-index)
+        for index in indexes: self.tabs.removeTab(size-1-index)
 
         titles = self._get_titles()
         if self.has_footprint: self.plot_canvas = [None]*(len(titles) + 1)
@@ -102,7 +101,6 @@ class GenericElement(AutomaticElement):
         if not self.plotted_beam is None:
             try:
                 self._initialize_tabs()
-
                 self._plot_results(self.plotted_beam, self.footprint_beam, progressBarValue=80)
             except Exception as exception:
                 self.prompt_exception(exception)
@@ -154,44 +152,41 @@ class GenericElement(AutomaticElement):
     def _plot_results(self, output_beam, footprint, progressBarValue=80):
         if not self.view_type == 2:
             if ShadowCongruence.check_empty_beam(output_beam):
-                if ShadowCongruence.check_good_beam(output_beam):
-                    self.view_type_combo.setEnabled(False)
+                self.view_type_combo.setEnabled(False)
 
-                    ShadowPlot.set_conversion_active(self._is_conversion_active())
+                ShadowPlot.set_conversion_active(self._is_conversion_active())
 
-                    variables = self._get_variables_to_plot()
-                    titles    = self._get_titles()
-                    xtitles   = self._get_x_titles()
-                    ytitles   = self._get_y_titles()
-                    xums      = self._get_x_um()
-                    yums      = self._get_y_um()
+                variables = self._get_variables_to_plot()
+                titles    = self._get_titles()
+                xtitles   = self._get_x_titles()
+                ytitles   = self._get_y_titles()
+                xums      = self._get_x_um()
+                yums      = self._get_y_um()
 
-                    try:
-                        if self.view_type == 1:
-                            self._plot_xy_preview(output_beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0])
-                            self._plot_xy_preview(output_beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
-                            self._plot_xy_preview(output_beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
-                            self._plot_xy_preview(output_beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
-                            self._plot_histo_preview(output_beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
-                            if self.has_footprint: self._plot_xy_preview(footprint, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", is_footprint=True)
+                try:
+                    if self.view_type == 1:
+                        self._plot_xy_preview(output_beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0])
+                        self._plot_xy_preview(output_beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1])
+                        self._plot_xy_preview(output_beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2])
+                        self._plot_xy_preview(output_beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3])
+                        self._plot_histo_preview(output_beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4])
+                        if self.has_footprint: self._plot_xy_preview(footprint, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", is_footprint=True)
 
 
-                        elif self.view_type == 0:
-                            self._plot_xy_detailed(output_beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0], xum=xums[0], yum=yums[0])
-                            self._plot_xy_detailed(output_beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
-                            self._plot_xy_detailed(output_beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
-                            self._plot_xy_detailed(output_beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
-                            self._plot_histo_detailed(output_beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4])
-                            if self.has_footprint: self._plot_xy_detailed(footprint, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", xum=("Y [m]"), yum=("X [m]"), is_footprint=True)
+                    elif self.view_type == 0:
+                        self._plot_xy_detailed(output_beam, progressBarValue + 4, variables[0][0], variables[0][1], plot_canvas_index=0, title=titles[0], xtitle=xtitles[0], ytitle=ytitles[0], xum=xums[0], yum=yums[0])
+                        self._plot_xy_detailed(output_beam, progressBarValue + 8, variables[1][0], variables[1][1], plot_canvas_index=1, title=titles[1], xtitle=xtitles[1], ytitle=ytitles[1], xum=xums[1], yum=yums[1])
+                        self._plot_xy_detailed(output_beam, progressBarValue + 12, variables[2][0], variables[2][1], plot_canvas_index=2, title=titles[2], xtitle=xtitles[2], ytitle=ytitles[2], xum=xums[2], yum=yums[2])
+                        self._plot_xy_detailed(output_beam, progressBarValue + 16, variables[3][0], variables[3][1], plot_canvas_index=3, title=titles[3], xtitle=xtitles[3], ytitle=ytitles[3], xum=xums[3], yum=yums[3])
+                        self._plot_histo_detailed(output_beam, progressBarValue + 20, variables[4], plot_canvas_index=4, title=titles[4], xtitle=xtitles[4], ytitle=ytitles[4], xum=xums[4])
+                        if self.has_footprint: self._plot_xy_detailed(footprint, progressBarValue + 20, 2, 1, plot_canvas_index=5, title="Footprint", xtitle="Y [m]", ytitle="X [m]", xum=("Y [m]"), yum=("X [m]"), is_footprint=True)
 
-                    except Exception as e:
-                        self.view_type_combo.setEnabled(True)
-
-                        raise Exception("Data not plottable: No good rays or bad content\nexception: " + str(e))
-
+                except Exception as e:
                     self.view_type_combo.setEnabled(True)
-                else:
-                    raise Exception("Beam with no good rays")
+
+                    raise Exception("Data not plottable: No good rays or bad content\nexception: " + str(e))
+
+                self.view_type_combo.setEnabled(True)
             else:
                 raise Exception("Empty Beam")
 
