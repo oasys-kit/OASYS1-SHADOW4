@@ -81,20 +81,6 @@ class ShadowData:
     def scanning_data(self, scanning_data : ScanningData):
         self.__scanning_data = scanning_data
 
-    @property
-    def history(self):
-        return self.__history
-    
-    @history.setter
-    def history(self, history):
-        self.__history = history
-        
-    def get_oe_history(self, oe_number):
-        return self.__history[oe_number]
-
-    def history_size(self):
-        return len(self.__history)
-
     def get_flux(self, nolost=1):
         if not self.__beam is None and not self.__initial_flux is None:
             return (self.__beam.intensity(nolost) / self.get_number_of_rays(0)) * self.get_initial_flux()
@@ -117,14 +103,14 @@ class ShadowData:
         if not self.__beam is None:
             self.__beam.write_h5(file_name)
 
-    def duplicate(self, copy_rays=True, history=True):
+    def duplicate(self, copy_rays=True, copy_history=True):
         beam = S4Beam()
         if copy_rays: beam.rays = copy.deepcopy(self.beam.rays)
 
         new_shadow_beam = ShadowData(beam=beam)
         new_shadow_beam.scanning_data = self.__scanning_data
         new_shadow_beam.initial_flux  = self.__initial_flux
-        new_shadow_beam.beamline = self.__beamline.duplicate()
+        new_shadow_beam.beamline = self.__beamline.duplicate(copy_input_beam=copy_history)
 
         return new_shadow_beam
 

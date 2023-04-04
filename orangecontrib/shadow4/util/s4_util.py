@@ -272,6 +272,10 @@ try:
         def set_conversion_active(cls, is_active=True):
             ShadowPlot._is_conversione_active = is_active
 
+        @classmethod
+        def get_conversion_active(cls):
+            return ShadowPlot._is_conversione_active
+
         """Sample code to add 2D dataset saving as text to ImageView."""
 
 
@@ -540,9 +544,7 @@ try:
                 ticket['sigma']    = get_sigma(ticket['histogram'], ticket['bin_center'], ret0=numpy.nan)
                 ticket['centroid'] = get_average(ticket['histogram'], ticket['bin_center'], ret0=numpy.nan)
 
-                # factor=ShadowPlot.get_factor(col, conv)
-                if col in [1,2,3,4,5,6]: factor = 1e6
-                else: factor = 1.0
+                factor = ShadowPlot.get_factor(col)
 
                 if ref != 0 and not ytitle is None:  ytitle = ytitle + ' weighted by ' + ShadowPlot.get_shadow_label(ref)
 
@@ -656,12 +658,8 @@ try:
                 ticket['centroid_h'] = get_average(ticket['histogram_h'], ticket['bin_h_center'], ret0=numpy.nan)
                 ticket['centroid_v'] = get_average(ticket['histogram_v'], ticket['bin_v_center'], ret0=numpy.nan)
 
-                if is_footprint:
-                    factor1 = 1.0
-                    factor2 = 1.0
-                else:
-                    factor1 = 1e6 # ShadowPlot.get_factor(var_x, conv)
-                    factor2 = 1e6 # ShadowPlot.get_factor(var_y, conv)
+                factor1 = 1.0 if is_footprint else ShadowPlot.get_factor(var_x)
+                factor2 = 1.0 if is_footprint else ShadowPlot.get_factor(var_y)
 
                 xx = ticket['bin_h_edges']
                 yy = ticket['bin_v_edges']
@@ -805,12 +803,8 @@ try:
             col1 = beam.get_column(var_x, nolost=nolost)
             col2 = beam.get_column(var_y, nolost=nolost)
 
-            if is_footprint:
-                factor1 = 1.0
-                factor2 = 1.0
-            else:
-                factor1 = 1e6 # ShadowPlot.get_factor(var_x, conv)
-                factor2 = 1e6 # ShadowPlot.get_factor(var_y, conv)
+            factor1 = 1.0 if is_footprint else ShadowPlot.get_factor(var_x)
+            factor2 = 1.0 if is_footprint else ShadowPlot.get_factor(var_y)
 
             if xtitle is None: xtitle=ShadowPlot.get_shadow_label(var_x)
             if ytitle is None: ytitle=ShadowPlot.get_shadow_label(var_y)
@@ -827,11 +821,7 @@ try:
 
             matplotlib.rcParams['axes.formatter.useoffset']='False'
 
-            # factor=ShadowPlot.get_factor(col, conv)
-            if col in [1, 2, 3, 4, 5, 6]:
-                factor = 1e6
-            else:
-                factor = 1.0
+            factor = ShadowPlot.get_factor(col)
 
             ticket = beam.histo1(col, nbins=100, xrange=None, nolost=nolost, ref=ref)
 
@@ -852,16 +842,9 @@ try:
             plot_window.replot()
 
         @classmethod
-        def get_factor(cls, var, conv=100.0):
-            factor = 1.0
-
-            if ShadowPlot._is_conversione_active:
-                if var == 1 or var == 2 or var == 3:
-                    factor = 1e4*conv # cm to micron
-                elif var == 4 or var == 5 or var == 6:
-                    factor = 1e6 # rad to urad
-
-            return factor
+        def get_factor(cls, var):
+            if ShadowPlot.get_conversion_active() and var in [1, 2, 3, 4, 5, 6]: return 1e6 # m to micron
+            else:                                                                return 1.0
 
         @classmethod
         def get_shadow_label(cls, var):

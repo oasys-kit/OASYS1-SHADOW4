@@ -67,13 +67,16 @@ from orangecontrib.shadow4.util.s4_util import ShadowCongruence
 NO_FILE_SPECIFIED = "<specify file name>"
 SUBTAB_INNER_BOX_WIDTH = 375
 
-class OWOpticalElement(GenericElement, WidgetDecorator):
+
+def optical_element_inputs():
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
     WidgetDecorator.append_syned_input_data(inputs)
 
-    outputs = [{"name":"Shadow Data",
-                "type":ShadowData,
-                "doc":"",}]
+    return inputs
+
+class OWOpticalElement(GenericElement, WidgetDecorator):
+    inputs  = optical_element_inputs()
+    outputs = [{"name":"Shadow Data", "type":ShadowData, "doc":"",}]
 
     #########################################################
     # Position
@@ -266,7 +269,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         elif self.oe_orientation_angle == 3: return 270.0
         elif self.oe_orientation_angle == 4: return self.oe_orientation_angle_user_value
 
-    def get_coordinates(self):
+    def get_coordinates_instance(self):
         angle_radial = numpy.pi / 2 - self.incidence_angle_mrad * 1e-3
         angle_radial_out = numpy.pi / 2 - self.reflection_angle_mrad * 1e-3
 
@@ -300,7 +303,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         try:
             element = self.get_beamline_element_instance()
             element.set_optical_element(self.get_optical_element_instance())
-            element.set_coordinates(self.get_coordinates())
+            element.set_coordinates(self.get_coordinates_instance())
             element.set_input_beam(self.input_data.beam)
 
             print(element.info())
@@ -337,10 +340,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             self.prompt_exception(exception)
             self._initialize_tabs()
 
-
-
-    def receive_syned_data(self, data):
-        raise Exception("Not yet implemented")
+    def receive_syned_data(self, data): raise Exception("Not yet implemented")
 
     def get_optical_element_instance(self): raise NotImplementedError()
     def get_beamline_element_instance(self): raise NotImplementedError()

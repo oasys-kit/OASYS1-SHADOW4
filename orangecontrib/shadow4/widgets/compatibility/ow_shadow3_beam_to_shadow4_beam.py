@@ -64,9 +64,6 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
 
         main_box = oasysgui.widgetBox(self.controlArea, "From Shadow4 Beam To Shadow3 (ShadowOUI) Beam", orientation="vertical", width=self.CONTROL_AREA_WIDTH-5, height=140)
 
-        # oasysgui.lineEdit(main_box, self, "pixels_h", "Number of Pixels (H)", labelWidth=280, valueType=int, orientation="horizontal")
-        # oasysgui.lineEdit(main_box, self, "pixels_v", "Number of Pixels (V)", labelWidth=280, valueType=int, orientation="horizontal")
-
         gui.button(main_box, self, "Compute", callback=self.convert_beam, height=45)
 
     def set_input(self, input_data):
@@ -74,14 +71,15 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
 
         if not input_data is None:
             self.shadow_beam = input_data
-
-            if self.is_automatic_execution:
-                self.convert_beam()
+            if self.is_automatic_execution: self.convert_beam()
 
     def convert_beam(self):
         beam3 = self.shadow_beam._beam
         print(">>beam3: ", beam3)
         beam4 = ShadowBeam4(beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
+        beam4.rays[:, 0:3] *= self.workspace_units_to_m
+        beam4.rays[:, 12]  *= self.workspace_units_to_m
+
         print(beam4)
         self.send("Shadow Data", beam4)
 

@@ -80,6 +80,8 @@ class OW_beam_converter_4_to_3(AutomaticWidget):
         print(">>beam4: ", beam4)
         beam3 = Shadow.Beam(N=self.shadow_data.get_number_of_rays())
         beam3.rays = beam4.rays.copy()
+        beam3.rays[:, 0:3] /= self.workspace_units_to_m
+        beam3.rays[:, 12] /= self.workspace_units_to_m
         print(">>beam3: ", beam3)
         print(beam4.get_number_of_rays(), beam3.nrays())
         output_beam3 = ShadowBeam3(beam=beam3, number_of_rays=self.shadow_data.get_number_of_rays())

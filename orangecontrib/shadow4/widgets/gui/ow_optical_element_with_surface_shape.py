@@ -1,23 +1,36 @@
 import numpy
 import sys, os
 
-from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QDialog, QGridLayout, QWidget
+
+from matplotlib import cm
+from oasys.widgets.gui import FigureCanvas3D
+from matplotlib.figure import Figure
+try:    from mpl_toolkits.mplot3d import Axes3D  # plot 3D
+except: pass
+
+from orangecanvas.resources import icon_loader
+from orangecanvas.scheme.node import SchemeNode
 
 from orangewidget import gui
 from orangewidget.settings import Setting
 
 from oasys.widgets import gui as oasysgui
+from oasys.widgets.gui import ConfirmDialog, MessageDialog
 from oasys.util.oasys_util import read_surface_file
+from oasys.util.oasys_objects import OasysPreProcessorData
 
 from syned.beamline.shape import Rectangle
 from syned.beamline.shape import Ellipse
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement, SUBTAB_INNER_BOX_WIDTH
+from srxraylib.metrology import profiles_simulation
 
-from orangecanvas.resources import icon_loader
-from orangecanvas.scheme.node import SchemeNode
+from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement, optical_element_inputs, SUBTAB_INNER_BOX_WIDTH
+
 
 class OWOpticalElementWithSurfaceShape(OWOpticalElement):
+    inputs = optical_element_inputs()
+    inputs.append(("PreProcessor Data", OasysPreProcessorData, "set_surface_data"))
 
     #########################################################
     # surface shape
@@ -354,22 +367,21 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         # mod_surf_box = oasysgui.widgetBox(tab_adv_mod_surf, "Modified Surface Parameters", addSpace=False,
         #                                   orientation="vertical", height=390)
 
-        gui.comboBox(box, self, "modified_surface", label="Modification Type", labelWidth=260,
+        gui.comboBox(box, self, "modified_surface", label="Modification Type", labelWidth=130,
                      items=["None", "Surface Error (numeric mesh)"],
                      callback=self.modified_surface_tab_visibility, sendSelectedValue=False, orientation="horizontal")
 
         gui.separator(box, height=10)
 
 
-        self.mod_surf_err_box_1 = oasysgui.widgetBox(box, "", addSpace=False,
-                                                     orientation="horizontal")
+        self.mod_surf_err_box_1 = oasysgui.widgetBox(box, "", addSpace=False, orientation="horizontal")
 
         self.le_ms_defect_file_name = oasysgui.lineEdit(self.mod_surf_err_box_1, self, "ms_defect_file_name",
-                                                        "File name", labelWidth=80, valueType=str,
+                                                        "File name", labelWidth=60, valueType=str,
                                                         orientation="horizontal")
 
-        gui.button(self.mod_surf_err_box_1, self, "...", callback=self.select_defect_file_name)
-        # gui.button(self.mod_surf_err_box_1, self, "View", callback=self.viewDefectFileName)
+        gui.button(self.mod_surf_err_box_1, self, "...", callback=self.select_defect_file_name, width=30)
+        gui.button(self.mod_surf_err_box_1, self, "View", callback=self.view_surface_data_file, width=40)
 
         self.modified_surface_tab_visibility()
 
@@ -377,6 +389,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     #########################################################
     # Surface Shape Methods
     #########################################################
+
     def surface_shape_tab_visibility(self, is_init=False):
         self.focusing_box.setVisible(False)
 
@@ -428,12 +441,28 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         if not is_init: self.__change_icon_from_surface_type()
 
-    def congruence_surface_data_file(self):
+    def set_surface_data(self, oasys_data : OasysPreProcessorData):
+        if not oasys_data is None:
+            if not oasys_data.error_profile_data is None:
+                try:
+                    surface_data = oasys_data.error_profile_data.surface_data
+
+                    error_profile_x_dim = oasys_data.error_profile_data.error_profile_x_dim
+                    error_profile_y_dim = oasys_data.error_profile_data.error_profile_y_dim
+
+                    self.ms_defect_file_name = surface_data.surface_data_file
+                    self.modified_surface = 1
+                    self.modified_surface_tab_visibility()
+
+                    self.congruence_surface_data_file(surface_data.xx, surface_data.yy, surface_data.zz)
+                except Exception as exception:
+                    self.prompt_exception(exception)
+
+    def congruence_surface_data_file(self, xx=None, yy=None, zz=None):
         # check congruence of limits and ask for corrections
         surface_data_file = self.ms_defect_file_name
 
-        if not os.path.isfile(surface_data_file):
-            raise Exception("File %s not found." % surface_data_file)
+        if not os.path.isfile(surface_data_file): raise Exception("File %s not found." % surface_data_file)
 
         ask_for_fix = False
         if self.is_infinite == 1:
@@ -443,7 +472,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 ask_for_fix = True
 
         if ask_for_fix:
-            xx, yy, zz = read_surface_file(surface_data_file)
+            if xx is None or yy is None or zz is None: xx, yy, zz = read_surface_file(surface_data_file)
 
             print(">>>> File limits: ", xx.min(), xx.max(), yy.min(), yy.max())
             print(">>>> Current limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
@@ -452,9 +481,10 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                     (xx.max() > self.dim_x_plus) or \
                     (yy.min() > -self.dim_y_minus) or \
                     (yy.max() > self.dim_y_plus):
-                if QtWidgets.QMessageBox.information(self, "Confirm Modification",
-                                                     "Dimensions of this O.E. must be changed in order to ensure congruence with the error profile surface, accept?",
-                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes:
+                if ConfirmDialog.confirmed(parent=self,
+                                           message="Dimensions of this O.E. must be changed in order to ensure congruence with the error profile surface, accept?",
+                                           title="Confirm Modification",
+                                           width=600):
                     self.is_infinite = 0
                     self.oe_shape = 0
                     self.dim_x_minus = numpy.min((-xx.min(), self.dim_x_minus))
@@ -468,6 +498,12 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 else:
                     print(">>>> **NOT CHANGED** limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
 
+    def view_surface_data_file(self):
+        try:
+            dialog = self.ShowSurfaceDataFileDialog(parent=self, surface_data_file=self.ms_defect_file_name)
+            dialog.show()
+        except Exception as exception:
+            self.prompt_exception(exception)
 
     #########################################################
     # Dimensions Methods
@@ -515,3 +551,52 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 return Ellipse(a_axis_min=-self.dim_x_minus, a_axis_max=self.dim_x_plus,
                                b_axis_min=-self.dim_y_minus, b_axis_max=self.dim_y_plus)
 
+
+    class ShowSurfaceDataFileDialog(QDialog):
+
+        def __init__(self, parent=None, surface_data_file=""):
+            QDialog.__init__(self, parent)
+            self.setWindowTitle('Surface Error Profile')
+            self.setFixedHeight(700)
+            layout = QGridLayout(self)
+
+            figure = Figure(figsize=(8, 7))
+            figure.patch.set_facecolor('white')
+
+            axis = figure.add_subplot(111, projection='3d')
+            axis.set_xlabel("X [m]")
+            axis.set_ylabel("Y [m]")
+            axis.set_zlabel("Z [nm]")
+
+            figure_canvas = FigureCanvas3D(ax=axis, fig=figure, show_legend=False, show_buttons=False)
+            figure_canvas.setFixedWidth(500)
+            figure_canvas.setFixedHeight(645)
+
+            xx, yy, zz = read_surface_file(surface_data_file)
+
+            x_to_plot, y_to_plot = numpy.meshgrid(xx, yy)
+            zz_slopes = zz.T
+
+            axis.plot_surface(x_to_plot, y_to_plot,  zz*1e9, rstride=1, cstride=1, cmap=cm.autumn, linewidth=0.5, antialiased=True)
+
+            sloperms = profiles_simulation.slopes(zz_slopes, xx, yy, return_only_rms=1)
+
+            title = ' Slope error rms in X direction: %f $\mu$rad' % (sloperms[0]*1e6) + '\n' + \
+                    ' Slope error rms in Y direction: %f $\mu$rad' % (sloperms[1]*1e6) + '\n' + \
+                    ' Figure error rms in X direction: %f nm' % (round(zz_slopes[:, 0].std()*1e9, 6)) + '\n' + \
+                    ' Figure error rms in Y direction: %f nm' % (round(zz_slopes[0, :].std()*1e9, 6))
+
+            axis.set_title(title)
+            figure_canvas.draw()
+            axis.mouse_init()
+
+            widget = QWidget(parent=self)
+            container = oasysgui.widgetBox(widget, "", addSpace=False, orientation="horizontal", width=500)
+            #gui.button(container, self, "Export Surface (.dat)", callback=self.save_shadow_surface)
+            #gui.button(container, self, "Export Surface (.hdf5)", callback=self.save_oasys_surface)
+            gui.button(container, self, "Close", callback=self.accept)
+
+            layout.addWidget(figure_canvas, 0, 0)
+            layout.addWidget(widget, 1, 0)
+
+            self.setLayout(layout)

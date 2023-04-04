@@ -120,7 +120,7 @@ class OWIdealLens(OWOpticalElement):
     # ----------------------------------------------------
     # from OpticalElement
 
-    def get_coordinates(self):
+    def get_coordinates_instance(self):
         return ElementCoordinates(
                 p=self.source_plane_distance,
                 q=self.image_plane_distance,
