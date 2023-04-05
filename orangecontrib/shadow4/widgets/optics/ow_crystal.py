@@ -10,7 +10,7 @@ from syned.beamline.optical_elements.crystals.crystal import DiffractionGeometry
 
 from shadow4.beamline.optical_elements.crystals.s4_plane_crystal import S4PlaneCrystal, S4PlaneCrystalElement
 
-from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 
 class OWCrystal(OWOpticalElementWithSurfaceShape):

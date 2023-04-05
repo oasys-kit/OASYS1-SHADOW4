@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QRect
 
 from orangewidget import gui
@@ -7,8 +6,12 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets.widget import AutomaticWidget
 from orangewidget.settings import Setting
 
-from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
-from orangecontrib.shadow4.util.s4_objects import ShadowData as ShadowBeam4
+try:
+    from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
+except:
+    pass
+
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData as ShadowBeam4
 from shadow4.beam.s4_beam import S4Beam
 
 from shadow4.beamline.s4_beamline import S4Beamline

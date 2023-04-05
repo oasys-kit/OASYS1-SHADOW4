@@ -10,8 +10,8 @@ from oasys.util.oasys_util import TriggerIn
 
 from shadow4.beam.s4_beam import S4Beam
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
-from orangecontrib.shadow4.util.s4_objects import ShadowData
-from orangecontrib.shadow4.util.s4_util import ShadowPlot, ShadowCongruence
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_util import ShadowPlot, ShadowCongruence
 from orangecontrib.shadow4.util.python_script import PythonScript
 
 class GenericElement(AutomaticElement):

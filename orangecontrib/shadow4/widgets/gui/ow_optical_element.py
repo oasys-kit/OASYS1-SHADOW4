@@ -61,8 +61,8 @@ from syned.widget.widget_decorator import WidgetDecorator
 from syned.beamline.element_coordinates import ElementCoordinates
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
-from orangecontrib.shadow4.util.s4_objects import ShadowData
-from orangecontrib.shadow4.util.s4_util import ShadowCongruence
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
 
 NO_FILE_SPECIFIED = "<specify file name>"
 SUBTAB_INNER_BOX_WIDTH = 375

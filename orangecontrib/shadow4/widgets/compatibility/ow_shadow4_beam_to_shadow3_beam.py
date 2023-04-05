@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QRect
 
 from orangewidget import gui
@@ -7,7 +6,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets.widget import AutomaticWidget
 from orangewidget.settings import Setting
 
-from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 
 try:
     import Shadow

@@ -3,7 +3,7 @@ import time
 
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
 from orangecontrib.shadow4.widgets.gui.plots import plot_data1D
-from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 
 from oasys.widgets import gui as oasysgui
 

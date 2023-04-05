@@ -17,8 +17,8 @@ from syned.widget.widget_decorator import WidgetDecorator
 
 from shadow4.beamline.optical_elements.ideal_elements.s4_beam_movement import S4BeamMovement, S4BeamMovementElement
 
-from orangecontrib.shadow4.util.s4_objects import ShadowData
-from orangecontrib.shadow4.util.s4_util import ShadowCongruence
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
 
 
 class OWBeamMovement(GenericElement, WidgetDecorator):

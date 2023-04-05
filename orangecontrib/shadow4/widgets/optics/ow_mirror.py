@@ -21,7 +21,7 @@ from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirr
 
 
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape, SUBTAB_INNER_BOX_WIDTH
-from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 
 class OWMirror(OWOpticalElementWithSurfaceShape):
     name        = "Generic Mirror"

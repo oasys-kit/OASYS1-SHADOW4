@@ -13,7 +13,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
 from oasys.util.oasys_util import EmittingStream
 
-from orangecontrib.shadow4.util.s4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 
 from shadow4.beamline.s4_beamline import S4Beamline

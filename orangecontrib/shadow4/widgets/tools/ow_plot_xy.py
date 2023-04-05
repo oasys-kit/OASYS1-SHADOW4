@@ -13,8 +13,8 @@ from oasys.widgets.gui import ConfirmDialog, MessageDialog, selectSaveFileFromDi
 
 from oasys.util.oasys_util import EmittingStream
 
-from orangecontrib.shadow4.util.s4_objects import ShadowData
-from orangecontrib.shadow4.util.s4_util import ShadowCongruence, ShadowPlot
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, ShadowPlot
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
 from shadow4.beam.s4_beam import S4Beam
 
