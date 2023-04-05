@@ -1,3 +1,4 @@
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QRect
 
 from orangewidget import gui
