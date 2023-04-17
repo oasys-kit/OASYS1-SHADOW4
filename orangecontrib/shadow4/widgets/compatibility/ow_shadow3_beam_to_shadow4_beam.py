@@ -12,7 +12,7 @@ try:
 except:
     pass
 
-from orangecontrib.shadow4.util.shadow4_objects import ShadowData as ShadowBeam4
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from shadow4.beam.s4_beam import S4Beam
 
 from shadow4.beamline.s4_beamline import S4Beamline
@@ -35,7 +35,7 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
     inputs = [("Shadow3 Beam", ShadowBeam3, "set_input")]
 
     outputs = [{"name":"Shadow Data",
-                "type":ShadowBeam4,
+                "type":ShadowData,
                 "doc":"",}]
 
     MAX_WIDTH = 420
@@ -79,10 +79,9 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
 
     def convert_beam(self):
         beam3 = self.shadow_beam._beam
-        print(">>beam3: ", beam3)
-        beam4 = ShadowBeam4(beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
-        beam4.rays[:, 0:3] *= self.workspace_units_to_m
-        beam4.rays[:, 12]  *= self.workspace_units_to_m
+        beam4 = ShadowData(beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
+        beam4.beam.rays[:, 0:3] *= self.workspace_units_to_m
+        beam4.beam.rays[:, 12]  *= self.workspace_units_to_m
 
         print(beam4)
         self.send("Shadow Data", beam4)
