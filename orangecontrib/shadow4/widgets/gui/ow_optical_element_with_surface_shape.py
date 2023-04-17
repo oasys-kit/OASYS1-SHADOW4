@@ -85,6 +85,19 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     modified_surface = Setting(0)
     ms_defect_file_name = Setting("<none>.hdf5")
 
+    #########################################################
+    # o.e. movement
+    #########################################################
+
+    oe_movement            = Setting(0)
+    oe_movement_offset_x   = Setting(0.0)
+    oe_movement_rotation_x = Setting(0.0)
+    oe_movement_offset_y   = Setting(0.0)
+    oe_movement_rotation_y = Setting(0.0)
+    oe_movement_offset_z   = Setting(0.0)
+    oe_movement_rotation_z = Setting(0.0)
+
+
     input_data = None
 
     def createdFromNode(self, node):
@@ -179,6 +192,11 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         # Advanced Settings / Modified Surface
         #########################################################
         self.populate_tab_modified_surface(subtab_modified_surface)
+
+        #########################################################
+        # Advanced Settings / O.E. Movement
+        #########################################################
+        self.populate_tab_oe_movement(subtab_modified_surface)
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting): return None
     def populate_basic_settings_specific_subtabs(self, specific_basic_settings_subtabs): pass
@@ -385,6 +403,44 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         self.modified_surface_tab_visibility()
 
+    def populate_tab_oe_movement(self, subtab_oe_movement):
+        mir_mov_box = oasysgui.widgetBox(subtab_oe_movement, "O.E. Movement Parameters", addSpace=True, orientation="vertical")
+
+        # mir_mov_box = oasysgui.widgetBox(tab_adv_mir_mov, "O.E. Movement Parameters", addSpace=False,
+        #                                  orientation="vertical", height=230)
+
+        gui.comboBox(mir_mov_box, self, "oe_movement", label="O.E. Movement", labelWidth=350,
+                     items=["No", "Yes"],
+                     callback=self.oe_movement_tab_visibility, sendSelectedValue=False, orientation="horizontal",
+                     tooltip="oe_movement")
+
+        gui.separator(mir_mov_box, height=10)
+
+        self.mir_mov_box_1 = oasysgui.widgetBox(mir_mov_box, "", addSpace=False, orientation="vertical")
+
+        self.le_mm_mirror_offset_x = oasysgui.lineEdit(self.mir_mov_box_1, self, "oe_movement_offset_x", "O.E. Offset X [m]",
+                                                       labelWidth=260, valueType=float, orientation="horizontal",
+                                                       tooltip="oe_movement_offset_x")
+        oasysgui.lineEdit(self.mir_mov_box_1, self, "oe_movement_rotation_x", "O.E. Rotation X [CCW, deg]",
+                          labelWidth=260, valueType=float, orientation="horizontal",
+                          tooltip="oe_movement_rotation_x")
+        self.le_mm_mirror_offset_y = oasysgui.lineEdit(self.mir_mov_box_1, self, "oe_movement_offset_y", "O.E. Offset Y [m]",
+                                                       labelWidth=260, valueType=float, orientation="horizontal",
+                                                       tooltip="oe_movement_offset_y")
+        oasysgui.lineEdit(self.mir_mov_box_1, self, "oe_movement_rotation_y", "O.E. Rotation Y [CCW, deg]",
+                          labelWidth=260, valueType=float, orientation="horizontal",
+                          tooltip="oe_movement_rotation_y")
+        self.le_mm_mirror_offset_z = oasysgui.lineEdit(self.mir_mov_box_1, self, "oe_movement_offset_z", "O.E. Offset Z [m]",
+                                                       labelWidth=260, valueType=float, orientation="horizontal",
+                                                       tooltip="oe_movement_offset_z")
+        oasysgui.lineEdit(self.mir_mov_box_1, self, "oe_movement_rotation_z", "O.E. Rotation Z [CCW, deg]",
+                          labelWidth=260, valueType=float, orientation="horizontal",
+                          tooltip="oe_movement_rotation_z")
+
+        self.oe_movement_tab_visibility()
+
+    def oe_movement_tab_visibility(self):
+        self.mir_mov_box_1.setVisible(self.oe_movement == 1)
 
     #########################################################
     # Surface Shape Methods

@@ -216,8 +216,6 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
 
         self.oe_orientation_angle_user()
 
-    def populate_tab_oe_movement(self, subtab_oe_movement):
-        box = oasysgui.widgetBox(subtab_oe_movement, "Not yet implemented", addSpace=True, orientation="vertical")
 
     #########################################################
     # Position Methods
