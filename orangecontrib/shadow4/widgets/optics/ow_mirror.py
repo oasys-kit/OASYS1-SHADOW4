@@ -7,7 +7,7 @@ from oasys.widgets import gui as oasysgui
 
 from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
-from shadow4.beamline.optical_elements.mirrors.s4_toroidal_mirror import S4ToroidalMirror, S4ToroidalMirrorElement
+from shadow4.beamline.optical_elements.mirrors.s4_toroidal_mirror import S4ToroidMirror, S4ToroidalMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_conic_mirror import S4ConicMirror, S4ConicMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirror, S4PlaneMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_ellipsoid_mirror import S4EllipsoidMirror, S4EllipsoidMirrorElement
@@ -305,7 +305,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 5:
-            mirror = S4ToroidalMirror(
+            mirror = S4ToroidMirror(
                 name="Toroidal Mirror",
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
