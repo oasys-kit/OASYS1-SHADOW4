@@ -27,6 +27,7 @@ from srxraylib.metrology import profiles_simulation
 
 from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement, optical_element_inputs, SUBTAB_INNER_BOX_WIDTH
 
+from shadow4.beamline.s4_beamline_element_movements import S4BeamlineElementMovements
 
 class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     inputs = optical_element_inputs()
@@ -578,7 +579,21 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     def select_defect_file_name(self):
         self.le_ms_defect_file_name.setText(oasysgui.selectFileFromDialog(self, self.ms_defect_file_name, "Select Defect File Name", file_extension_filter="Data Files (*.h5 *.hdf5)"))
 
-
+    #########################################################
+    # Movements methods
+    #########################################################
+    def get_movements_instance(self):
+        if self.oe_movement == 0:
+            return None
+        else:
+            return S4BeamlineElementMovements(f_move=1,
+                                              offset_x=self.oe_movement_offset_x,
+                                              offset_y=self.oe_movement_offset_y,
+                                              offset_z=self.oe_movement_offset_z,
+                                              rotation_x=numpy.radians(self.oe_movement_rotation_x),
+                                              rotation_y=numpy.radians(self.oe_movement_rotation_y),
+                                              rotation_z=numpy.radians(self.oe_movement_rotation_z),
+                                              )
     #########################################################
     # S4 objects
     #########################################################

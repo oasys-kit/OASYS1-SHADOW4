@@ -302,6 +302,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             element = self.get_beamline_element_instance()
             element.set_optical_element(self.get_optical_element_instance())
             element.set_coordinates(self.get_coordinates_instance())
+            element.set_movements(self.get_movements_instance())
             element.set_input_beam(self.input_data.beam)
 
             print(element.info())
@@ -342,3 +343,5 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
 
     def get_optical_element_instance(self): raise NotImplementedError()
     def get_beamline_element_instance(self): raise NotImplementedError()
+    def get_movements_instance(self): raise NotImplementedError()
+
