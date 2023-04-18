@@ -139,7 +139,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         self.tabs_advanced_settings   = oasysgui.tabWidget(self.tab_advanced_settings)
 
         advanced_setting_subtabs = self.create_advanced_settings_subtabs(self.tabs_advanced_settings)
-        subtab_oe_movement       = oasysgui.createTabPage(self.tabs_advanced_settings, "O.E. Movement")  # to be populated
+        oe_movement_subtab       = self.create_oe_movement_subtab(self.tabs_advanced_settings)
 
         #########################################################
         # Position
@@ -156,16 +156,18 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         # Advanced Settings
         #########################################################
         self.populate_advanced_setting_subtabs(advanced_setting_subtabs)
-
-        self.populate_tab_oe_movement(subtab_oe_movement)
+        self.populate_oe_movement_subtab(oe_movement_subtab)
 
         gui.rubber(self.controlArea)
         gui.rubber(self.mainArea)
 
     def create_basic_settings_subtabs(self, tabs_basic_settings): return None
     def create_advanced_settings_subtabs(self, tabs_advanced_settings): return None
+    def create_oe_movement_subtab(self, tabs_advanced_settings): return oasysgui.createTabPage(tabs_advanced_settings, "O.E. Movement")
+
     def populate_basic_setting_subtabs(self, basic_setting_subtabs): pass
     def populate_advanced_setting_subtabs(self, advanced_setting_subtabs): pass
+    def populate_oe_movement_subtab(self, oe_movement_subtab): pass
 
     def populate_tab_position(self, tab_position):
         self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True, orientation="vertical")

@@ -194,11 +194,6 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         #########################################################
         self.populate_tab_modified_surface(subtab_modified_surface)
 
-        #########################################################
-        # Advanced Settings / O.E. Movement
-        #########################################################
-        self.populate_tab_oe_movement(subtab_modified_surface)
-
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting): return None
     def populate_basic_settings_specific_subtabs(self, specific_basic_settings_subtabs): pass
 
@@ -404,8 +399,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         self.modified_surface_tab_visibility()
 
-    def populate_tab_oe_movement(self, subtab_oe_movement):
-        mir_mov_box = oasysgui.widgetBox(subtab_oe_movement, "O.E. Movement Parameters", addSpace=True, orientation="vertical")
+    def populate_oe_movement_subtab(self, oe_movement_subtab):
+        mir_mov_box = oasysgui.widgetBox(oe_movement_subtab, "O.E. Movement Parameters", addSpace=True, orientation="vertical")
 
         # mir_mov_box = oasysgui.widgetBox(tab_adv_mir_mov, "O.E. Movement Parameters", addSpace=False,
         #                                  orientation="vertical", height=230)
