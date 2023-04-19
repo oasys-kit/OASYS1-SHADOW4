@@ -165,8 +165,9 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
     def create_advanced_settings_subtabs(self, tabs_advanced_settings):
         subtab_modified_surface = oasysgui.createTabPage(tabs_advanced_settings, "Modified Surface")  # to be populated
+        subtab_oe_movement = oasysgui.createTabPage(tabs_advanced_settings, "O.E. Movement")  # to be populated
 
-        return subtab_modified_surface
+        return [subtab_modified_surface, subtab_oe_movement]
 
     def populate_basic_setting_subtabs(self, basic_setting_subtabs):
         subtab_surface_shape, specific_basic_settings_subtabs, subtab_dimensions = basic_setting_subtabs
@@ -187,12 +188,16 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.populate_tab_dimensions(subtab_dimensions)
 
     def populate_advanced_setting_subtabs(self, advanced_setting_subtabs):
-        subtab_modified_surface = advanced_setting_subtabs
 
         #########################################################
         # Advanced Settings / Modified Surface
         #########################################################
-        self.populate_tab_modified_surface(subtab_modified_surface)
+        self.populate_tab_modified_surface(advanced_setting_subtabs[0])
+
+        #########################################################
+        # Advanced Settings / Movements
+        #########################################################
+        self.populate_oe_movement_subtab(advanced_setting_subtabs[1])
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting): return None
     def populate_basic_settings_specific_subtabs(self, specific_basic_settings_subtabs): pass
