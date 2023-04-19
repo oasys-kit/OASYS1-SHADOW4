@@ -49,20 +49,27 @@ class OWIdealLens(OWOpticalElement):
 
         gui.comboBox(box_ideal_lens, self, "ideal_lens_type", label="Ideal Lens Type", labelWidth=350,
                      items=["Simple", "Super"],
-                     callback=self.set_ideal_lens_type, sendSelectedValue=False, orientation="horizontal")
+                     callback=self.set_ideal_lens_type, sendSelectedValue=False, orientation="horizontal",
+                     tooltip="ideal_lens_type")
 
         gui.separator(box_ideal_lens)
 
         self.box_focal_distances = oasysgui.widgetBox(box_ideal_lens, "Focal Distances", addSpace=False, orientation="vertical", height=140)
-        self.box_p_q_distances   = oasysgui.widgetBox(box_ideal_lens, "P,Q Distances",   addSpace=False, orientation="vertical", height=140)
+        self.box_p_q_distances   = oasysgui.widgetBox(box_ideal_lens, "p,q Distances",   addSpace=False, orientation="vertical", height=140)
 
-        oasysgui.lineEdit(self.box_focal_distances, self, "focal_x", "F(x) [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.box_focal_distances, self, "focal_z", "F(Z) [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.box_focal_distances, self, "focal_x", "focal distance X [m]", labelWidth=260,
+                          valueType=float, orientation="horizontal", tooltip="focal_x")
+        oasysgui.lineEdit(self.box_focal_distances, self, "focal_z", "focal distance Z [m]", labelWidth=260,
+                          valueType=float, orientation="horizontal", tooltip="focal_z")
 
-        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_p_x", "P(x) [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_p_z", "P(Z) [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_q_x", "Q(X) [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_q_z", "Q(Z) [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_p_x", "p(X) [m]", labelWidth=260,
+                          valueType=float, orientation="horizontal", tooltip="focal_p_x")
+        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_p_z", "p(Z) [m]",
+                          labelWidth=260, valueType=float, orientation="horizontal", tooltip="focal_p_z")
+        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_q_x", "q(X) [m]",
+                          labelWidth=260, valueType=float, orientation="horizontal", tooltip="focal_q_x")
+        oasysgui.lineEdit(self.box_p_q_distances, self, "focal_q_z", "q(Z) [m]",
+                          labelWidth=260, valueType=float, orientation="horizontal", tooltip="focal_q_z")
 
         self.set_ideal_lens_type()
 
@@ -83,10 +90,15 @@ class OWIdealLens(OWOpticalElement):
                 )
 
     def get_optical_element_instance(self):
-        if self.ideal_lens_type == 0:   return S4IdealLens(name=self.getNode().title,
+        try:
+            name = self.getNode().title
+        except:
+            name = "Ideal Lens"
+
+        if self.ideal_lens_type == 0:   return S4IdealLens(name=name,
                                                            focal_x=self.focal_x,
                                                            focal_y=self.focal_z)
-        elif self.ideal_lens_type == 1: return S4SuperIdealLens(name=self.getNode().title,
+        elif self.ideal_lens_type == 1: return S4SuperIdealLens(name=name,
                                                                 focal_p_x=self.focal_p_x,
                                                                 focal_p_y=self.focal_p_z,
                                                                 focal_q_x=self.focal_q_x,
@@ -95,3 +107,34 @@ class OWIdealLens(OWOpticalElement):
     def get_beamline_element_instance(self):
         if self.ideal_lens_type == 0:   return S4IdealLensElement()
         elif self.ideal_lens_type == 1: return S4SuperIdealLensElement()
+
+
+if __name__ == "__main__":
+    from shadow4.beamline.s4_beamline import S4Beamline
+    from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+    import sys
+    def get_test_beam():
+        from shadow4.sources.source_geometrical.source_geometrical import SourceGeometrical
+        light_source = SourceGeometrical(name='SourceGeometrical', nrays=5000, seed=5676561)
+        light_source.set_spatial_type_rectangle(width=0.001000, height=0.001000)
+        light_source.set_angular_distribution_flat(hdiv1=0.000000, hdiv2=0.000000, vdiv1=0.000000, vdiv2=0.000000)
+        light_source.set_energy_distribution_singleline(5000.000000, unit='A')
+        light_source.set_polarization(polarization_degree=1.000000, phase_diff=0.000000, coherent_beam=0)
+        beam = light_source.get_beam()
+
+        return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
+
+    from PyQt5.QtWidgets import QApplication
+    a = QApplication(sys.argv)
+    ow = OWIdealLens()
+    ow.set_shadow_data(get_test_beam())
+
+    ow.source_plane_distance = 0
+    ow.image_plane_distance = 5000.0
+    ow.focal_x = 5000.0
+    ow.focal_z = 5000.0
+    ow.run_shadow4()
+
+    ow.show()
+    a.exec_()
+    ow.saveSettings()
