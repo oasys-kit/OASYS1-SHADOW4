@@ -17,12 +17,6 @@ from shadow4.beam.s4_beam import S4Beam
 
 from shadow4.beamline.s4_beamline import S4Beamline
 
-# try:
-#     import Shadow
-#     from orangecontrib.shadow.util.shadow_objects import ShadowBeam as ShadowBeam3
-# except:
-#     pass
-
 class OW_beam_converter_3_to_4(AutomaticWidget):
     name = "shadow3->4 beam converter"
     id = "toShadowOUIbeam"
@@ -66,7 +60,7 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
         self.controlArea.setFixedWidth(self.MAX_WIDTH-10)
         self.controlArea.setFixedHeight(self.MAX_HEIGHT-10)
 
-        main_box = oasysgui.widgetBox(self.controlArea, "From Shadow4 Beam To Shadow3 (ShadowOUI) Beam", orientation="vertical", width=self.CONTROL_AREA_WIDTH-5, height=140)
+        main_box = oasysgui.widgetBox(self.controlArea, "From Shadow3 (ShadowOUI) Beam To Shadow4 Beam", orientation="vertical", width=self.CONTROL_AREA_WIDTH-5, height=140)
 
         gui.button(main_box, self, "Compute", callback=self.convert_beam, height=45)
 
@@ -92,7 +86,8 @@ if __name__ == "__main__":
     import Shadow
     a = QApplication(sys.argv)
     ow = OW_beam_converter_3_to_4()
-    ow.set_input(ShadowBeam3(oe_number=0,beam=Shadow.Beam(N=5000)))
+    ow.workspace_units_to_m = 1.0
+    ow.set_input(ShadowBeam3(beam=Shadow.Beam(N=5000)))
     ow.show()
     a.exec_()
     #ow.saveSettings()
