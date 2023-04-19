@@ -103,14 +103,14 @@ class ShadowData:
         if not self.__beam is None:
             self.__beam.write_h5(file_name)
 
-    def duplicate(self, copy_rays=True, copy_history=True):
+    def duplicate(self, copy_rays=True):
         beam = S4Beam()
         if copy_rays: beam.rays = copy.deepcopy(self.beam.rays)
 
         new_shadow_beam = ShadowData(beam=beam)
         new_shadow_beam.scanning_data = self.__scanning_data
         new_shadow_beam.initial_flux  = self.__initial_flux
-        new_shadow_beam.beamline = self.__beamline.duplicate(copy_input_beam=copy_history)
+        new_shadow_beam.beamline = self.__beamline.duplicate()
 
         return new_shadow_beam
 
