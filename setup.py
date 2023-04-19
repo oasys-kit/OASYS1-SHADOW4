@@ -5,7 +5,8 @@
 #
 # Copyright (c) 2016-2019 European Synchrotron Radiation Facility
 # Copyright (c) 2019-2020 Lawrence Berkeley National Laboratory
-# Copyright (c) 2020-2022 European Synchrotron Radiation Facility
+# Copyright (c) 2020-now European Synchrotron Radiation Facility
+# Copyright (c) 2023-now Argonne National Laboratory
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +45,7 @@
 #     pip install <name>
 #
 
-__authors__ = ["M Sanchez del Rio"]
+__authors__ = ["M Sanchez del Rio, Luca Rebuffi"]
 __license__ = "MIT"
 __date__ = "25/10/2019"
 
@@ -61,10 +62,10 @@ ISRELEASED = False
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
 README_FILE = os.path.join(os.path.dirname(__file__), 'README.txt')
 LONG_DESCRIPTION = open(README_FILE).read()
-AUTHOR = 'M. Sanchez del Rio'
-AUTHOR_EMAIL = 'srio@esrf.eu'
-URL = 'https://github.com/srio/OASYS1-SHADOW4'
-DOWNLOAD_URL = 'https://github.com/srio/OASYS1-SHADOW4'
+AUTHOR = 'M. Sanchez del Rio, L. Rebuffi'
+AUTHOR_EMAIL = 'srio at esrf dot eu'
+URL = 'https://github.com/oasys-kit/OASYS1-SHADOW4'
+DOWNLOAD_URL = 'https://github.com/oasys-kit/OASYS1-SHADOW4'
 LICENSE = 'MIT'
 
 KEYWORDS = (
