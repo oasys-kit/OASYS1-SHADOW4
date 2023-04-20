@@ -7,7 +7,7 @@ from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElemen
 
 class OWAbstractLens(OWOpticalElement):
     surface_shape           = Setting(2)
-    convex_to_the_beam      = Setting(1)
+    convex_to_the_beam      = Setting(0)
     has_finite_diameter     = Setting(0)
     diameter                = Setting(632.0)
     is_cylinder             = Setting(0)
