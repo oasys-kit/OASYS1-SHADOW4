@@ -90,10 +90,8 @@ class OWIdealLens(OWOpticalElementWithSurfaceShape):
                 )
 
     def get_optical_element_instance(self):
-        try:
-            name = self.getNode().title
-        except:
-            name = "Ideal Lens"
+        try:    name = self.getNode().title
+        except: name = "Ideal Lens"
 
         if self.ideal_lens_type == 0:   return S4IdealLens(name=name,
                                                            focal_x=self.focal_x,
