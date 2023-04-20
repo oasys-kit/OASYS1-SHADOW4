@@ -7,7 +7,7 @@ class OWEmptyElement(OWOpticalElement):
     description = "Shadow Empty Element"
     icon        = "icons/empty_element.png"
 
-    priority = 2.0
+    priority = 10.0
 
     def __init__(self): super().__init__(has_footprint=False)
     def get_optical_element_instance(self): return S4Empty(name=self.getNode().title)

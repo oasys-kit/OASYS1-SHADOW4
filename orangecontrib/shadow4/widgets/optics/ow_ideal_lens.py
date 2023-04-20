@@ -8,15 +8,15 @@ from syned.beamline.element_coordinates import ElementCoordinates
 
 from shadow4.beamline.optical_elements.ideal_elements.s4_ideal_lens import S4IdealLensElement, S4SuperIdealLensElement, S4IdealLens, S4SuperIdealLens
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
+from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 
 
-class OWIdealLens(OWOpticalElement):
+class OWIdealLens(OWOpticalElementWithSurfaceShape):
     name        = "Ideal Lens"
     description = "Shadow Ideal Lens"
     icon        = "icons/ideal_lens.png"
 
-    priority = 2.1
+    priority = 10.1
 
     focal_x    = Setting(0.0)
     focal_z    = Setting(0.0)

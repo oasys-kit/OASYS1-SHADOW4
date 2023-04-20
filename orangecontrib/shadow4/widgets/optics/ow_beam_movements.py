@@ -26,7 +26,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
     name = "Beam movements"
     description = "Shadow Beam Movement"
     icon = "icons/beam_movement.png"
-    priority = 2.99
+    priority = 10.99
 
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
     WidgetDecorator.append_syned_input_data(inputs)

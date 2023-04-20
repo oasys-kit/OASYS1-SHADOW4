@@ -1,7 +1,7 @@
 import numpy
 import sys, os
 
-from PyQt5.QtWidgets import QDialog, QGridLayout, QWidget
+from PyQt5.QtWidgets import QDialog, QGridLayout, QWidget, QDialogButtonBox, QFileDialog
 
 from matplotlib import cm
 from oasys.widgets.gui import FigureCanvas3D
@@ -16,8 +16,10 @@ from orangewidget import gui
 from orangewidget.settings import Setting
 
 from oasys.widgets import gui as oasysgui
-from oasys.widgets.gui import ConfirmDialog, MessageDialog
-from oasys.util.oasys_util import read_surface_file
+from oasys.widgets.gui import ConfirmDialog
+from oasys.widgets import congruence
+
+from oasys.util.oasys_util import read_surface_file, write_surface_file
 from oasys.util.oasys_objects import OasysPreProcessorData
 
 from syned.beamline.shape import Rectangle
@@ -98,6 +100,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     oe_movement_offset_z   = Setting(0.0)
     oe_movement_rotation_z = Setting(0.0)
 
+    #########################################################
 
     input_data = None
 
@@ -111,10 +114,11 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
     def __change_icon_from_surface_type(self):
         try:
-            node = self.getNode()
-            node.description.icon = self.icons_for_shape[self.surface_shape_type]
-            self.changeNodeIcon(icon_loader.from_description(node.description).get(node.description.icon))
-            if node.title in self.oe_names: self.changeNodeTitle(self.title_for_shape[self.surface_shape_type])
+            if self.__switch_icons:
+                node = self.getNode()
+                node.description.icon = self.icons_for_shape[self.surface_shape_type]
+                self.changeNodeIcon(icon_loader.from_description(node.description).get(node.description.icon))
+                if node.title in self.oe_names: self.changeNodeTitle(self.title_for_shape[self.surface_shape_type])
         except:
             pass
 
@@ -153,8 +157,9 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 5 : self.oe_names[6],
                 6 : self.oe_names[7]}
 
-    def __init__(self, show_automatic_box=True, has_footprint=True):
+    def __init__(self, show_automatic_box=True, has_footprint=True, switch_icons=True):
         super().__init__(show_automatic_box=show_automatic_box, has_footprint=has_footprint)
+        self.__switch_icons = switch_icons
 
     def create_basic_settings_subtabs(self, tabs_basic_settings):
         subtab_surface_shape            = oasysgui.createTabPage(tabs_basic_settings, "Surface Shape")  # to be populated
@@ -203,7 +208,6 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     def populate_basic_settings_specific_subtabs(self, specific_basic_settings_subtabs): pass
 
     def populate_tab_surface_shape(self, subtab_surface_shape):
-
         box_1 = oasysgui.widgetBox(subtab_surface_shape, "Surface Shape", addSpace=True, orientation="vertical")
 
         gui.comboBox(box_1, self, "surface_shape_type", label="Figure",
@@ -353,6 +357,10 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                      valueType=float,
                      sendSelectedValue=False, orientation="horizontal", tooltip="cylinder_orientation")
 
+        view_shape_box = oasysgui.widgetBox(subtab_surface_shape, "Calculated Surface Shape", addSpace=False, orientation="vertical")
+
+        gui.button(view_shape_box, self, "Render Surface Shape", callback=self.view_surface_shape_data)
+
         self.surface_shape_tab_visibility(is_init=True)
 
     def populate_tab_dimensions(self, subtab_dimensions):
@@ -400,7 +408,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                         orientation="horizontal")
 
         gui.button(self.mod_surf_err_box_1, self, "...", callback=self.select_defect_file_name, width=30)
-        gui.button(self.mod_surf_err_box_1, self, "View", callback=self.view_surface_data_file, width=40)
+        gui.button(self.mod_surf_err_box_1, self, "View", callback=self.view_surface_error_data_file, width=40)
 
         self.modified_surface_tab_visibility()
 
@@ -555,9 +563,16 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 else:
                     print(">>>> **NOT CHANGED** limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
 
-    def view_surface_data_file(self):
+    def view_surface_error_data_file(self):
         try:
-            dialog = self.ShowSurfaceDataFileDialog(parent=self, surface_data_file=self.ms_defect_file_name)
+            dialog = self.ShowSurfaceErrorDataFileDialog(parent=self)
+            dialog.show()
+        except Exception as exception:
+            self.prompt_exception(exception)
+
+    def view_surface_shape_data(self):
+        try:
+            dialog = self.ShowSurfaceShapeDialog(parent=self)
             dialog.show()
         except Exception as exception:
             self.prompt_exception(exception)
@@ -623,9 +638,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                b_axis_min=-self.dim_y_minus, b_axis_max=self.dim_y_plus)
 
 
-    class ShowSurfaceDataFileDialog(QDialog):
-
-        def __init__(self, parent=None, surface_data_file=""):
+    class ShowSurfaceErrorDataFileDialog(QDialog):
+        def __init__(self, parent=None):
             QDialog.__init__(self, parent)
             self.setWindowTitle('Surface Error Profile')
             self.setFixedHeight(700)
@@ -643,7 +657,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             figure_canvas.setFixedWidth(500)
             figure_canvas.setFixedHeight(645)
 
-            xx, yy, zz = read_surface_file(surface_data_file)
+            xx, yy, zz = read_surface_file(parent.ms_defect_file_name)
 
             x_to_plot, y_to_plot = numpy.meshgrid(xx, yy)
             zz_slopes = zz.T
@@ -663,7 +677,6 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
             widget = QWidget(parent=self)
             container = oasysgui.widgetBox(widget, "", addSpace=False, orientation="horizontal", width=500)
-            #gui.button(container, self, "Export Surface (.dat)", callback=self.save_shadow_surface)
             #gui.button(container, self, "Export Surface (.hdf5)", callback=self.save_oasys_surface)
             gui.button(container, self, "Close", callback=self.accept)
 
@@ -671,3 +684,247 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             layout.addWidget(widget, 1, 0)
 
             self.setLayout(layout)
+
+    class ShowSurfaceShapeDialog(QDialog):
+        c1  = 0.0
+        c2  = 0.0
+        c3  = 0.0
+        c4  = 0.0
+        c5  = 0.0
+        c6  = 0.0
+        c7  = 0.0
+        c8  = 0.0
+        c9  = 0.0
+        c10 = 0.0
+
+        torus_major_radius = 0.0
+        torus_minor_radius = 0.0
+
+        xx = None
+        yy = None
+        zz = None
+
+        bin_x = 100
+        bin_y = 1000
+
+        def __init__(self, parent=None):
+            QDialog.__init__(self, parent)
+            self.setWindowTitle('O.E. Surface Shape')
+            self.setFixedWidth(750)
+
+            layout = QGridLayout(self)
+
+            figure = Figure(figsize=(100, 100))
+            figure.patch.set_facecolor('white')
+
+            axis = figure.add_subplot(111, projection='3d')
+            axis.set_xlabel("X [" + parent.workspace_units_label + "]")
+            axis.set_ylabel("Y [" + parent.workspace_units_label + "]")
+            axis.set_zlabel("Z [" + parent.workspace_units_label + "]")
+
+            figure_canvas = FigureCanvas3D(ax=axis, fig=figure, show_legend=False, show_buttons=False)
+            figure_canvas.setFixedWidth(500)
+            figure_canvas.setFixedHeight(500)
+
+            X, Y, z_values = self.calculate_surface(parent, 100, 100)
+
+            axis.plot_surface(X, Y, z_values, rstride=1, cstride=1, cmap=cm.autumn, linewidth=0.5, antialiased=True)
+
+            if parent.surface_shape_type == 5:
+                axis.set_title("Surface from Torus equation:\n" +
+                               "[(Z + R + r)" + u"\u00B2" +
+                               " + Y" + u"\u00B2" +
+                               " + X" + u"\u00B2" +
+                               " + R" + u"\u00B2" +
+                               " - r" + u"\u00B2"
+                               + "]" + u"\u00B2" +
+                               "= 4R" + u"\u00B2" + "[(Z + R + r)" + u"\u00B2" + " + Y" + u"\u00B2" + "]")
+            else:
+                title_head = "Surface from generated conic coefficients:\n"
+                title = ""
+                max_dim = 40
+
+                if self.c1 != 0: title +=       str(self.c1) + u"\u00B7" + "X" + u"\u00B2"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c2 < 0 or (self.c2 > 0 and title == ""): title +=       str(self.c2) + u"\u00B7" + "Y" + u"\u00B2"
+                elif self.c2 > 0                                 : title += "+" + str(self.c2) + u"\u00B7" + "Y" + u"\u00B2"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c3 < 0 or (self.c3 > 0 and title == ""): title +=       str(self.c3) + u"\u00B7" + "Z" + u"\u00B2"
+                elif self.c3 > 0                                 : title += "+" + str(self.c3) + u"\u00B7" + "Z" + u"\u00B2"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c4 < 0 or (self.c4 > 0 and title == ""): title +=       str(self.c4) + u"\u00B7" + "XY"
+                elif self.c4 > 0                                 : title += "+" + str(self.c4) + u"\u00B7" + "XY"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c5 < 0 or (self.c5 > 0 and title == ""): title +=       str(self.c5) + u"\u00B7" + "YZ"
+                elif self.c5 > 0                                 : title += "+" + str(self.c5) + u"\u00B7" + "YZ"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c6 < 0 or (self.c6 > 0 and title == ""): title +=       str(self.c6) + u"\u00B7" + "XZ"
+                elif self.c6 > 0                                 : title += "+" + str(self.c6) + u"\u00B7" + "XZ"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c7 < 0 or (self.c7 > 0 and title == ""): title +=       str(self.c7) + u"\u00B7" + "X"
+                elif self.c7 > 0                                 : title += "+" + str(self.c7) + u"\u00B7" + "X"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c8 < 0 or (self.c8 > 0 and title == ""): title +=       str(self.c8) + u"\u00B7" + "Y"
+                elif self.c8 > 0                                 : title += "+" + str(self.c8) + u"\u00B7" + "Y"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c9 < 0 or (self.c9 > 0 and title == ""): title +=       str(self.c9) + u"\u00B7" + "Z"
+                elif self.c9 > 0                                 : title += "+" + str(self.c9) + u"\u00B7" + "Z"
+                if len(title) >=  max_dim:
+                    title_head += title + "\n"
+                    title = ""
+                if self.c10< 0 or (self.c10> 0 and title == ""): title +=       str(self.c10)
+                elif self.c10> 0                                 : title += "+" + str(self.c10)
+
+                axis.set_title(title_head + title + " = 0")
+
+            figure_canvas.draw()
+            axis.mouse_init()
+
+            widget    = QWidget(parent=self)
+            container = oasysgui.widgetBox(widget, "", addSpace=False, orientation="vertical", width=220)
+
+            if parent.surface_shape_type == 5:
+                surface_box = oasysgui.widgetBox(container, "Torus Parameters", addSpace=False, orientation="vertical", width=220, height=375)
+
+                le_torus_major_radius = oasysgui.lineEdit(surface_box, self, "torus_major_radius" , "R" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_torus_minor_radius = oasysgui.lineEdit(surface_box, self, "torus_minor_radius" , "r" , labelWidth=60, valueType=float, orientation="horizontal")
+
+                le_torus_major_radius.setReadOnly(True)
+                le_torus_minor_radius.setReadOnly(True)
+            else:
+                surface_box = oasysgui.widgetBox(container, "Conic Coefficients", addSpace=False, orientation="vertical", width=220, height=375)
+
+                label  = "c[1]" + u"\u00B7" + "X" + u"\u00B2" + " + c[2]" + u"\u00B7" + "Y" + u"\u00B2" + " + c[3]" + u"\u00B7" + "Z" + u"\u00B2" + " +\n"
+                label += "c[4]" + u"\u00B7" + "XY" + " + c[5]" + u"\u00B7" + "YZ" + " + c[6]" + u"\u00B7" + "XZ" + " +\n"
+                label += "c[7]" + u"\u00B7" + "X" + " + c[8]" + u"\u00B7" + "Y" + " + c[9]" + u"\u00B7" + "Z" + " + c[10] = 0"
+
+                gui.label(surface_box, self, label)
+
+                gui.separator(surface_box, 10)
+
+                le_0 = oasysgui.lineEdit(surface_box, self, "c1" , "c[1]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_1 = oasysgui.lineEdit(surface_box, self, "c2" , "c[2]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_2 = oasysgui.lineEdit(surface_box, self, "c3" , "c[3]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_3 = oasysgui.lineEdit(surface_box, self, "c4" , "c[4]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_4 = oasysgui.lineEdit(surface_box, self, "c5" , "c[5]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_5 = oasysgui.lineEdit(surface_box, self, "c6" , "c[6]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_6 = oasysgui.lineEdit(surface_box, self, "c7" , "c[7]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_7 = oasysgui.lineEdit(surface_box, self, "c8" , "c[8]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_8 = oasysgui.lineEdit(surface_box, self, "c9" , "c[9]" , labelWidth=60, valueType=float, orientation="horizontal")
+                le_9 = oasysgui.lineEdit(surface_box, self, "c10", "c[10]", labelWidth=60, valueType=float, orientation="horizontal")
+
+                le_0.setReadOnly(True)
+                le_1.setReadOnly(True)
+                le_2.setReadOnly(True)
+                le_3.setReadOnly(True)
+                le_4.setReadOnly(True)
+                le_5.setReadOnly(True)
+                le_6.setReadOnly(True)
+                le_7.setReadOnly(True)
+                le_8.setReadOnly(True)
+                le_9.setReadOnly(True)
+
+            export_box = oasysgui.widgetBox(container, "Export", addSpace=False, orientation="vertical", width=220)
+
+            bin_box = oasysgui.widgetBox(export_box, "", addSpace=False, orientation="horizontal")
+
+            oasysgui.lineEdit(bin_box, self, "bin_x" , "Bins X" , labelWidth=40, valueType=float, orientation="horizontal")
+            oasysgui.lineEdit(bin_box, self, "bin_y" , " x Y" , labelWidth=30, valueType=float, orientation="horizontal")
+
+            gui.button(export_box, self, "Export Surface (.hdf5)", callback=self.save_oasys_surface)
+
+            bbox = QDialogButtonBox(QDialogButtonBox.Ok)
+            bbox.accepted.connect(self.accept)
+            layout.addWidget(figure_canvas, 0, 0)
+            layout.addWidget(widget, 0, 1)
+            layout.addWidget(bbox, 1, 0, 1, 2)
+
+            self.setLayout(layout)
+
+        def calculate_surface(self, parent, bin_x=100, bin_y=100, sign=-1):
+            if parent.is_infinite == 0:
+                x_min = -10
+                x_max = 10
+                y_min = -10
+                y_max = 10
+            else:
+                x_min = -parent.dim_x_minus
+                x_max = parent.dim_x_plus
+                y_min = -parent.dim_y_minus
+                y_max = parent.dim_y_plus
+
+            self.xx = numpy.linspace(x_min, x_max, bin_x + 1)
+            self.yy = numpy.linspace(y_min, y_max, bin_y + 1)
+
+            X, Y = numpy.meshgrid(self.xx, self.yy)
+
+            if parent.surface_shape_type == 5:
+                self.torus_major_radius = parent.torus_major_radius
+                self.torus_minor_radius = parent.torus_minor_radius
+
+                sign = -1 if parent.toroidal_mirror_pole_location <= 1 else 1
+
+                z_values = sign*(numpy.sqrt((self.torus_major_radius
+                                             + numpy.sqrt(self.torus_minor_radius**2-X**2))**2
+                                            - Y**2)
+                                - self.torus_major_radius - self.torus_minor_radius)
+                z_values[numpy.where(numpy.isnan(z_values))] = 0.0
+            else:
+                self.c1 = round(parent.conic_coefficient_0, 10)
+                self.c2 = round(parent.conic_coefficient_1, 10)
+                self.c3 = round(parent.conic_coefficient_2, 10)
+                self.c4 = round(parent.conic_coefficient_3, 10)
+                self.c5 = round(parent.conic_coefficient_4, 10)
+                self.c6 = round(parent.conic_coefficient_5, 10)
+                self.c7 = round(parent.conic_coefficient_6, 10)
+                self.c8 = round(parent.conic_coefficient_7, 10)
+                self.c9 = round(parent.conic_coefficient_8, 10)
+                self.c10= round(parent.conic_coefficient_9, 10)
+
+                c = self.c1*(X**2) + self.c2*(Y**2) + self.c4*X*Y + self.c7*X + self.c8*Y + self.c10
+                b = self.c5*Y + self.c6*X + self.c9
+                a = self.c3
+
+                if a != 0.0:
+                    z_values = (-b + sign*numpy.sqrt(b**2 - 4*a*c))/(2*a)
+                    z_values[b**2 - 4*a*c < 0] = numpy.nan
+                else:
+                    z_values = -c/b
+
+            self.zz = z_values
+
+            return X, Y, z_values
+
+        def check_values(self):
+            congruence.checkStrictlyPositiveNumber(self.bin_x, "Bins X")
+            congruence.checkStrictlyPositiveNumber(self.bin_y, "Bins Y")
+
+        def save_oasys_surface(self):
+            try:
+                file_path = QFileDialog.getSaveFileName(self, "Save Surface in Oasys (hdf5) Format", ".", "HDF5 format (*.hdf5)")[0]
+
+                if not file_path is None and not file_path.strip() == "":
+                    self.check_values()
+
+                    self.calculate_surface(self.parent(), int(self.bin_x), int(self.bin_y))
+
+                    write_surface_file(self.zz, numpy.round(self.xx, 8), numpy.round(self.yy, 8), file_path)
+            except Exception as exception:
+                self.parent().prompt_exception(exception)
+
