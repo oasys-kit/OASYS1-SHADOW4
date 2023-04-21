@@ -58,11 +58,8 @@ class OWAbstractLens(OWOpticalElement):
 
         oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        gui.comboBox(oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=40),
-                     self,
-                     "convex_to_the_beam", label="Convexity of 1st interface exposed to the beam\n(2nd interface has opposite convexity)",
-                     labelWidth=310,
-                     items=["No", "Yes"], sendSelectedValue=False, orientation="horizontal")
+        gui.comboBox(lens_box, self, "convex_to_the_beam", label="1st interface exposed to the beam", labelWidth=310,
+                     items=["Convex", "Concave"], sendSelectedValue=False, orientation="horizontal")
 
         gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", labelWidth=310,
                      items=["No", "Yes"], callback=self.set_cylindrical, sendSelectedValue=False, orientation="horizontal")

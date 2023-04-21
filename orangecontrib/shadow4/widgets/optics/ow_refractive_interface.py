@@ -20,7 +20,7 @@ class OWRefractiveInterface(OWOpticalElementWithSurfaceShape):
     attenuation_in_image_medium        = Setting(0.0)
     file_prerefl_for_image_medium      = Setting("<none>")
 
-    priority = 3.0
+    priority = 3.1
 
     def __init__(self):
         super().__init__(has_footprint=False, switch_icons=False)

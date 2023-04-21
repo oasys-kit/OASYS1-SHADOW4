@@ -6,7 +6,7 @@ class OWLens(OWAbstractLens):
     name = "Refractive Lens"
     description = "Shadow Refractive Lens"
     icon = "icons/lens.png"
-    priority = 3.1
+    priority = 2.1
 
     def __init__(self):
         super().__init__()

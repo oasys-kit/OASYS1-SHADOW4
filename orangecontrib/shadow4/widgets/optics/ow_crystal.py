@@ -18,7 +18,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     description = "Shadow Crystal"
     icon = "icons/plane_crystal.png"
 
-    priority = 1.1
+    priority = 1.3
 
     def get_oe_type(self):
         return "crystal", "Crystal"

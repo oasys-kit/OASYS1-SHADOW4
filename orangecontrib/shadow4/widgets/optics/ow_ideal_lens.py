@@ -16,7 +16,7 @@ class OWIdealLens(OWOpticalElementWithSurfaceShape):
     description = "Shadow Ideal Lens"
     icon        = "icons/ideal_lens.png"
 
-    priority = 10.1
+    priority = 3.2
 
     focal_x    = Setting(0.0)
     focal_z    = Setting(0.0)

@@ -8,7 +8,7 @@ class OWCRL(OWAbstractLens):
     name = "Compound Refractive Lens"
     description = "Shadow Compound Refractive Lens"
     icon = "icons/crl.png"
-    priority = 3.2
+    priority = 2.2
 
     n_lens                  = Setting(10)
     piling_thickness        = Setting(2.5)

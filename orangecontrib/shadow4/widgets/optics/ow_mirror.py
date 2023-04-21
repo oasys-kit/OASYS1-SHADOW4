@@ -28,7 +28,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
     description = "Shadow Mirror"
     icon        = "icons/plane_mirror.png"
 
-    priority = 1.0
+    priority = 1.2
 
     def get_oe_type(self):
         return "mirror", "Mirror"
