@@ -306,7 +306,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 5:
             mirror = S4ToroidMirror(
-                name="Toroidal Mirror",
+                name="Toroid Mirror",
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 min_radius=0.1,
@@ -377,7 +377,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
             elif self.surface_shape_type == 2: return S4EllipsoidMirrorElement()
             elif self.surface_shape_type == 3: return S4HyperboloidMirrorElement()
             elif self.surface_shape_type == 4: return S4ParaboloidMirrorElement()
-            elif self.surface_shape_type == 5: return S4ToroidalMirrorElement()
+            elif self.surface_shape_type == 5: return S4ToroidMirrorElement()
             elif self.surface_shape_type == 6: return S4ConicMirrorElement()
 
 

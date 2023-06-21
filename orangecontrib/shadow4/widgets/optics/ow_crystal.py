@@ -396,7 +396,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
         elif self.surface_shape_type == 2: optical_element = S4EllipsoidCrystalElement()
         elif self.surface_shape_type == 3: optical_element = S4HyperboloidCrystalElement()
         elif self.surface_shape_type == 4: optical_element = S4ParaboloidCrystalElement()
-        elif self.surface_shape_type == 5: optical_element = S4ToroidalCrystalElement()
+        elif self.surface_shape_type == 5: optical_element = S4ToroidCrystalElement()
         '''
 
         return optical_element

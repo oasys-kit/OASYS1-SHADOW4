@@ -339,16 +339,18 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_9", "c[9]=C0=",  labelWidth=60, valueType=float, orientation="horizontal")
 
         # flat or invert
-        gui.comboBox(self.focusing_box, self, "surface_curvature", label="Surface Curvature",
+        self.convexity_box = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical")
+        gui.comboBox(self.convexity_box, self, "surface_curvature", label="Surface Curvature",
                      items=["Concave", "Convex"], labelWidth=280, sendSelectedValue=False, orientation="horizontal",
                      tooltip="surface_curvature")
 
         #
-        gui.comboBox(self.focusing_box, self, "is_cylinder", label="Cylindrical", items=["No", "Yes"], labelWidth=350,
+        self.cylindrical_box = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical")
+        gui.comboBox(self.cylindrical_box, self, "is_cylinder", label="Cylindrical", items=["No", "Yes"], labelWidth=350,
                      callback=self.surface_shape_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="is_cylinder")
 
-        self.cylinder_orientation_box = oasysgui.widgetBox(self.focusing_box, "", addSpace=False,
+        self.cylinder_orientation_box = oasysgui.widgetBox(self.cylindrical_box, "", addSpace=False,
                                                            orientation="vertical")
 
         gui.comboBox(self.cylinder_orientation_box, self, "cylinder_orientation",
@@ -469,6 +471,10 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.focusing_external_paraboloid.setVisible(False)
         self.focusing_external_toroid.setVisible(False)
 
+
+        self.convexity_box.setVisible(False)
+
+        self.cylindrical_box.setVisible(False)
         self.cylinder_orientation_box.setVisible(False)
 
         self.ccc_box.setVisible(False)
@@ -500,8 +506,12 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 elif self.surface_shape_type == 5: # toroid
                     self.focusing_external_toroid.setVisible(True)
 
-            self.cylinder_orientation_box.setVisible(self.is_cylinder==1)
-        elif self.surface_shape_type == 6:
+            if self.surface_shape_type != 5: # toroid cannot change convexity nor set to cylinder
+                self.convexity_box.setVisible(True)
+                self.cylindrical_box.setVisible(True)
+                self.cylinder_orientation_box.setVisible(self.is_cylinder==1)
+
+        elif self.surface_shape_type == 6: # conic coefficients
             self.ccc_box.setVisible(True)
 
         if not is_init: self.__change_icon_from_surface_type()
