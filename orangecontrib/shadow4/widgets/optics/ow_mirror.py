@@ -284,7 +284,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
                 parabola_parameter=0.0,
                 at_infinity=Side.SOURCE, #  Side:  SOURCE = 0  IMAGE = 1
-                pole_to_focus=None,
+                pole_to_focus=0.0,
                 p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
