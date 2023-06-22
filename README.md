@@ -3,7 +3,7 @@
 ### DO NOT INSTALL: this add-on is under development and highly unstable.
 
 ## Alpha tests
-A collection of workspaces are being created containing parallel branches of simulations with shadow3 and shadow4. They are in the repository https://github.com/oasys-kit/OASYS1-shadow4
+A collection of workspaces are being created containing parallel branches of simulations with shadow3 and shadow4. They are in the repository https://github.com/oasys-kit/shadow4workspaces
 
 If involved in the alpha testing, please report issues in https://github.com/oasys-kit/shadow4/issues
 
