@@ -20,6 +20,7 @@ from orangecontrib.shadow.util.shadow_util import ShadowCongruence, ShadowPlot
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence as ShadowCongruence4
 
+import Shadow
 from shadow4.beam.s4_beam import S4Beam
 
 """
