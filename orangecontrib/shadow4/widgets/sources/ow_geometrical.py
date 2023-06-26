@@ -69,13 +69,14 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
     depth = Setting(0)
 
-    source_depth_y = Setting(0.2)
+    source_depth_y = Setting(0.002)
     sigma_y = Setting(0.001)
 
     photon_energy_distribution = Setting(0)
 
     units=Setting(0)
 
+    single_line_value = Setting(1000.0)
     single_line_value = Setting(1000.0)
     number_of_lines = Setting(0)
 
@@ -289,12 +290,12 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
         self.depth_box_1 = oasysgui.widgetBox(depth_box, "", addSpace=False, orientation="vertical")
 
-        self.le_source_depth_y = oasysgui.lineEdit(self.depth_box_1, self, "source_depth_y", "Source Depth (Y)",
+        self.le_source_depth_y = oasysgui.lineEdit(self.depth_box_1, self, "source_depth_y", "Source Depth (Y) [m]",
                                                    labelWidth=260, valueType=float, orientation="horizontal")
 
         self.depth_box_2 = oasysgui.widgetBox(depth_box, "", addSpace=False, orientation="vertical")
 
-        self.le_sigma_y = oasysgui.lineEdit(self.depth_box_2, self, "sigma_y", "Sigma Y", labelWidth=260,
+        self.le_sigma_y = oasysgui.lineEdit(self.depth_box_2, self, "sigma_y", "Sigma Y [m]", labelWidth=260,
                                             valueType=float, orientation="horizontal")
 
         self.set_Depth()
@@ -606,6 +607,14 @@ class OWGeometrical(GenericElement, WidgetDecorator):
             gs.set_spatial_type_gaussian(sigma_h=self.gauss_sigma_x,
                                          sigma_v=self.gauss_sigma_z,
                                          )
+
+        if self.depth == 0:
+            gs.set_depth_distribution_off()
+        elif self.depth == 1:
+            gs.set_depth_distribution_uniform(self.source_depth_y)
+        elif self.depth == 2:
+            gs.set_depth_distribution_gaussian(self.sigma_y)
+
 
         if self.angular_distribution == 0: # flat
             gs.set_angular_distribution_flat(hdiv1=-self.horizontal_div_x_minus,
