@@ -627,7 +627,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         if self.focii_and_continuation_plane == 0: return numpy.radians(90.0 - self.incidence_angle_deg)
         else:
             if self.incidence_angle_respect_to_normal_type == 0: return numpy.radians(90.0 - self.incidence_angle_deg)
-            else:                                                return numpy.radians(self.incidence_angle_respect_to_normal)
+            else:                                                return numpy.radians(90.0 - self.incidence_angle_respect_to_normal)
 
     def get_focusing_p(self):
         if self.focii_and_continuation_plane == 0: return self.source_plane_distance
