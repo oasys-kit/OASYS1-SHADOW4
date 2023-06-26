@@ -112,13 +112,13 @@ def check_almost_equal(beam3, beam4, do_assert=True, display_ray_number=10, leve
                         assert_almost_equal( numpy.mod(rays3[:, i], numpy.pi), numpy.mod(rays4[:, i], numpy.pi), level)
                         print(txt + "**passed**")
                     except:
-                        print(txt + "********failed********", S4Beam.column_short_names()[i])
+                        print(txt + "********failed********", S4Beam.column_short_names_with_column_number()[i])
                 else:
                     try:
                         assert_almost_equal(rays3[:,i], rays4[:,i], level)
                         print(txt + "**passed**")
                     except:
-                        print(txt + "********failed********", S4Beam.column_short_names()[i])
+                        print(txt + "********failed********", S4Beam.column_short_names_with_column_number()[i])
 
 
 class OWShadowCompareBeam3Beam4(widget.OWWidget):

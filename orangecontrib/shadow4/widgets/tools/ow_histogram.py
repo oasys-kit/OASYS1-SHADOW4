@@ -104,7 +104,7 @@ class Histogram(AutomaticElement):
         general_box = oasysgui.widgetBox(tab_set, "General Settings", addSpace=True, orientation="vertical", height=250)
 
         self.x_column = gui.comboBox(general_box, self, "x_column_index", label="Column", labelWidth=70,
-                                     items=S4Beam.column_names(),
+                                     items=S4Beam.column_names_with_column_number(),
                                      sendSelectedValue=False, orientation="horizontal", callback=self.set_column_index)
 
         gui.comboBox(general_box, self, "x_range", label="Range", labelWidth=250,
@@ -120,7 +120,7 @@ class Histogram(AutomaticElement):
         self.set_x_range()
 
         self.weight_column = gui.comboBox(general_box, self, "weight_column_index", label="Weight", labelWidth=70,
-                                         items=S4Beam.column_names(),
+                                         items=S4Beam.column_names_with_column_number(),
                                          sendSelectedValue=False, orientation="horizontal")
 
         gui.comboBox(general_box, self, "rays", label="Rays", labelWidth=250,

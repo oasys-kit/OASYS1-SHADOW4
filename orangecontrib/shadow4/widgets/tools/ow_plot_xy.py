@@ -111,7 +111,7 @@ class PlotXY(AutomaticElement):
         general_box = oasysgui.widgetBox(tab_set, "Variables Settings", addSpace=True, orientation="vertical", height=350)
 
         self.x_column = gui.comboBox(general_box, self, "x_column_index", label="H Column",labelWidth=70,
-                                     items=S4Beam.column_names(),
+                                     items=S4Beam.column_names_with_column_number(),
                                      sendSelectedValue=False, orientation="horizontal", callback=self.set_x_column_index)
 
         gui.comboBox(general_box, self, "x_range", label="H Range", labelWidth=250,
@@ -127,7 +127,7 @@ class PlotXY(AutomaticElement):
         self.set_x_range()
 
         self.y_column = gui.comboBox(general_box, self, "y_column_index", label="V Column",labelWidth=70,
-                                     items=S4Beam.column_names(),
+                                     items=S4Beam.column_names_with_column_number(),
                                      sendSelectedValue=False, orientation="horizontal", callback=self.set_y_column_index)
 
         gui.comboBox(general_box, self, "y_range", label="V Range", labelWidth=250,
@@ -143,7 +143,7 @@ class PlotXY(AutomaticElement):
         self.set_y_range()
 
         self.weight_column = gui.comboBox(general_box, self, "weight_column_index", label="Weight", labelWidth=70,
-                                         items=S4Beam.column_names(),
+                                         items=S4Beam.column_names_with_column_number(),
                                          sendSelectedValue=False, orientation="horizontal")
 
         gui.comboBox(general_box, self, "rays", label="Rays", labelWidth=250,
