@@ -54,6 +54,13 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     number_of_rays = Setting(500)
     seed = Setting(5676561)
 
+    # number of points in advanced parameters
+    ng_e = Setting(101)
+    ng_j = Setting(501)
+
+    epsi_dx = Setting(0.0)
+    epsi_dz = Setting(0.0)
+
     plot_wiggler_graph = 1
 
     beam_out = None
@@ -67,45 +74,45 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         # wiggler parameters box
         left_box_3 = oasysgui.widgetBox(tab_wiggler, "Wiggler Parameters", addSpace=False, orientation="vertical", height=200)
 
-        orangegui.comboBox(left_box_3, self, "magnetic_field_source", label="Type", items=["conventional/sinusoidal", "B from file (y [m], Bz [T])", "B from harmonics"], callback=self.set_visibility, labelWidth=220, orientation="horizontal")
+        orangegui.comboBox(left_box_3, self, "magnetic_field_source", tooltip="magnetic_field_source", label="Type", items=["conventional/sinusoidal", "B from file (y [m], Bz [T])", "B from harmonics"], callback=self.set_visibility, labelWidth=220, orientation="horizontal")
 
-        oasysgui.lineEdit(left_box_3, self, "number_of_periods", "Number of Periods", labelWidth=260, tooltip="Number of Periods", valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_3, self, "number_of_periods", "Number of Periods", tooltip="number_of_periods",labelWidth=260, valueType=int, orientation="horizontal")
 
         self.conventional_sinusoidal_box = oasysgui.widgetBox(left_box_3, "", addSpace=False, orientation="vertical")
 
-        oasysgui.lineEdit(self.conventional_sinusoidal_box, self, "k_value", "K value", labelWidth=260, tooltip="K value", valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.conventional_sinusoidal_box, self, "id_period", "ID period [m]", labelWidth=260, tooltip="ID period [m]", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.conventional_sinusoidal_box, self, "k_value", "K value", labelWidth=260, tooltip="k_value", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.conventional_sinusoidal_box, self, "id_period", "ID period [m]", labelWidth=260, tooltip="id_period", valueType=float, orientation="horizontal")
 
         self.b_from_file_box = oasysgui.widgetBox(left_box_3, "", addSpace=False, orientation="vertical")
 
         file_box = oasysgui.widgetBox(self.b_from_file_box, "", addSpace=True, orientation="horizontal", height=25)
 
-        self.le_file_with_b_vs_y = oasysgui.lineEdit(file_box, self, "file_with_b_vs_y", "File/Url with B vs Y", labelWidth=150, tooltip="File/Url with B vs Y", valueType=str, orientation="horizontal")
+        self.le_file_with_b_vs_y = oasysgui.lineEdit(file_box, self, "file_with_b_vs_y", "File/Url with B vs Y", labelWidth=150, tooltip="file_with_b_vs_y", valueType=str, orientation="horizontal")
 
         orangegui.button(file_box, self, "...", callback=self.select_file_with_B_vs_Y)
 
         self.b_from_harmonics_box = oasysgui.widgetBox(left_box_3, "", addSpace=False, orientation="vertical")
 
-        oasysgui.lineEdit(self.b_from_harmonics_box, self, "id_period", "ID period [m]", labelWidth=260, tooltip="ID period [m]", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.b_from_harmonics_box, self, "id_period", "ID period [m]", labelWidth=260, tooltip="id_period", valueType=float, orientation="horizontal")
 
         file_box = oasysgui.widgetBox(self.b_from_harmonics_box, "", addSpace=True, orientation="horizontal", height=25)
 
-        self.le_file_with_harmonics = oasysgui.lineEdit(file_box, self, "file_with_harmonics", "File/Url with harmonics", labelWidth=150, tooltip="File/Url with harmonics", valueType=str, orientation="horizontal")
+        self.le_file_with_harmonics = oasysgui.lineEdit(file_box, self, "file_with_harmonics", "File/Url with harmonics", labelWidth=150, tooltip="file_with_harmonics", valueType=str, orientation="horizontal")
 
         orangegui.button(file_box, self, "...", callback=self.select_file_with_harmonics)
 
         # Electron initial conditions Box
         left_box_10 = oasysgui.widgetBox(tab_wiggler, "Electron Initial Condition", addSpace=False, orientation="vertical", height=200)
 
-        orangegui.comboBox(left_box_10, self, "shift_betax_flag", label="Shift Transversal Velocity", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_beta_X_flag, labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(left_box_10, self, "shift_betax_flag", tooltip="shift_betax_flag", label="Shift Transversal Velocity", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_beta_X_flag, labelWidth=260, orientation="horizontal")
         self.shift_betax_value_box = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
         self.shift_betax_value_box_hidden = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
-        oasysgui.lineEdit(self.shift_betax_value_box, self, "shift_betax_value", "Value", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.shift_betax_value_box, self, "shift_betax_value", "Value", tooltip="shift_betax_value", labelWidth=260, valueType=float, orientation="horizontal")
 
-        orangegui.comboBox(left_box_10, self, "shift_x_flag", label="Shift Transversal Coordinate", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_X_flag, labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(left_box_10, self, "shift_x_flag", tooltip="shift_x_flag", label="Shift Transversal Coordinate", items=["No shift", "Half excursion", "Minimum", "Maximum", "Value at zero", "User value"], callback=self.set_shift_X_flag, labelWidth=260, orientation="horizontal")
         self.shift_x_value_box = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
         self.shift_x_value_box_hidden = oasysgui.widgetBox(left_box_10, "", addSpace=False, orientation="vertical", height=25)
-        oasysgui.lineEdit(self.shift_x_value_box, self, "shift_x_value", "Value [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.shift_x_value_box, self, "shift_x_value", "Value [m]", tooltip="shift_x_value", labelWidth=260, valueType=float, orientation="horizontal")
 
         self.set_shift_X_flag()
         self.set_shift_beta_X_flag()
@@ -113,13 +120,24 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         # Calculation Box
         left_box_11 = oasysgui.widgetBox(tab_wiggler, "Sampling rays", addSpace=False, orientation="vertical", height=200)
 
-        oasysgui.lineEdit(left_box_11, self, "e_min", "Min photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(left_box_11, self, "e_max", "Max photon energy [eV]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(left_box_11, self, "number_of_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(left_box_11, self, "seed", "Seed", tooltip="Seed (0=clock)", labelWidth=250, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "e_min", "Min photon energy [eV]", tooltip="e_min", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "e_max", "Max photon energy [eV]", tooltip="e_max", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "number_of_rays", "Number of rays", tooltip="number_of_rays", labelWidth=260, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "seed", "Seed", tooltip="seed", labelWidth=250, valueType=int, orientation="horizontal")
 
         self.set_shift_X_flag()
         self.set_shift_beta_X_flag()
+
+
+        # wiggler adv settings
+        tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced Setting")
+        left_box_adv = oasysgui.widgetBox(tab_advanced, "Advanced settings", addSpace=False, orientation="vertical", height=200)
+        oasysgui.lineEdit(left_box_adv, self, "ng_e", "Number of Points in energy scan", labelWidth=260, tooltip="ng_e", valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "ng_j", "Number of Points in e trajectory (per period)", labelWidth=280, tooltip="ng_j", valueType=int, orientation="horizontal")
+
+        oasysgui.lineEdit(left_box_adv, self, "epsi_dx", "Distance from waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "epsi_dz", "Distance from waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
+
 
         # wiggler plots
         self.add_specific_wiggler_plots()
@@ -197,8 +215,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         electron_beam = self.get_electron_beam()
         print("\n\n>>>>>> ElectronBeam info: ", electron_beam.info(), type(electron_beam))
 
-        ng_j = 501 # trajectory points
-
         if self.type_of_properties == 3:
             flag_emittance = 0
         else:
@@ -213,20 +229,22 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                     number_of_periods        = self.number_of_periods, # syned Wiggler pars: useful if magnetic_field_periodic=1
                     emin                     = self.e_min,     # Photon energy scan from energy (in eV)
                     emax                     = self.e_max,     # Photon energy scan to energy (in eV)
-                    ng_e                     = 100,            # Photon energy scan number of points
-                    ng_j                     = ng_j ,          # Number of points in electron trajectory (per period) for internal calculation only
+                    ng_e                     = self.ng_e,      # Photon energy scan number of points
+                    ng_j                     = self.ng_j ,     # Number of points in electron trajectory (per period) for internal calculation only
                     flag_emittance           = flag_emittance, # Use emittance (0=No, 1=Yes)
                     shift_x_flag             = 0,
                     shift_x_value            = 0.0,
                     shift_betax_flag         = 0,
                     shift_betax_value        = 0.0,
+                    epse_dx                  = self.epsi_dx,
+                    epse_dz                  = self.epsi_dz,
                     )
 
         elif self.magnetic_field_source == 1:
             if self.e_min == self.e_max:
                 ng_e = 1
             else:
-                ng_e = 10
+                ng_e = self.ng_e
 
             sourcewiggler = S4Wiggler(
                 magnetic_field_periodic   = 0,
@@ -234,7 +252,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                 emin                      = self.e_min,
                 emax                      = self.e_max,
                 ng_e                      = ng_e,
-                ng_j                      = ng_j,
+                ng_j                      = self.ng_j,
                 flag_emittance            = flag_emittance,  # Use emittance (0=No, 1=Yes)
                 shift_x_flag              = 4,
                 shift_x_value             = 0.0,

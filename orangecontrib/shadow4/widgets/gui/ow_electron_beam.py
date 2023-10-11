@@ -89,47 +89,47 @@ class OWElectronBeam(GenericElement):
 
         self.electron_beam_box = oasysgui.widgetBox(self.tab_electron_beam, "Electron Beam/Machine Parameters", addSpace=False, orientation="vertical")
 
-        oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_in_GeV", "Energy [GeV]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_spread", "Energy Spread", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.electron_beam_box, self, "ring_current", "Ring Current [A]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_in_GeV", "Energy [GeV]",  tooltip="electron_energy_in_GeV", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_spread", "Energy Spread", tooltip="electron_energy_spread", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.electron_beam_box, self, "ring_current", "Ring Current [A]",        tooltip="ring_current",           labelWidth=260, valueType=float, orientation="horizontal")
 
-        gui.comboBox(self.electron_beam_box, self, "type_of_properties", label="Electron Beam Properties", labelWidth=350,
+        gui.comboBox(self.electron_beam_box, self, "type_of_properties", tooltip="type_of_properties", label="Electron Beam Properties", labelWidth=350,
                      items=["From 2nd Moments", "From Size/Divergence", "From Twiss parameters","Zero emittance"],
                      callback=self.set_TypeOfProperties,
                      sendSelectedValue=False, orientation="horizontal")
 
         self.left_box_2_1 = oasysgui.widgetBox(self.electron_beam_box, "", addSpace=False, orientation="vertical", height=150)
 
-        oasysgui.lineEdit(self.left_box_2_1, self, "moment_xx",   "<x x>   [m^2]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_1, self, "moment_xxp",  "<x x'>  [m.rad]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_1, self, "moment_xpxp", "<x' x'> [rad^2]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_1, self, "moment_yy",   "<y y>   [m^2]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_1, self, "moment_yyp",  "<y y'>  [m.rad]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_1, self, "moment_ypyp", "<y' y'> [rad^2]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_1, self, "moment_xx",   "<x x>   [m^2]",   tooltip="moment_xx",   labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_1, self, "moment_xxp",  "<x x'>  [m.rad]", tooltip="moment_xxp",  labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_1, self, "moment_xpxp", "<x' x'> [rad^2]", tooltip="moment_xpxp", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_1, self, "moment_yy",   "<y y>   [m^2]",   tooltip="moment_yy",   labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_1, self, "moment_yyp",  "<y y'>  [m.rad]", tooltip="moment_yyp",  labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_1, self, "moment_ypyp", "<y' y'> [rad^2]", tooltip="moment_ypyp", labelWidth=260, valueType=float, orientation="horizontal")
 
 
         self.left_box_2_2 = oasysgui.widgetBox(self.electron_beam_box, "", addSpace=False, orientation="vertical", height=150)
 
-        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_size_h",       "Horizontal Beam Size \u03c3x [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_size_v",       "Vertical Beam Size \u03c3y [m]",  labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_divergence_h", "Horizontal Beam Divergence \u03c3'x [rad]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_divergence_v", "Vertical Beam Divergence \u03c3'y [rad]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_size_h",       "Horizontal Beam Size \u03c3x [m]",          tooltip="electron_beam_size_h", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_size_v",       "Vertical Beam Size \u03c3y [m]",            tooltip="electron_beam_size_v",  labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_divergence_h", "Horizontal Beam Divergence \u03c3'x [rad]", tooltip="electron_beam_divergence_h", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_2, self, "electron_beam_divergence_v", "Vertical Beam Divergence \u03c3'y [rad]",   tooltip="electron_beam_divergence_v", labelWidth=260, valueType=float, orientation="horizontal")
 
         self.left_box_2_3 = oasysgui.widgetBox(self.electron_beam_box, "", addSpace=False, orientation="horizontal",height=150)
         self.left_box_2_3_l = oasysgui.widgetBox(self.left_box_2_3, "", addSpace=False, orientation="vertical")
         self.left_box_2_3_r = oasysgui.widgetBox(self.left_box_2_3, "", addSpace=False, orientation="vertical")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_emittance_h", "\u03B5x [m.rad]",labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_alpha_h",     "\u03B1x",        labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_beta_h",      "\u03B2x [m]",    labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_eta_h",       "\u03B7x",        labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_etap_h",      "\u03B7'x",       labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_emittance_h", "\u03B5x [m.rad]",tooltip="electron_beam_emittance_h",labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_alpha_h",     "\u03B1x",        tooltip="electron_beam_alpha_h",    labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_beta_h",      "\u03B2x [m]",    tooltip="electron_beam_beta_h",     labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_eta_h",       "\u03B7x",        tooltip="electron_beam_eta_h",      labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_etap_h",      "\u03B7'x",       tooltip="electron_beam_etap_h",     labelWidth=75, valueType=float, orientation="horizontal")
 
 
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_emittance_v", "\u03B5y [m.rad]",labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_alpha_v",     "\u03B1y",        labelWidth=75,valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_beta_v",      "\u03B2y [m]",    labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_eta_v",       "\u03B7y",        labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_etap_v",      "\u03B7'y",       labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_emittance_v", "\u03B5y [m.rad]",tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_alpha_v",     "\u03B1y",        tooltip="",labelWidth=75,valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_beta_v",      "\u03B2y [m]",    tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_eta_v",       "\u03B7y",        tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_etap_v",      "\u03B7'y",       tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
 
         self.set_TypeOfProperties()
 
