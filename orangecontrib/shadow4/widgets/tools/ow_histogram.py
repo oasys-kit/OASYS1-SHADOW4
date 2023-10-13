@@ -406,7 +406,7 @@ class Histogram(AutomaticElement):
 
     def write_stdout(self, text):
         cursor = self.shadow_output.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.movePosition(QTextCursor.End)
         cursor.insertText(text)
         self.shadow_output.setTextCursor(cursor)
         self.shadow_output.ensureCursorVisible()
