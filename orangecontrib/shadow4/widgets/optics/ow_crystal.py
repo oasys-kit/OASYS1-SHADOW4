@@ -47,13 +47,15 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     photon_energy = Setting(8000.0)
     photon_wavelength = Setting(1.0)
 
-    mosaic_crystal = Setting(0)
-    angle_spread_FWHM = Setting(0.0)
-    thickness = Setting(0.0)
-    seed_for_mosaic = Setting(1626261131)
+    # mosaic_crystal = Setting(0)
+    # angle_spread_FWHM = Setting(0.0)
+    # seed_for_mosaic = Setting(1626261131)
 
-    johansson_geometry = Setting(0)
-    johansson_radius = Setting(0.0)
+    is_thick = Setting(1)
+    thickness = Setting(1e-3)
+
+    # johansson_geometry = Setting(0)
+    # johansson_radius = Setting(0.0)
 
     asymmetric_cut = Setting(0)
     planes_angle = Setting(0.0)
@@ -192,17 +194,17 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
         self.crystal_diffraction_tab_visibility()
 
     def populate_tab_crystal_geometry(self, subtab_crystal_geometry):
-        mosaic_box = oasysgui.widgetBox(subtab_crystal_geometry, "Geometric Parameters", addSpace=True, orientation="vertical")
+        # mosaic_box = oasysgui.widgetBox(subtab_crystal_geometry, "Geometric Parameters", addSpace=True, orientation="vertical")
+        #
+        # gui.comboBox(mosaic_box, self, "mosaic_crystal", tooltip="mosaic_crystal", label="Mosaic Crystal **deleted**", labelWidth=355,
+        #              items=["No", "Yes"],
+        #              callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False, orientation="horizontal")
+        #
+        # gui.separator(mosaic_box, height=10)
 
-        gui.comboBox(mosaic_box, self, "mosaic_crystal", tooltip="mosaic_crystal", label="Mosaic Crystal **deleted**", labelWidth=355,
-                     items=["No", "Yes"],
-                     callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False, orientation="horizontal")
-
-        gui.separator(mosaic_box, height=10)
-
-        self.mosaic_box_1 = oasysgui.widgetBox(mosaic_box, "", addSpace=False, orientation="vertical")
-
-        self.asymmetric_cut_box = oasysgui.widgetBox(self.mosaic_box_1, "", addSpace=False, orientation="vertical",
+        # self.mosaic_box_1 = oasysgui.widgetBox(mosaic_box, "", addSpace=False, orientation="vertical")
+        #
+        self.asymmetric_cut_box = oasysgui.widgetBox(subtab_crystal_geometry, "", addSpace=False, orientation="vertical",
                                                      height=110)
 
         self.asymmetric_cut_combo = gui.comboBox(self.asymmetric_cut_box, self, "asymmetric_cut",
@@ -223,42 +225,57 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
         self.asymmetric_cut_box_1_order = oasysgui.widgetBox(self.asymmetric_cut_box_1, "", addSpace=False,
                                                              orientation="vertical")
 
-        oasysgui.lineEdit(self.asymmetric_cut_box_1_order, self,
-                          "below_onto_bragg_planes", "Below[-1]/onto[1] bragg planes **deleted**",
-                          tooltip="below_onto_bragg_planes",
-                          labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_thickness_1 = oasysgui.lineEdit(self.asymmetric_cut_box_1_order, self,
+        # oasysgui.lineEdit(self.asymmetric_cut_box_1_order, self,
+        #                   "below_onto_bragg_planes", "Below[-1]/onto[1] bragg planes **deleted**",
+        #                   tooltip="below_onto_bragg_planes",
+        #                   labelWidth=260, valueType=float, orientation="horizontal")
+
+        self.thickness_box = oasysgui.widgetBox(subtab_crystal_geometry, "", addSpace=False, orientation="vertical",
+                                                     height=110)
+
+        self.thickness_combo = gui.comboBox(self.thickness_box, self, "is_thick",
+                                                 tooltip="is_thick", label="Thick crystal approx.",
+                                                 labelWidth=355,
+                                                 items=["No", "Yes"],
+                                                 callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False,
+                                                 orientation="horizontal")
+
+        self.thickness_box_1 = oasysgui.widgetBox(self.thickness_box, "", addSpace=False, orientation="vertical")
+        self.thickness_box_1_empty = oasysgui.widgetBox(self.thickness_box_1, "", addSpace=False,
+                                                             orientation="vertical")
+
+        self.le_thickness_1 = oasysgui.lineEdit(self.thickness_box_1, self,
                                                 "thickness", "Crystal thickness [m]",tooltip="thickness",
                                                 valueType=float, labelWidth=260, orientation="horizontal")
 
         # self.set_BraggLaue()
 
-        gui.separator(self.mosaic_box_1)
+        # gui.separator(self.mosaic_box_1)
 
-        self.johansson_box = oasysgui.widgetBox(self.mosaic_box_1, "", addSpace=False, orientation="vertical", height=100)
-
-        gui.comboBox(self.johansson_box, self, "johansson_geometry", tooltip="johansson_geometry",
-                     label="Johansson Geometry **deleted**", labelWidth=355, items=["No", "Yes"],
-                     callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False, orientation="horizontal")
-
-        self.johansson_box_1 = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
-        self.johansson_box_1_empty = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
-
-        self.le_johansson_radius = oasysgui.lineEdit(self.johansson_box_1, self, "johansson_radius", "Johansson radius",
-                                                     tooltip="johansson_radius",
-                                                     labelWidth=260, valueType=float, orientation="horizontal")
-
-        self.mosaic_box_2 = oasysgui.widgetBox(mosaic_box, "", addSpace=False, orientation="vertical")
-
-        oasysgui.lineEdit(self.mosaic_box_2, self, "angle_spread_FWHM", "Angle spread FWHM [deg]",
-                          tooltip="angle_spread_FWHM", labelWidth=260,
-                          valueType=float, orientation="horizontal")
-        self.le_thickness_2 = oasysgui.lineEdit(self.mosaic_box_2, self, "thickness", "Thickness",
-                                                tooltip="thickness", labelWidth=260,
-                                                valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.mosaic_box_2, self, "seed_for_mosaic", "Seed for mosaic [>10^5]",
-                          tooltip="seed_for_mosaic", labelWidth=260,
-                          valueType=float, orientation="horizontal")
+        # self.johansson_box = oasysgui.widgetBox(self.mosaic_box_1, "", addSpace=False, orientation="vertical", height=100)
+        #
+        # gui.comboBox(self.johansson_box, self, "johansson_geometry", tooltip="johansson_geometry",
+        #              label="Johansson Geometry **deleted**", labelWidth=355, items=["No", "Yes"],
+        #              callback=self.crystal_geometry_tab_visibility, sendSelectedValue=False, orientation="horizontal")
+        #
+        # self.johansson_box_1 = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
+        # self.johansson_box_1_empty = oasysgui.widgetBox(self.johansson_box, "", addSpace=False, orientation="vertical")
+        #
+        # self.le_johansson_radius = oasysgui.lineEdit(self.johansson_box_1, self, "johansson_radius", "Johansson radius",
+        #                                              tooltip="johansson_radius",
+        #                                              labelWidth=260, valueType=float, orientation="horizontal")
+        #
+        # self.mosaic_box_2 = oasysgui.widgetBox(mosaic_box, "", addSpace=False, orientation="vertical")
+        #
+        # oasysgui.lineEdit(self.mosaic_box_2, self, "angle_spread_FWHM", "Angle spread FWHM [deg]",
+        #                   tooltip="angle_spread_FWHM", labelWidth=260,
+        #                   valueType=float, orientation="horizontal")
+        # self.le_thickness_2 = oasysgui.lineEdit(self.mosaic_box_2, self, "thickness", "Thickness",
+        #                                         tooltip="thickness", labelWidth=260,
+        #                                         valueType=float, orientation="horizontal")
+        # oasysgui.lineEdit(self.mosaic_box_2, self, "seed_for_mosaic", "Seed for mosaic [>10^5]",
+        #                   tooltip="seed_for_mosaic", labelWidth=260,
+        #                   valueType=float, orientation="horizontal")
 
         # self.set_Mosaic()
 
@@ -275,9 +292,10 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
         self.set_units_in_use()
 
     def crystal_geometry_tab_visibility(self):
-        self.set_mosaic()
+        # self.set_mosaic()
         self.set_asymmetric_cut()
-        self.set_johansson_geometry()
+        self.set_thickness()
+        # self.set_johansson_geometry()
 
 
     # todo: change next methods name from CamelCase to undercore...
@@ -340,21 +358,25 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     def select_file_diffraction_profile(self):
         self.le_file_diffraction_profile.setText(oasysgui.selectFileFromDialog(self, self.file_diffraction_profile, "Select File With User Defined Diffraction Profile"))
 
-    def set_mosaic(self):
-        self.mosaic_box_1.setVisible(self.mosaic_crystal == 0)
-        self.mosaic_box_2.setVisible(self.mosaic_crystal == 1)
-
-        if self.mosaic_crystal == 0:
-            self.set_asymmetric_cut()
-            self.set_johansson_geometry()
+    # def set_mosaic(self):
+    #     self.mosaic_box_1.setVisible(self.mosaic_crystal == 0)
+    #     self.mosaic_box_2.setVisible(self.mosaic_crystal == 1)
+    #
+    #     if self.mosaic_crystal == 0:
+    #         self.set_asymmetric_cut()
+    #         self.set_johansson_geometry()
 
     def set_asymmetric_cut(self):
         self.asymmetric_cut_box_1.setVisible(self.asymmetric_cut == 1)
         self.asymmetric_cut_box_1_empty.setVisible(self.asymmetric_cut == 0)
 
-    def set_johansson_geometry(self):
-        self.johansson_box_1.setVisible(self.johansson_geometry == 1)
-        self.johansson_box_1_empty.setVisible(self.johansson_geometry == 0)
+    def set_thickness(self):
+        self.thickness_box_1.setVisible(self.is_thick == 0)
+        self.thickness_box_1_empty.setVisible(self.is_thick == 1)
+
+    # def set_johansson_geometry(self):
+    #     self.johansson_box_1.setVisible(self.johansson_geometry == 1)
+    #     self.johansson_box_1_empty.setVisible(self.johansson_geometry == 0)
 
 
     #########################################################
@@ -373,7 +395,8 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                 miller_index_k=self.user_defined_k,  #todo: check if this is needed if material_constants_library_flag in (2,3)
                 miller_index_l=self.user_defined_l,  #todo: check if this is needed if material_constants_library_flag in (2,3)
                 asymmetry_angle=0.0 if not self.asymmetric_cut else numpy.radians(self.planes_angle),
-                thickness=0.010, # this is thick crystal by now...
+                is_thick=self.is_thick,
+                thickness=self.thickness,
                 f_central=self.crystal_auto_setting,
                 f_phot_cent=self.units_in_use,
                 phot_cent=(self.photon_energy if (self.units_in_use == 0) else self.photon_wavelength),
