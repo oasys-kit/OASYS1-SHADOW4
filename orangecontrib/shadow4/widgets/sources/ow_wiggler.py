@@ -236,8 +236,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                     shift_x_value            = 0.0,
                     shift_betax_flag         = 0,
                     shift_betax_value        = 0.0,
-                    epse_dx                  = self.epsi_dx,
-                    epse_dz                  = self.epsi_dz,
+                    epsi_dx                  = self.epsi_dx,
+                    epsi_dz                  = self.epsi_dz,
                     )
 
         elif self.magnetic_field_source == 1:
