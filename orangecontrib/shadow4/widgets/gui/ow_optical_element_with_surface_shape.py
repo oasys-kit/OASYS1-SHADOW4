@@ -224,7 +224,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         self.focusing_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical")
 
-        gui.comboBox(self.focusing_box, self, "surface_shape_parameters", label="Type",
+        self.surface_shape_parameters_box = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical")
+        gui.comboBox(self.surface_shape_parameters_box, self, "surface_shape_parameters", label="Type",
                      items=["internal/calculated", "external/user_defined"], labelWidth=240,
                      callback=self.surface_shape_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="surface_shape_parameters")
@@ -303,7 +304,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                          height=150)
         self.le_paraboloid_parameter = oasysgui.lineEdit(self.focusing_external_paraboloid, self, "paraboloid_parameter",
                                                          "Paraboloid parameter [m]", labelWidth=260, valueType=float,
-                                                         orientation="horizontal", tooltip="float")
+                                                         orientation="horizontal", tooltip="paraboloid_parameter")
 
         # toroid
         self.focusing_external_toroid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
@@ -327,16 +328,16 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         # conic coefficients
         self.ccc_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical", height=250)
 
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_0", "c[0]=Cxx=", labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_1", "c[1]=Cyy=", labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_2", "c[2]=Czz=", labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_3", "c[3]=Cxy=", labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_4", "c[4]=Cyz=", labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_5", "c[5]=Cxz=", labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_6", "c[6]=Cx=",  labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_7", "c[7]=Cy=",  labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_8", "c[8]=Cz=",  labelWidth=60, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_9", "c[9]=C0=",  labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_0", "c[0]=Cxx=", tooltip="conic_coefficient_0", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_1", "c[1]=Cyy=", tooltip="conic_coefficient_1", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_2", "c[2]=Czz=", tooltip="conic_coefficient_2", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_3", "c[3]=Cxy=", tooltip="conic_coefficient_3", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_4", "c[4]=Cyz=", tooltip="conic_coefficient_4", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_5", "c[5]=Cxz=", tooltip="conic_coefficient_5", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_6", "c[6]=Cx=",  tooltip="conic_coefficient_6", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_7", "c[7]=Cy=",  tooltip="conic_coefficient_7", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_8", "c[8]=Cz=",  tooltip="conic_coefficient_8", labelWidth=60, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.ccc_box, self, "conic_coefficient_9", "c[9]=C0=",  tooltip="conic_coefficient_9", labelWidth=60, valueType=float, orientation="horizontal")
 
         # flat or invert
         self.convexity_box = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical")
@@ -396,7 +397,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         # mod_surf_box = oasysgui.widgetBox(tab_adv_mod_surf, "Modified Surface Parameters", addSpace=False,
         #                                   orientation="vertical", height=390)
 
-        gui.comboBox(box, self, "modified_surface", label="Modification Type", labelWidth=130,
+        gui.comboBox(box, self, "modified_surface", tooltip="modified_surface", label="Modification Type", labelWidth=130,
                      items=["None", "Surface Error (numeric mesh)"],
                      callback=self.modified_surface_tab_visibility, sendSelectedValue=False, orientation="horizontal")
 

@@ -9,6 +9,7 @@ from oasys.widgets import gui as oasysgui
 from syned.beamline.optical_elements.crystals.crystal import DiffractionGeometry
 
 from shadow4.beamline.optical_elements.crystals.s4_plane_crystal import S4PlaneCrystal, S4PlaneCrystalElement
+from shadow4.beamline.optical_elements.crystals.s4_sphere_crystal import S4SphereCrystal, S4SphereCrystalElement
 
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
@@ -27,7 +28,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     # crystal
     #########################################################
 
-    diffraction_geometry = Setting(0)
+    # diffraction_geometry = Setting(0)
     diffraction_calculation = Setting(0)
 
     file_diffraction_profile = Setting("diffraction_profile.dat")
@@ -63,6 +64,9 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
 
     def __init__(self):
         super(OWCrystal, self).__init__()
+        # with crystals no "internal surface parameters" allowed. Fix value and hide selecting combo:
+        self.surface_shape_parameters = 1
+        self.surface_shape_parameters_box.setVisible(False)
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting):
         subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Diffraction")    # to be populated
@@ -86,10 +90,10 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     def populate_tab_crystal_diffraction(self, subtab_crystal_diffraction):
         crystal_box = oasysgui.widgetBox(subtab_crystal_diffraction, "Diffraction Settings", addSpace=True, orientation="vertical")
 
-        gui.comboBox(crystal_box, self, "diffraction_geometry", tooltip="diffraction_geometry",
-                     label="Diffraction Geometry", labelWidth=250,
-                     items=["Bragg", "Laue *NYI*"],
-                     sendSelectedValue=False, orientation="horizontal", callback=self.crystal_diffraction_tab_visibility)
+        # gui.comboBox(crystal_box, self, "diffraction_geometry", tooltip="diffraction_geometry",
+        #              label="Diffraction Geometry", labelWidth=250,
+        #              items=["Bragg", "Laue *NYI*"],
+        #              sendSelectedValue=False, orientation="horizontal", callback=self.crystal_diffraction_tab_visibility)
 
 
         gui.comboBox(crystal_box, self, "diffraction_calculation", tooltip="diffraction_calculation",
@@ -385,12 +389,15 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
 
     def get_optical_element_instance(self):
 
+        if self.surface_shape_type > 0 and self.surface_shape_parameters == 0:
+            raise ValueError("Curved crystal with internal calculation not allowed.")
+
+
         if self.surface_shape_type == 0:
             crystal = S4PlaneCrystal(
                 name="Plane Crystal",
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
-                diffraction_geometry=DiffractionGeometry.BRAGG,  # ?? not supposed to be in syned...
                 miller_index_h=self.user_defined_h,  #todo: check if this is needed if material_constants_library_flag in (2,3)
                 miller_index_k=self.user_defined_k,  #todo: check if this is needed if material_constants_library_flag in (2,3)
                 miller_index_l=self.user_defined_l,  #todo: check if this is needed if material_constants_library_flag in (2,3)
@@ -402,46 +409,231 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                 phot_cent=(self.photon_energy if (self.units_in_use == 0) else self.photon_wavelength),
                 file_refl=self.file_crystal_parameters,
                 f_bragg_a=True if self.asymmetric_cut else False,
-                f_johansson=False,
-                r_johansson=1.0,
-                f_mosaic=False,
-                spread_mos=0.4 * numpy.pi / 180,
                 f_ext=0,
                 material_constants_library_flag=self.diffraction_calculation,
-                # 0=xraylib, 1=dabax
-                # 2=shadow preprocessor file v1, 3=shadow preprocessor file v2
-                # 4=xoppy e-independent, 5=xoppy e-dependent
             )
 
         elif self.surface_shape_type == 1:
             print("FOCUSING DISTANCES: convexity:  ", numpy.logical_not(self.surface_curvature).astype(int))
-            print("FOCUSING DISTANCES: internal/external:  ", self.surface_shape_parameters)
+            # print("FOCUSING DISTANCES: internal/external:  ", self.surface_shape_parameters)
             print("FOCUSING DISTANCES: radius:  ", self.spherical_radius)
-            print("FOCUSING DISTANCES: p:  ", self.get_focusing_p())
-            print("FOCUSING DISTANCES: q:  ", self.get_focusing_q())
-            print("FOCUSING DISTANCES: grazing angle:  ", self.get_focusing_grazing_angle())
+            # print("FOCUSING DISTANCES: p:  ", self.get_focusing_p())
+            # print("FOCUSING DISTANCES: q:  ", self.get_focusing_q())
+            # print("FOCUSING DISTANCES: grazing angle:  ", self.get_focusing_grazing_angle())
 
-            raise NotImplementedError
+            crystal = S4SphereCrystal(
+                name="Sphere Crystal",
+                boundary_shape=self.get_boundary_shape(),
+                material=self.CRYSTALS[self.user_defined_crystal],
+                miller_index_h=self.user_defined_h,
+                miller_index_k=self.user_defined_k,
+                miller_index_l=self.user_defined_l,
+                asymmetry_angle=0.0 if not self.asymmetric_cut else numpy.radians(self.planes_angle),
+                is_thick=self.is_thick,
+                thickness=self.thickness,
+                f_central=self.crystal_auto_setting,
+                f_phot_cent=self.units_in_use,
+                phot_cent=(self.photon_energy if (self.units_in_use == 0) else self.photon_wavelength),
+                file_refl=self.file_crystal_parameters,
+                f_bragg_a=True if self.asymmetric_cut else False,
+                f_ext=0,
+                material_constants_library_flag=self.diffraction_calculation,
+                radius=self.spherical_radius,
+                is_cylinder=self.is_cylinder,
+                cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
+                convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
+                # p_focus=self.get_focusing_p(),
+                # q_focus=self.get_focusing_q(),
+                # grazing_angle=self.get_focusing_grazing_angle(),
+            )
+        elif self.surface_shape_type == 2:
+            raise ValueError("Curved crystal not implemented")
+            # mirror = S4EllipsoidMirror(
+            #     name="Ellipsoid Mirror",
+            #     boundary_shape=self.get_boundary_shape(),
+            #     surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
+            #     is_cylinder=self.is_cylinder,
+            #     cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
+            #     convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
+            #     min_axis=0.0,
+            #     maj_axis=0.0,
+            #     p_focus=self.get_focusing_p(),
+            #     q_focus=self.get_focusing_q(),
+            #     grazing_angle=self.get_focusing_grazing_angle(),
+            #     # inputs related to mirror reflectivity
+            #     f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
+            #     f_refl=self.reflectivity_source,  # 0=prerefl file
+            #                                     # 1=electric susceptibility
+            #                                     # 2=user defined file (1D reflectivity vs angle)
+            #                                     # 3=user defined file (1D reflectivity vs energy)
+            #                                     # 4=user defined file (2D reflectivity vs energy and angle)
+            #                                     # 5=direct calculation using xraylib
+            #                                     # 6=direct calculation using dabax
+            #     file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+            #     refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+            #     # refraction index (complex) for f_refl=1
+            #     coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+            #     coating_density=self.coating_density,      # coating material density for f_refl=5,6
+            #     coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
+            # )
+        elif self.surface_shape_type == 3:
+            raise ValueError("Curved crystal not implemented")
+            # mirror = S4HyperboloidMirror(
+            #     name="Hyperboloid Mirror",
+            #     boundary_shape=self.get_boundary_shape(),
+            #     surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
+            #     is_cylinder=self.is_cylinder,
+            #     cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
+            #     convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
+            #     min_axis=0.0,
+            #     maj_axis=0.0,
+            #     p_focus=self.get_focusing_p(),
+            #     q_focus=self.get_focusing_q(),
+            #     grazing_angle=self.get_focusing_grazing_angle(),
+            #     # inputs related to mirror reflectivity
+            #     f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
+            #     f_refl=self.reflectivity_source,  # 0=prerefl file
+            #                                     # 1=electric susceptibility
+            #                                     # 2=user defined file (1D reflectivity vs angle)
+            #                                     # 3=user defined file (1D reflectivity vs energy)
+            #                                     # 4=user defined file (2D reflectivity vs energy and angle)
+            #                                     # 5=direct calculation using xraylib
+            #                                     # 6=direct calculation using dabax
+            #     file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+            #     refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+            #     # refraction index (complex) for f_refl=1
+            #     coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+            #     coating_density=self.coating_density,      # coating material density for f_refl=5,6
+            #     coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
+            # )
+        elif self.surface_shape_type == 4:
+            raise ValueError("Curved crystal not implemented")
+            # mirror = S4ParaboloidMirror(
+            #     name="Paraboloid Mirror",
+            #     boundary_shape=self.get_boundary_shape(),
+            #     surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
+            #     is_cylinder=self.is_cylinder,
+            #     cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
+            #     convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
+            #     parabola_parameter=0.0,
+            #     at_infinity=Side.SOURCE, #  Side:  SOURCE = 0  IMAGE = 1
+            #     pole_to_focus=0.0,
+            #     p_focus=self.get_focusing_p(),
+            #     q_focus=self.get_focusing_q(),
+            #     grazing_angle=self.get_focusing_grazing_angle(),
+            #     # inputs related to mirror reflectivity
+            #     f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
+            #     f_refl=self.reflectivity_source,  # 0=prerefl file
+            #                                     # 1=electric susceptibility
+            #                                     # 2=user defined file (1D reflectivity vs angle)
+            #                                     # 3=user defined file (1D reflectivity vs energy)
+            #                                     # 4=user defined file (2D reflectivity vs energy and angle)
+            #                                     # 5=direct calculation using xraylib
+            #                                     # 6=direct calculation using dabax
+            #     file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+            #     refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+            #     # refraction index (complex) for f_refl=1
+            #     coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+            #     coating_density=self.coating_density,      # coating material density for f_refl=5,6
+            #     coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
+            # )
+        elif self.surface_shape_type == 5:
+            raise ValueError("Curved crystal not implemented")
+            # mirror = S4ToroidMirror(
+            #     name="Toroid Mirror",
+            #     boundary_shape=self.get_boundary_shape(),
+            #     surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
+            #     min_radius=0.1,
+            #     maj_radius=1.0,
+            #     p_focus=self.get_focusing_p(),
+            #     q_focus=self.get_focusing_q(),
+            #     grazing_angle=self.get_focusing_grazing_angle(),
+            #     # inputs related to mirror reflectivity
+            #     f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
+            #     f_refl=self.reflectivity_source,  # 0=prerefl file
+            #                                     # 1=electric susceptibility
+            #                                     # 2=user defined file (1D reflectivity vs angle)
+            #                                     # 3=user defined file (1D reflectivity vs energy)
+            #                                     # 4=user defined file (2D reflectivity vs energy and angle)
+            #                                     # 5=direct calculation using xraylib
+            #                                     # 6=direct calculation using dabax
+            #     file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+            #     refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+            #     # refraction index (complex) for f_refl=1
+            #     coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+            #     coating_density=self.coating_density,      # coating material density for f_refl=5,6
+            #     coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
+            # )
+        elif self.surface_shape_type == 6:
+            raise ValueError("Curved crystal not implemented")
+            # mirror = S4ConicMirror(
+            #     name="Conic coefficients Mirror",
+            #     boundary_shape=self.get_boundary_shape(),
+            #     conic_coefficients=[
+            #          self.conic_coefficient_0,self.conic_coefficient_1,self.conic_coefficient_2,
+            #          self.conic_coefficient_3,self.conic_coefficient_4,self.conic_coefficient_5,
+            #          self.conic_coefficient_6,self.conic_coefficient_7,self.conic_coefficient_8,
+            #          self.conic_coefficient_9],
+            #     # inputs related to mirror reflectivity
+            #     f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
+            #     f_refl=self.reflectivity_source,  # 0=prerefl file
+            #                                     # 1=electric susceptibility
+            #                                     # 2=user defined file (1D reflectivity vs angle)
+            #                                     # 3=user defined file (1D reflectivity vs energy)
+            #                                     # 4=user defined file (2D reflectivity vs energy and angle)
+            #                                     # 5=direct calculation using xraylib
+            #                                     # 6=direct calculation using dabax
+            #     file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+            #     refraction_index=1 - self.refraction_index_delta + 1j * self.refraction_index_beta,
+            #     # refraction index (complex) for f_refl=1
+            #     coating_material=self.coating_material,    # string with coating material formula for f_refl=5,6
+            #     coating_density=self.coating_density,      # coating material density for f_refl=5,6
+            #     coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
+            # )
 
-        else:
-            raise NotImplementedError
+        # if error is selected...
+
+        # if self.modified_surface:
+        #     return S4AdditionalNumericalMeshMirror(name="ideal + error Mirror",
+        #                                            ideal_mirror=mirror,
+        #                                            numerical_mesh_mirror=S4NumericalMeshMirror(
+        #                                                surface_data_file=self.ms_defect_file_name,
+        #                                                boundary_shape=None),
+        #                                            )
+        # else:
+        #     return mirror
+
 
         return crystal
 
     def get_beamline_element_instance(self):
 
-        if self.surface_shape_type > 0: raise NotImplementedError()  # todo: complete for curved crystals
+        if self.modified_surface:
+            ValueError("Curved crystal not implemented")
+            # return S4AdditionalNumericalMeshMirrorElement()
+        else:
+            if self.surface_shape_type == 0:   return S4PlaneCrystalElement()
+            elif self.surface_shape_type == 1: return S4SphereCrystalElement()
+            elif self.surface_shape_type == 2: ValueError("Curved crystal not implemented")
+            elif self.surface_shape_type == 3: ValueError("Curved crystal not implemented")
+            elif self.surface_shape_type == 4: ValueError("Curved crystal not implemented")
+            elif self.surface_shape_type == 5: ValueError("Curved crystal not implemented")
+            elif self.surface_shape_type == 6: ValueError("Curved crystal not implemented")
 
-        if self.surface_shape_type == 0: optical_element = S4PlaneCrystalElement()
-        '''
-        elif self.surface_shape_type == 1: optical_element = S4SphereCrystalElement()
-        elif self.surface_shape_type == 2: optical_element = S4EllipsoidCrystalElement()
-        elif self.surface_shape_type == 3: optical_element = S4HyperboloidCrystalElement()
-        elif self.surface_shape_type == 4: optical_element = S4ParaboloidCrystalElement()
-        elif self.surface_shape_type == 5: optical_element = S4ToroidCrystalElement()
-        '''
-
-        return optical_element
+        # optical_element = S4PlaneCrystalElement()
+        #
+        # if self.surface_shape_type > 0: ValueError("Curved crystal not implemented")  # todo: complete for curved crystals
+        #
+        # # if self.surface_shape_type == 0: optical_element = S4PlaneCrystalElement()
+        # '''
+        # elif self.surface_shape_type == 1: optical_element = S4SphereCrystalElement()
+        # elif self.surface_shape_type == 2: optical_element = S4EllipsoidCrystalElement()
+        # elif self.surface_shape_type == 3: optical_element = S4HyperboloidCrystalElement()
+        # elif self.surface_shape_type == 4: optical_element = S4ParaboloidCrystalElement()
+        # elif self.surface_shape_type == 5: optical_element = S4ToroidCrystalElement()
+        # '''
+        #
+        # return optical_element
 
 
 if __name__ == "__main__":
