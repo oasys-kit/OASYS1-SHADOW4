@@ -224,8 +224,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 is_cylinder=self.is_cylinder,
                 cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                min_axis=0.0,
-                maj_axis=0.0,
+                min_axis=self.ellipse_hyperbola_semi_minor_axis * 2, # todo: check factor 2
+                maj_axis=self.ellipse_hyperbola_semi_major_axis * 2, # todo: check factor 2
                 p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
@@ -282,9 +282,9 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 is_cylinder=self.is_cylinder,
                 cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                parabola_parameter=0.0,
+                parabola_parameter=self.paraboloid_parameter,
                 at_infinity=Side.SOURCE, #  Side:  SOURCE = 0  IMAGE = 1
-                pole_to_focus=0.0,
+                pole_to_focus=0.0, # todo: check this input
                 p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
@@ -309,8 +309,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 name="Toroid Mirror",
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
-                min_radius=0.1,
-                maj_radius=1.0,
+                min_radius=self.torus_minor_radius,
+                maj_radius=self.torus_major_radius,
                 p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
