@@ -219,11 +219,18 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         elif self.oe_orientation_angle == 4: return self.oe_orientation_angle_user_value
 
     def get_coordinates_instance(self):
-        angle_radial = numpy.pi / 2 - self.incidence_angle_mrad * 1e-3
-        angle_radial_out = numpy.pi / 2 - self.reflection_angle_mrad * 1e-3
+        if self.angles_respect_to == 0:
+            angle_radial = numpy.radians(self.incidence_angle_deg)
+            angle_radial_out = numpy.radians(self.reflection_angle_deg)
+        elif self.angles_respect_to == 1:
+            angle_radial = numpy.pi / 2 - self.incidence_angle_mrad * 1e-3
+            angle_radial_out = numpy.pi / 2 - self.reflection_angle_mrad * 1e-3
+
+        # angle_radial = numpy.pi / 2 - self.incidence_angle_mrad * 1e-3
+        # angle_radial_out = numpy.pi / 2 - self.reflection_angle_mrad * 1e-3
 
         print(">>>>>>normal inc ref [deg]:", numpy.degrees(angle_radial), numpy.degrees(angle_radial_out), self.get_oe_orientation_angle())
-        print(">>>>>>grazing inc ref [mrad]:", 1e3 * angle_radial, 1e3 * angle_radial_out, self.get_oe_orientation_angle())
+        print(">>>>>>grazing inc ref [mrad]:", 1e3 * (numpy.pi / 2 - angle_radial), 1e3 * (numpy.pi / 2 - angle_radial_out))
         print(">>>>>>m.o.a. [deg]:", self.get_oe_orientation_angle())
 
         return ElementCoordinates(

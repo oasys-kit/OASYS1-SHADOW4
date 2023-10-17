@@ -625,10 +625,19 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     #########################################################
 
     def get_focusing_grazing_angle(self):
-        if self.focii_and_continuation_plane == 0: return numpy.radians(90.0 - self.incidence_angle_deg)
+        if self.focii_and_continuation_plane == 0: # coincident
+            if self.angles_respect_to == 0:
+                return numpy.radians(90.0 - self.incidence_angle_deg)
+            else:
+                return 1e-3 * self.incidence_angle_mrad
         else:
-            if self.incidence_angle_respect_to_normal_type == 0: return numpy.radians(90.0 - self.incidence_angle_deg)
-            else:                                                return numpy.radians(90.0 - self.incidence_angle_respect_to_normal)
+            if self.incidence_angle_respect_to_normal_type == 0:
+                if self.angles_respect_to == 0:
+                    return numpy.radians(90.0 - self.incidence_angle_deg)
+                else:
+                    return 1e-3 * self.incidence_angle_mrad
+            else:
+                return numpy.radians(90.0 - self.incidence_angle_respect_to_normal)
 
     def get_focusing_p(self):
         if self.focii_and_continuation_plane == 0: return self.source_plane_distance
