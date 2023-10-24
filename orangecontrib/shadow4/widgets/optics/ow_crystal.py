@@ -544,6 +544,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                 material_constants_library_flag=self.diffraction_calculation,
                 min_radius=self.torus_minor_radius,
                 maj_radius=self.torus_major_radius,
+                f_torus=self.toroidal_mirror_pole_location,
                 # is_cylinder=self.is_cylinder,
                 # cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 # convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1

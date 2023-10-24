@@ -223,12 +223,20 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         box_1 = oasysgui.widgetBox(subtab_surface_shape, "Surface Shape Parameter", addSpace=True, orientation="vertical")
 
         self.focusing_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical")
-
         self.surface_shape_parameters_box = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical")
+
+        # only for Parabola
+        self.focus_location_box = oasysgui.widgetBox(self.surface_shape_parameters_box, "", addSpace=False, orientation="vertical")
+        gui.comboBox(self.focus_location_box, self, "focus_location", label="Focus location", labelWidth=220,
+                     items=["Source is at Infinity", "Image is at Infinity"], sendSelectedValue=False,
+                     orientation="horizontal", tooltip="focus_location", callback=self.surface_shape_tab_visibility)
+
         gui.comboBox(self.surface_shape_parameters_box, self, "surface_shape_parameters", label="Type",
                      items=["internal/calculated", "external/user_defined"], labelWidth=240,
                      callback=self.surface_shape_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="surface_shape_parameters")
+
+
 
         #
         #internal focusing parameters
@@ -252,7 +260,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                              "Image Side Focal Distance [m]", labelWidth=260,
                                                              valueType=float, orientation="horizontal", tooltip="image_side_focal_distance")
 
-        gui.comboBox(self.image_side_focal_distance_box, self, "incidence_angle_respect_to_normal_type", label="Incidence Angle",
+        gui.comboBox(self.focusing_internal_box, self, "incidence_angle_respect_to_normal_type", label="Incidence Angle",
                      labelWidth=260,
                      items=["Copied from position",
                             "User value"],
@@ -267,10 +275,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                                      labelWidth=290, valueType=float,
                                                                      orientation="horizontal", tooltip="incidence_angle_respect_to_normal")
 
-        self.focus_location_box = oasysgui.widgetBox(self.focusing_internal_box, "", addSpace=False, orientation="vertical")
-        gui.comboBox(self.focus_location_box, self, "focus_location", label="Focus location", labelWidth=220,
-                     items=["Image is at Infinity", "Source is at Infinity"], sendSelectedValue=False,
-                     orientation="horizontal", tooltip="focus_location")
+
 
         #
         # external focusing parameters
@@ -283,20 +288,20 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                      "Spherical Radius [m]", labelWidth=260, valueType=float,
                                                      orientation="horizontal", tooltip="spherical_radius")
         # ellipsoid or hyperboloid
-        self.focusing_external_ellipsoir_or_hyperboloid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
+        self.focusing_external_ellipsoid_or_hyperboloid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
-        self.le_ellipse_hyperbola_semi_major_axis = oasysgui.lineEdit(self.focusing_external_ellipsoir_or_hyperboloid, self,
+        self.le_ellipse_hyperbola_semi_major_axis = oasysgui.lineEdit(self.focusing_external_ellipsoid_or_hyperboloid, self,
                                                                       "ellipse_hyperbola_semi_major_axis",
                                                                       "Ellipse/Hyperbola semi-major Axis [m]",
                                                                       labelWidth=260, valueType=float,
                                                                       orientation="horizontal", tooltip="ellipse_hyperbola_semi_major_axis")
-        self.le_ellipse_hyperbola_semi_minor_axis = oasysgui.lineEdit(self.focusing_external_ellipsoir_or_hyperboloid, self,
+        self.le_ellipse_hyperbola_semi_minor_axis = oasysgui.lineEdit(self.focusing_external_ellipsoid_or_hyperboloid, self,
                                                                       "ellipse_hyperbola_semi_minor_axis",
                                                                       "Ellipse/Hyperbola semi-minor Axis [m]",
                                                                       labelWidth=260, valueType=float,
                                                                       orientation="horizontal", tooltip="ellipse_hyperbola_semi_minor_axis")
-        oasysgui.lineEdit(self.focusing_external_ellipsoir_or_hyperboloid, self, "angle_of_majax_and_pole",
-                          "Angle of MajAx and Pole [CCW, deg]", labelWidth=260, valueType=float,
+        oasysgui.lineEdit(self.focusing_external_ellipsoid_or_hyperboloid, self, "angle_of_majax_and_pole",
+                          "Distance focus-1 to o.e. pole [m]", labelWidth=260, valueType=float,
                           orientation="horizontal", tooltip="angle_of_majax_and_pole")
 
         # paraboloid
@@ -305,15 +310,18 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.le_paraboloid_parameter = oasysgui.lineEdit(self.focusing_external_paraboloid, self, "paraboloid_parameter",
                                                          "Paraboloid parameter [m]", labelWidth=260, valueType=float,
                                                          orientation="horizontal", tooltip="paraboloid_parameter")
+        oasysgui.lineEdit(self.focusing_external_paraboloid, self, "angle_of_majax_and_pole",
+                          "Distance focus to o.e. pole [m]", labelWidth=260, valueType=float,
+                          orientation="horizontal", tooltip="angle_of_majax_and_pole")
 
         # toroid
         self.focusing_external_toroid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
         self.le_torus_major_radius = oasysgui.lineEdit(self.focusing_external_toroid, self, "torus_major_radius",
-                                                       "Torus Major Radius [m]", labelWidth=260, valueType=float,
+                                                       "Torus Major Radius [m] (Rtan-Rsag)", labelWidth=260, valueType=float,
                                                        orientation="horizontal", tooltip="torus_major_radius")
         self.le_torus_minor_radius = oasysgui.lineEdit(self.focusing_external_toroid, self, "torus_minor_radius",
-                                                       "Torus Minor Radius [m]", labelWidth=260, valueType=float,
+                                                       "Torus Minor Radius [m] (Rsag)", labelWidth=260, valueType=float,
                                                        orientation="horizontal", tooltip="torus_minor_radius")
 
 
@@ -468,7 +476,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.focus_location_box.setVisible(False)
 
         self.focusing_external_sphere.setVisible(False)
-        self.focusing_external_ellipsoir_or_hyperboloid.setVisible(False)
+        self.focusing_external_ellipsoid_or_hyperboloid.setVisible(False)
         self.focusing_external_paraboloid.setVisible(False)
         self.focusing_external_toroid.setVisible(False)
 
@@ -480,10 +488,10 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         self.ccc_box.setVisible(False)
 
-        if self.surface_shape_type in (1,2,3,4,5): # not plane
+        if self.surface_shape_type in (1,2,3,5): # not plane, not Paraboloid
             self.focusing_box.setVisible(True)
 
-            if self.surface_shape_parameters == 0:
+            if self.surface_shape_parameters == 0: # internal
                 self.focusing_internal_box.setVisible(True)
                 if self.focii_and_continuation_plane == 0:
                     pass
@@ -492,18 +500,19 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                     self.image_side_focal_distance_box.setVisible(True)
                     if self.incidence_angle_respect_to_normal_type == 1:
                         self.incidence_angle_respect_to_normal_box.setVisible(True)
-
-            else:
+            else: # external
                 if self.surface_shape_type == 0: # plane
                     pass
                 elif self.surface_shape_type == 1: # sphere
                     self.focusing_external_sphere.setVisible(True)
                 elif self.surface_shape_type == 2: # ellipsoid
-                    self.focusing_external_ellipsoir_or_hyperboloid.setVisible(True)
+                    self.focusing_external_ellipsoid_or_hyperboloid.setVisible(True)
                 elif self.surface_shape_type == 3: # hyperboloid
-                    self.focusing_external_ellipsoir_or_hyperboloid.setVisible(True)
-                elif self.surface_shape_type == 4: # paraboloid
-                    self.focusing_external_paraboloid.setVisible(True)
+                    self.focusing_external_ellipsoid_or_hyperboloid.setVisible(True)
+                # elif self.surface_shape_type == 4: # paraboloid
+                #     self.focusing_external_paraboloid.setVisible(True)
+                #     self.focus_location_box.setVisible(True)
+
                 elif self.surface_shape_type == 5: # toroid
                     self.focusing_external_toroid.setVisible(True)
 
@@ -511,6 +520,50 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 self.convexity_box.setVisible(True)
                 self.cylindrical_box.setVisible(True)
                 self.cylinder_orientation_box.setVisible(self.is_cylinder==1)
+
+
+        elif self.surface_shape_type == 4: # Paraboloid
+            self.focusing_box.setVisible(True)
+
+            if self.surface_shape_parameters == 0:  # internal
+                self.focusing_internal_box.setVisible(True)
+                self.focus_location_box.setVisible(True)
+
+                if self.focii_and_continuation_plane == 0:
+                    pass
+                else:
+                    if self.focus_location == 0: # source is at infinity
+                        self.object_side_focal_distance_box.setVisible(False)
+                        self.image_side_focal_distance_box.setVisible(True)
+                    else: # image at infinity
+                        self.object_side_focal_distance_box.setVisible(True)
+                        self.image_side_focal_distance_box.setVisible(False)
+
+                    if self.incidence_angle_respect_to_normal_type == 1:
+                        self.incidence_angle_respect_to_normal_box.setVisible(True)
+
+            else: # external
+                self.focusing_external_paraboloid.setVisible(True)
+                self.focus_location_box.setVisible(True)
+            #     if self.surface_shape_type == 0: # plane
+            #         pass
+            #     elif self.surface_shape_type == 1: # sphere
+            #         self.focusing_external_sphere.setVisible(True)
+            #     elif self.surface_shape_type == 2: # ellipsoid
+            #         self.focusing_external_ellipsoid_or_hyperboloid.setVisible(True)
+            #     elif self.surface_shape_type == 3: # hyperboloid
+            #         self.focusing_external_ellipsoid_or_hyperboloid.setVisible(True)
+            #     elif self.surface_shape_type == 4: # paraboloid
+            #         self.focusing_external_paraboloid.setVisible(True)
+            #         self.focus_location_box.setVisible(True)
+            #
+            #     elif self.surface_shape_type == 5: # toroid
+            #         self.focusing_external_toroid.setVisible(True)
+            #
+            # if self.surface_shape_type != 5: # toroid cannot change convexity nor set to cylinder
+            #     self.convexity_box.setVisible(True)
+            #     self.cylindrical_box.setVisible(True)
+            #     self.cylinder_orientation_box.setVisible(self.is_cylinder==1)
 
         elif self.surface_shape_type == 6: # conic coefficients
             self.ccc_box.setVisible(True)
