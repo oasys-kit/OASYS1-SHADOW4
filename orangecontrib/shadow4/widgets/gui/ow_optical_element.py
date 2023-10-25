@@ -257,6 +257,8 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         try:
+
+            beamline = self.input_data.beamline.duplicate()
             element = self.get_beamline_element_instance()
             element.set_optical_element(self.get_optical_element_instance())
             element.set_coordinates(self.get_coordinates_instance())
@@ -265,18 +267,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
 
             print(element.info())
 
-            self.progressBarInit()
-
-            output_beam, footprint = element.trace_beam()
-
-            beamline = self.input_data.beamline.duplicate()
             beamline.append_beamline_element(element)
-
-            self._set_plot_quality()
-
-            self._plot_results(output_beam, footprint, progressBarValue=80)
-
-            self.progressBarFinished()
 
             #
             # script
@@ -288,6 +279,15 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             script += "\n   plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
             script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
             self.shadow4_script.set_code(script)
+
+            #
+            # run
+            #
+            self.progressBarInit()
+            output_beam, footprint = element.trace_beam()
+            self._set_plot_quality()
+            self._plot_results(output_beam, footprint, progressBarValue=80)
+            self.progressBarFinished()
 
             #
             # send beam

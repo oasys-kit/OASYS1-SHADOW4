@@ -217,11 +217,6 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 2:
-            if self.surface_shape_parameters == 0: # internal/calculated
-                p_focus = self.get_focusing_p()
-            elif self.surface_shape_parameters == 1: # external/user_defined
-                p_focus = self.angle_of_majax_and_pole # todo: change variable name
-
             mirror = S4EllipsoidMirror(
                 name="Ellipsoid Mirror",
                 boundary_shape=self.get_boundary_shape(),
@@ -231,7 +226,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
                 min_axis=self.ellipse_hyperbola_semi_minor_axis * 2, # todo: check factor 2
                 maj_axis=self.ellipse_hyperbola_semi_major_axis * 2, # todo: check factor 2
-                p_focus=p_focus,
+                pole_to_focus=self.angle_of_majax_and_pole, # todo: change variable name
+                p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
                 # inputs related to mirror reflectivity
@@ -251,11 +247,6 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 coating_roughness=self.coating_roughness,  # coating material roughness in A for f_refl=5,6
             )
         elif self.surface_shape_type == 3:
-            if self.surface_shape_parameters == 0: # internal/calculated
-                p_focus = self.get_focusing_p()
-            elif self.surface_shape_parameters == 1: # external/user_defined
-                p_focus = self.angle_of_majax_and_pole # todo: change variable name
-
             mirror = S4HyperboloidMirror(
                 name="Hyperboloid Mirror",
                 boundary_shape=self.get_boundary_shape(),
@@ -265,7 +256,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
                 min_axis=0.0,
                 maj_axis=0.0,
-                p_focus=p_focus,
+                pole_to_focus=self.angle_of_majax_and_pole, # todo: change variable name
+                p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
                 # inputs related to mirror reflectivity

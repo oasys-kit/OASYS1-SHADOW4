@@ -74,7 +74,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
         super(OWCrystal, self).__init__()
         # with crystals no "internal surface parameters" allowed. Fix value and hide selecting combo:
         self.surface_shape_parameters = 1
-        self.surface_shape_parameters_box.setVisible(False)
+        self.surface_shape_internal_external_box.setVisible(False)
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting):
         subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Diffraction")    # to be populated
@@ -467,13 +467,10 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                 material_constants_library_flag=self.diffraction_calculation,
                 min_axis=self.ellipse_hyperbola_semi_minor_axis * 2, # todo: check factor 2
                 maj_axis=self.ellipse_hyperbola_semi_major_axis * 2, # todo: check factor 2
-                p_focus=self.get_focusing_p(),
+                pole_to_focus=self.angle_of_majax_and_pole, # todo: change variable name,
                 is_cylinder=self.is_cylinder,
                 cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                # p_focus=self.get_focusing_p(),
-                # q_focus=self.get_focusing_q(),
-                # grazing_angle=self.get_focusing_grazing_angle(),
             )
         elif self.surface_shape_type == 3:
             crystal = S4HyperboloidCrystal(
@@ -495,7 +492,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                 material_constants_library_flag=self.diffraction_calculation,
                 min_axis=self.ellipse_hyperbola_semi_minor_axis * 2, # todo: check factor 2
                 maj_axis=self.ellipse_hyperbola_semi_major_axis * 2, # todo: check factor 2
-                p_focus=self.get_focusing_p(), # todo: check this input
+                pole_to_focus=self.angle_of_majax_and_pole, # todo: change variable name
                 is_cylinder=self.is_cylinder,
                 cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
@@ -518,8 +515,9 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
                 f_bragg_a=True if self.asymmetric_cut else False,
                 f_ext=0,
                 material_constants_library_flag=self.diffraction_calculation,
+                at_infinity=self.focus_location,  # Side:  Side.SOURCE: SOURCE = 0  IMAGE = 1
                 parabola_parameter=self.paraboloid_parameter,
-                pole_to_focus=0.0, # todo: check this input
+                pole_to_focus=self.angle_of_majax_and_pole,
                 is_cylinder=self.is_cylinder,
                 cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1

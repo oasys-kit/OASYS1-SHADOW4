@@ -231,7 +231,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                      items=["Source is at Infinity", "Image is at Infinity"], sendSelectedValue=False,
                      orientation="horizontal", tooltip="focus_location", callback=self.surface_shape_tab_visibility)
 
-        gui.comboBox(self.surface_shape_parameters_box, self, "surface_shape_parameters", label="Type",
+        self.surface_shape_internal_external_box = oasysgui.widgetBox(self.surface_shape_parameters_box, "", addSpace=False, orientation="vertical")
+        gui.comboBox(self.surface_shape_internal_external_box, self, "surface_shape_parameters", label="Type",
                      items=["internal/calculated", "external/user_defined"], labelWidth=240,
                      callback=self.surface_shape_tab_visibility, sendSelectedValue=False, orientation="horizontal",
                      tooltip="surface_shape_parameters")
@@ -524,6 +525,9 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         elif self.surface_shape_type == 4: # Paraboloid
             self.focusing_box.setVisible(True)
+            self.convexity_box.setVisible(True)
+            self.cylindrical_box.setVisible(True)
+            self.cylinder_orientation_box.setVisible(self.is_cylinder == 1)
 
             if self.surface_shape_parameters == 0:  # internal
                 self.focusing_internal_box.setVisible(True)
