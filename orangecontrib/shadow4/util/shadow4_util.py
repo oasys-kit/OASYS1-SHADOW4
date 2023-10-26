@@ -38,7 +38,8 @@ except ImportError:
     print(sys.exc_info()[1])
     pass
 
-import Shadow.ShadowToolsPrivate as stp
+# import Shadow.ShadowToolsPrivate as stp
+from shadow4.beam.s4_beam import S4Beam
 
 import scipy.constants as codata
 
@@ -848,7 +849,8 @@ try:
 
         @classmethod
         def get_shadow_label(cls, var):
-            return (stp.getLabel(var-1))[0]
+            return S4Beam.column_names_formatted()[var-1]
+            # return (stp.getLabel(var-1))[0]
 
 
         #########################################################################################
