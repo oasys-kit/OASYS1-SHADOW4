@@ -331,6 +331,10 @@ class OWShadowCompareBeam3Beam4(widget.OWWidget):
             fail = 1
 
         if not fail:
+            # pass to SI
+            beam3.rays[:, 0:3] *= self.workspace_units_to_m
+            beam3.rays[:, 12]  *= self.workspace_units_to_m
+
             if self.columns_6_flag:
                 print("\n\n>>>> comparing mean and stdev of 6 first columns")
                 check_six_columns_mean_and_std(beam3, beam4, do_assert=self.columns_6_assert, do_plot=self.columns_6_plot)
