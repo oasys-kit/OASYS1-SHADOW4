@@ -121,7 +121,6 @@ class Histogram(AutomaticElement):
 
         col_names = S4Beam.column_names_with_column_number()
         col_names.insert(0, "0: No Weight")
-        print(col_names)
         self.weight_column = gui.comboBox(general_box, self, "weight_column_index", label="Weight", labelWidth=70,
                                          items=col_names,
                                          sendSelectedValue=False, orientation="horizontal")

@@ -142,8 +142,10 @@ class PlotXY(AutomaticElement):
 
         self.set_y_range()
 
+        col_names = S4Beam.column_names_with_column_number()
+        col_names.insert(0, "0: No Weight")
         self.weight_column = gui.comboBox(general_box, self, "weight_column_index", label="Weight", labelWidth=70,
-                                         items=S4Beam.column_names_with_column_number(),
+                                         items=col_names,
                                          sendSelectedValue=False, orientation="horizontal")
 
         gui.comboBox(general_box, self, "rays", label="Rays", labelWidth=250,
