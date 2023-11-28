@@ -23,6 +23,9 @@ from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirr
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape, SUBTAB_INNER_BOX_WIDTH
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 
+from orangecontrib.shadow4.util.shadow4_objects import VlsPgmPreProcessorData
+import copy
+
 class OWMirror(OWOpticalElementWithSurfaceShape):
     name        = "Generic Mirror"
     description = "Shadow Mirror"
@@ -32,6 +35,10 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
 
     def get_oe_type(self):
         return "mirror", "Mirror"
+
+
+    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
 
     #########################################################
     # reflectivity
@@ -147,6 +154,24 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
 
     def select_file_refl(self):
         self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
+
+    #########################################################
+    # preprocessor
+    #########################################################
+
+    def setVlsPgmPreProcessorData(self, data):
+        if data is not None:
+            self.surface_shape_type = 0
+            self.surface_shape_tab_visibility()
+
+            self.source_plane_distance = data.d_source_plane_to_mirror * 1e-3
+            self.image_plane_distance =  data.d_mirror_to_grating/2 * 1e-3
+            self.angles_respect_to = 0
+            self.incidence_angle_deg  = (data.alpha + data.beta)/2
+            self.reflection_angle_deg = (data.alpha + data.beta)/2
+
+            self.calculate_incidence_angle_mrad()
+            self.calculate_reflection_angle_mrad()
 
     #########################################################
     # S4 objects

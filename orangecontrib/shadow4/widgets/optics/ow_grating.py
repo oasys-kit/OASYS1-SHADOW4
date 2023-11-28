@@ -13,18 +13,19 @@ from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
 
-from syned.beamline.optical_elements.crystals.crystal import DiffractionGeometry
-
-from shadow4.beamline.optical_elements.gratings.s4_plane_grating import                                       S4PlaneGrating,         S4PlaneGratingElement
-from shadow4.beamline.optical_elements.gratings.s4_sphere_grating import                                     S4SphereGrating,        S4SphereGratingElement
-# from shadow4.beamline.optical_elements.gratings.s4_conic_grating import                                       S4ConicGrating,         S4ConicGratingElement
-# from shadow4.beamline.optical_elements.gratings.s4_toroid_grating import                                     S4ToroidGrating,        S4ToroidGratingElement
-# from shadow4.beamline.optical_elements.gratings.s4_numerical_mesh_grating import                      S4NumericalMeshGrating, S4NumericalMeshGratingElement
-# from shadow4.beamline.optical_elements.gratings.s4_additional_numerical_mesh_grating import S4AdditionalNumericalMeshGrating, S4AdditionalNumericalMeshGratingElement
+from shadow4.beamline.optical_elements.gratings.s4_plane_grating import S4PlaneGrating, S4PlaneGratingElement
+from shadow4.beamline.optical_elements.gratings.s4_sphere_grating import S4SphereGrating, S4SphereGratingElement
+from shadow4.beamline.optical_elements.gratings.s4_conic_grating import S4ConicGrating, S4ConicGratingElement
+from shadow4.beamline.optical_elements.gratings.s4_toroid_grating import S4ToroidGrating, S4ToroidGratingElement
+from shadow4.beamline.optical_elements.gratings.s4_numerical_mesh_grating import S4NumericalMeshGrating, S4NumericalMeshGratingElement
+from shadow4.beamline.optical_elements.gratings.s4_additional_numerical_mesh_grating import S4AdditionalNumericalMeshGrating, S4AdditionalNumericalMeshGratingElement
 
 
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
+
+from orangecontrib.shadow4.util.shadow4_objects import VlsPgmPreProcessorData
+import copy
 
 class OWGrating(OWOpticalElementWithSurfaceShape):
     name = "Generic Grating"
@@ -32,6 +33,9 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
     icon = "icons/plane_grating.png"
 
     priority = 1.390
+
+    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
 
     def get_oe_type(self):
         return "grating", "Grating"
@@ -51,32 +55,32 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
 
     def __init__(self):
         super(OWGrating, self).__init__()
-        # with crystals no "internal surface parameters" allowed. Fix value and hide selecting combo:
+        # with gratings no "internal surface parameters" allowed. Fix value and hide selecting combo:
         self.surface_shape_parameters = 1
         self.surface_shape_internal_external_box.setVisible(False)
 
     def create_basic_settings_specific_subtabs(self, tabs_basic_setting):
-        subtab_crystal_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Diffraction")    # to be populated
-        subtab_crystal_geometry = oasysgui.createTabPage(tabs_basic_setting, "Geometry")    # to be populated
+        subtab_grating_diffraction = oasysgui.createTabPage(tabs_basic_setting, "Grating")    # to be populated
+        subtab_grating_efficiency = oasysgui.createTabPage(tabs_basic_setting, "G. Efficiency")    # to be populated
 
-        return subtab_crystal_diffraction, subtab_crystal_geometry
+        return subtab_grating_diffraction, subtab_grating_efficiency
 
     def populate_basic_settings_specific_subtabs(self, specific_subtabs):
-        subtab_grating_diffraction, subtab_grating_geometry = specific_subtabs
+        subtab_grating_diffraction, subtab_grating_efficiency = specific_subtabs
 
         #########################################################
-        # Basic Settings / Crystal Diffraction
+        # Basic Settings / Grating Diffraction
         #########################################################
         self.populate_tab_grating_diffraction(subtab_grating_diffraction)
 
         #########################################################
-        # Basic Settings / Crystal Geometry
+        # Basic Settings / Grating Efficiency
         #########################################################
-        self.populate_tab_grating_geometry(subtab_grating_geometry)
+        self.populate_tab_grating_efficiency(subtab_grating_efficiency)
 
-    def populate_tab_grating_diffraction(self, subtab_crystal_diffraction):
+    def populate_tab_grating_diffraction(self, subtab_grating_diffraction):
 
-        grating_box = oasysgui.widgetBox(subtab_crystal_diffraction, "Grating Diffraction", addSpace=True, orientation="vertical")
+        grating_box = oasysgui.widgetBox(subtab_grating_diffraction, "Grating Diffraction", addSpace=True, orientation="vertical")
 
 
         gui.comboBox(grating_box, self, "f_ruling", tooltip="f_ruling",
@@ -203,7 +207,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
         #
         self.grating_diffraction_tab_visibility()
 
-    def populate_tab_grating_geometry(self, subtab_crystal_geometry):
+    def populate_tab_grating_efficiency(self, subtab_grating_efficiency):
         pass
 
         # self.asymmetric_cut_box = oasysgui.widgetBox(subtab_crystal_geometry, "", addSpace=False, orientation="vertical",
@@ -287,6 +291,32 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
     # Grating Methods
     #########################################################
 
+    def setVlsPgmPreProcessorData(self, data):
+        if data is not None:
+            self.surface_shape_type = 0
+            self.surface_shape_tab_visibility()
+
+            self.source_plane_distance = data.d_mirror_to_grating/2 * 1e-3
+            self.image_plane_distance = data.d_grating_to_exit_slits * 1e-3
+
+            self.angles_respect_to = 0
+            self.incidence_angle_deg = data.alpha
+            self.reflection_angle_deg =data.beta
+            self.calculate_incidence_angle_mrad()
+            self.calculate_reflection_angle_mrad()
+
+            self.oe_orientation_angle = 2
+            self.order = -1
+
+            self.f_ruling = 1
+            self.ruling = data.shadow_coeff_0 * 1e3
+            self.ruling_coeff_linear = data.shadow_coeff_1 * 1e6
+            self.ruling_coeff_quadratic = data.shadow_coeff_2 * 1e9
+            self.ruling_coeff_cubic = data.shadow_coeff_3 * 1e12
+            self.ruling_coeff_quartic = 0.0
+            self.grating_diffraction_tab_visibility()
+
+
     def grating_diffraction_tab_visibility(self):
         self.grating_box_vls.setVisible(self.f_ruling==1)
 
@@ -365,18 +395,17 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
     def get_optical_element_instance(self):
 
         if self.surface_shape_type > 0 and self.surface_shape_parameters == 0:
-            raise ValueError("Curved crystal with internal calculation not allowed.")
+            raise ValueError("Curved grating with internal calculation not allowed.")
 
 
         if self.surface_shape_type == 0:
             grating = S4PlaneGrating(
                 name="Plane Grating",
                 boundary_shape=self.get_boundary_shape(),
-                ruling=600000.0,
-                ruling_coeff_linear=260818.35944225,
-                ruling_coeff_quadratic=260818.35944225,
-                ruling_coeff_cubic=13648.21037618,
-                ruling_coeff_quartic=0.0,
+                ruling_coeff_linear=self.ruling_coeff_linear,
+                ruling_coeff_quadratic=self.ruling_coeff_quadratic,
+                ruling_coeff_cubic=self.ruling_coeff_cubic,
+                ruling_coeff_quartic=self.ruling_coeff_quartic,
                 coating=None,
                 coating_thickness=None,
                 f_central=False,
@@ -384,8 +413,8 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 phot_cent=8000.0,
                 material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
                 file_refl="",
-                order=0,
-                f_ruling=0,
+                order=self.order,
+                f_ruling=0 if (self.f_ruling==0) else 5,
             )
 
         elif self.surface_shape_type == 1:
@@ -395,11 +424,11 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
             grating = S4SphereGrating(
                 name="Sphere Grating",
                 boundary_shape=self.get_boundary_shape(),
-                ruling=800.0e3,
-                ruling_coeff_linear=0,
-                ruling_coeff_quadratic=0,
-                ruling_coeff_cubic=0,
-                ruling_coeff_quartic=0,
+                ruling=self.ruling,
+                ruling_coeff_linear=self.ruling_coeff_linear,
+                ruling_coeff_quadratic=self.ruling_coeff_quadratic,
+                ruling_coeff_cubic=self.ruling_coeff_cubic,
+                ruling_coeff_quartic=self.ruling_coeff_quartic,
                 coating=None,
                 coating_thickness=None,
                 f_central=False,
@@ -407,7 +436,8 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 phot_cent=8000.0,
                 material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
                 file_refl="",
-                order=1,
+                order=self.order,
+                f_ruling=0 if (self.f_ruling == 0) else 5,
                 #
                 surface_calculation=SurfaceCalculation.EXTERNAL,
                 is_cylinder=self.is_cylinder,
@@ -418,55 +448,55 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 q_focus=0.0,
                 grazing_angle=0.0,
             )
-            #     name="Sphere Crystal",
-            #     boundary_shape=self.get_boundary_shape(),
-            #     material=self.CRYSTALS[self.user_defined_crystal],
-            #     miller_index_h=self.user_defined_h,
-            #     miller_index_k=self.user_defined_k,
-            #     miller_index_l=self.user_defined_l,
-            #     asymmetry_angle=0.0 if not self.asymmetric_cut else numpy.radians(self.planes_angle),
-            #     is_thick=self.is_thick,
-            #     thickness=self.thickness,
-            #     f_central=self.crystal_auto_setting,
-            #     f_phot_cent=self.units_in_use,
-            #     phot_cent=(self.photon_energy if (self.units_in_use == 0) else self.photon_wavelength),
-            #     file_refl=self.file_crystal_parameters,
-            #     f_bragg_a=True if self.asymmetric_cut else False,
-            #     f_ext=0,
-            #     material_constants_library_flag=self.diffraction_calculation,
-            #     radius=self.spherical_radius,
-            #     is_cylinder=self.is_cylinder,
-            #     cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-            #     convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-            # )
         elif self.surface_shape_type == 5:
-            raise NotImplementedError
-            # crystal = S4ToroidCrystal(
-            #     name="Toroid Crystal",
-            #     boundary_shape=self.get_boundary_shape(),
-            #     material=self.CRYSTALS[self.user_defined_crystal],
-            #     miller_index_h=self.user_defined_h,
-            #     miller_index_k=self.user_defined_k,
-            #     miller_index_l=self.user_defined_l,
-            #     asymmetry_angle=0.0 if not self.asymmetric_cut else numpy.radians(self.planes_angle),
-            #     is_thick=self.is_thick,
-            #     thickness=self.thickness,
-            #     f_central=self.crystal_auto_setting,
-            #     f_phot_cent=self.units_in_use,
-            #     phot_cent=(self.photon_energy if (self.units_in_use == 0) else self.photon_wavelength),
-            #     file_refl=self.file_crystal_parameters,
-            #     f_bragg_a=True if self.asymmetric_cut else False,
-            #     f_ext=0,
-            #     material_constants_library_flag=self.diffraction_calculation,
-            #     min_radius=self.torus_minor_radius,
-            #     maj_radius=self.torus_major_radius,
-            #     f_torus=self.toroidal_mirror_pole_location,
-            #     # is_cylinder=self.is_cylinder,
-            #     # cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
-            #     # convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-            # )
+            grating = S4ToroidGrating(
+                name="Toroid Grating",
+                boundary_shape=self.get_boundary_shape(),
+                ruling=self.ruling,
+                ruling_coeff_linear=self.ruling_coeff_linear,
+                ruling_coeff_quadratic=self.ruling_coeff_quadratic,
+                ruling_coeff_cubic=self.ruling_coeff_cubic,
+                ruling_coeff_quartic=self.ruling_coeff_quartic,
+                coating=None,
+                coating_thickness=None,
+                f_central=False,
+                f_phot_cent=0,
+                phot_cent=8000.0,
+                material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
+                file_refl="",
+                order=self.order,
+                f_ruling=0 if (self.f_ruling == 0) else 5,
+                #
+                min_radius=self.torus_minor_radius,
+                maj_radius=self.torus_major_radius,
+                f_torus=self.toroidal_mirror_pole_location,
+            )
         elif self.surface_shape_type == 6:
-            raise NotImplementedError
+            grating = S4ConicGrating(
+                name="Conic Grating",
+                boundary_shape=self.get_boundary_shape(),
+                ruling=self.ruling,
+                ruling_coeff_linear=self.ruling_coeff_linear,
+                ruling_coeff_quadratic=self.ruling_coeff_quadratic,
+                ruling_coeff_cubic=self.ruling_coeff_cubic,
+                ruling_coeff_quartic=self.ruling_coeff_quartic,
+                coating=None,
+                coating_thickness=None,
+                f_central=False,
+                f_phot_cent=0,
+                phot_cent=8000.0,
+                material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
+                file_refl="",
+                order=self.order,
+                f_ruling=0 if (self.f_ruling == 0) else 5,
+                conic_coefficients=[
+                    self.conic_coefficient_0, self.conic_coefficient_1, self.conic_coefficient_2,
+                    self.conic_coefficient_3, self.conic_coefficient_4, self.conic_coefficient_5,
+                    self.conic_coefficient_6, self.conic_coefficient_7, self.conic_coefficient_8,
+                    self.conic_coefficient_9],
+            )
+        else:
+            raise NotImplementedError("surface_shape_type=%d not implemented " % self.urface_shape_type)
         #     crystal = S4ConicCrystal(
         #         name="Conic Crystal",
         #         boundary_shape=self.get_boundary_shape(),
@@ -494,31 +524,29 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
         # # if error is selected...
 
         if self.modified_surface:
-            raise NotImplementedError
-            # return S4AdditionalNumericalMeshCrystal(name="ideal + error Mirror",
-            #             ideal_crystal=crystal,
-            #             numerical_mesh_crystal=S4NumericalMeshCrystal(
-            #                 surface_data_file=self.ms_defect_file_name,
-            #                 boundary_shape=None,
-            #                 name="Sphere Crystal",
-            #                 # boundary_shape=self.get_boundary_shape(),
-            #                 material=self.CRYSTALS[self.user_defined_crystal],
-            #                 miller_index_h=self.user_defined_h,
-            #                 miller_index_k=self.user_defined_k,
-            #                 miller_index_l=self.user_defined_l,
-            #                 asymmetry_angle=0.0 if not self.asymmetric_cut else numpy.radians(self.planes_angle),
-            #                 is_thick=self.is_thick,
-            #                 thickness=self.thickness,
-            #                 f_central=self.crystal_auto_setting,
-            #                 f_phot_cent=self.units_in_use,
-            #                 phot_cent=(self.photon_energy if (
-            #                 self.units_in_use == 0) else self.photon_wavelength),
-            #                 file_refl=self.file_crystal_parameters,
-            #                 f_bragg_a=True if self.asymmetric_cut else False,
-            #                 f_ext=0,
-            #                 material_constants_library_flag=self.diffraction_calculation,
-            #                 )
-            #             )
+            return S4AdditionalNumericalMeshGrating(name="ideal + error Grating",
+                        ideal_grating=grating,
+                        numerical_mesh_grating=S4NumericalMeshGrating(
+                            surface_data_file=self.ms_defect_file_name,
+                            boundary_shape=None,
+                            name="Sphere Grating",
+                            # boundary_shape=self.get_boundary_shape(),
+                            ruling=self.ruling,
+                            ruling_coeff_linear=self.ruling_coeff_linear,
+                            ruling_coeff_quadratic=self.ruling_coeff_quadratic,
+                            ruling_coeff_cubic=self.ruling_coeff_cubic,
+                            ruling_coeff_quartic=self.ruling_coeff_quartic,
+                            coating=None,
+                            coating_thickness=None,
+                            f_central=False,
+                            f_phot_cent=0,
+                            phot_cent=8000.0,
+                            material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
+                            file_refl="",
+                            order=self.order,
+                            f_ruling=0 if (self.f_ruling == 0) else 5,
+                            )
+                        )
         else:
             return grating
 
@@ -534,8 +562,9 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
             # elif self.surface_shape_type == 2: return S4EllipsoidCrystalElement()
             # elif self.surface_shape_type == 3: return S4HyperboloidCrystalElement()
             # elif self.surface_shape_type == 4: return S4ParaboloidCrystalElement()
-            # elif self.surface_shape_type == 5: return S4ToroidCrystalElement()
-            # elif self.surface_shape_type == 6: return S4ConicCrystalElement()
+            elif self.surface_shape_type == 5: return S4ToroidGratingElement()
+            elif self.surface_shape_type == 6: return S4ConicGratingElement()
+            else: raise NotImplementedError("surface_shape_type not yet implemented!")
 
 
 if __name__ == "__main__":
