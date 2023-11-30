@@ -56,7 +56,7 @@ from setuptools import find_packages, setup
 import subprocess
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.15'
+VERSION = '0.0.16'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
@@ -101,10 +101,8 @@ PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
 PACKAGE_DATA = {
     "orangecontrib.shadow4.widgets.sources":["icons/*.png", "icons/*.jpg"],
     "orangecontrib.shadow4.widgets.optics": ["icons/*.png", "icons/*.jpg"],
-    "orangecontrib.shadow4.widgets.preprocessors": ["icons/*.png", "icons/*.jpg"],
     "orangecontrib.shadow4.widgets.tools":["icons/*.png", "icons/*.jpg"],
     "orangecontrib.shadow4.widgets.compatibility":["icons/*.png", "icons/*.jpg"],
-    "orangecontrib.shadow4.widgets.gui":["misc/*.*"],
     }
 
 NAMESPACE_PACAKGES = ["orangecontrib","orangecontrib.shadow4", "orangecontrib.shadow4.widgets"]
@@ -115,7 +113,6 @@ ENTRY_POINTS = {
     'oasys.widgets' : (
             "SHADOW4 Sources = orangecontrib.shadow4.widgets.sources",
             "SHADOW4 Optics = orangecontrib.shadow4.widgets.optics",
-            "SHADOW4 Preprocessors = orangecontrib.shadow4.widgets.preprocessors",
             "SHADOW4 Tools = orangecontrib.shadow4.widgets.tools",
             "SHADOW3 \u21d4 SHADOW4 = orangecontrib.shadow4.widgets.compatibility",
     ),
