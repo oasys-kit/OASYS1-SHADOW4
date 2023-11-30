@@ -408,11 +408,6 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 ruling_coeff_quartic=self.ruling_coeff_quartic,
                 coating=None,
                 coating_thickness=None,
-                f_central=False,
-                f_phot_cent=0,
-                phot_cent=8000.0,
-                material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
-                file_refl="",
                 order=self.order,
                 f_ruling=0 if (self.f_ruling==0) else 5,
             )
@@ -431,11 +426,6 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 ruling_coeff_quartic=self.ruling_coeff_quartic,
                 coating=None,
                 coating_thickness=None,
-                f_central=False,
-                f_phot_cent=0,
-                phot_cent=8000.0,
-                material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
-                file_refl="",
                 order=self.order,
                 f_ruling=0 if (self.f_ruling == 0) else 5,
                 #
@@ -459,11 +449,6 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 ruling_coeff_quartic=self.ruling_coeff_quartic,
                 coating=None,
                 coating_thickness=None,
-                f_central=False,
-                f_phot_cent=0,
-                phot_cent=8000.0,
-                material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
-                file_refl="",
                 order=self.order,
                 f_ruling=0 if (self.f_ruling == 0) else 5,
                 #
@@ -482,11 +467,6 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 ruling_coeff_quartic=self.ruling_coeff_quartic,
                 coating=None,
                 coating_thickness=None,
-                f_central=False,
-                f_phot_cent=0,
-                phot_cent=8000.0,
-                material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
-                file_refl="",
                 order=self.order,
                 f_ruling=0 if (self.f_ruling == 0) else 5,
                 conic_coefficients=[
@@ -538,11 +518,6 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                             ruling_coeff_quartic=self.ruling_coeff_quartic,
                             coating=None,
                             coating_thickness=None,
-                            f_central=False,
-                            f_phot_cent=0,
-                            phot_cent=8000.0,
-                            material_constants_library_flag=0,  # 0=xraylib, 1=dabax, 2=shadow preprocessor
-                            file_refl="",
                             order=self.order,
                             f_ruling=0 if (self.f_ruling == 0) else 5,
                             )
