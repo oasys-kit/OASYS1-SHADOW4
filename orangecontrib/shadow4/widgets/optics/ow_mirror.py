@@ -1,6 +1,8 @@
 import numpy
 import sys
 
+from PyQt5.QtWidgets import QMessageBox
+
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
@@ -23,7 +25,7 @@ from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirr
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape, SUBTAB_INNER_BOX_WIDTH
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 
-from orangecontrib.shadow4.util.shadow4_objects import VlsPgmPreProcessorData
+from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData, VlsPgmPreProcessorData
 import copy
 
 class OWMirror(OWOpticalElementWithSurfaceShape):
@@ -38,6 +40,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
 
 
     inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "setPreReflPreProcessorData"))
     inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
 
     #########################################################
@@ -158,6 +161,16 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
     #########################################################
     # preprocessor
     #########################################################
+
+    def setPreReflPreProcessorData(self, data):
+        if data is not None:
+            if data.prerefl_data_file != PreReflPreProcessorData.NONE:
+                self.file_refl = data.prerefl_data_file
+                self.reflectivity_flag = 1
+                self.reflectivity_source = 0
+                self.reflectivity_tab_visibility()
+            else:
+                QMessageBox.warning(self, "Warning", "Incompatible Preprocessor Data", QMessageBox.Ok)
 
     def setVlsPgmPreProcessorData(self, data):
         if data is not None:

@@ -2,6 +2,8 @@ import numpy
 import sys
 import xraylib
 
+from PyQt5.QtWidgets import QMessageBox
+
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
@@ -22,6 +24,9 @@ from shadow4.beamline.optical_elements.crystals.s4_additional_numerical_mesh_cry
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 
+from orangecontrib.shadow4.util.shadow4_objects import BraggPreProcessorData
+import copy
+
 class OWCrystal(OWOpticalElementWithSurfaceShape):
     name = "Generic Crystal"
     description = "Shadow Crystal"
@@ -31,6 +36,9 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
 
     def get_oe_type(self):
         return "crystal", "Crystal"
+
+    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("Bragg PreProcessor Data", BraggPreProcessorData, "setBraggProcessorData"))
 
     #########################################################
     # crystal
@@ -390,6 +398,18 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     #     self.johansson_box_1.setVisible(self.johansson_geometry == 1)
     #     self.johansson_box_1_empty.setVisible(self.johansson_geometry == 0)
 
+    #########################################################
+    # Preprocessors
+    #########################################################
+
+    def setBraggProcessorData(self, data):
+        if data is not None:
+            if data.bragg_data_file != BraggPreProcessorData.NONE:
+                self.file_crystal_parameters = data.bragg_data_file
+                self.diffraction_calculation = 3
+                self.crystal_diffraction_tab_visibility()
+            else:
+                QMessageBox.warning(self, "Warning", "Incompatible Preprocessor Data", QMessageBox.Ok)
 
     #########################################################
     # S4 objects
