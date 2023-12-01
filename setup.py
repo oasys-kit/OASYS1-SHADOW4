@@ -91,7 +91,7 @@ SETUP_REQUIRES = (
 
 INSTALL_REQUIRES = (
                     'oasys1>=1.2.130',
-                    'shadow4>=0.1.16',
+                    'shadow4>=0.1.17',
                     'xoppylib', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
                     )
 
