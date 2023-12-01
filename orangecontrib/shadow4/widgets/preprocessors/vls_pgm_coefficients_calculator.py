@@ -78,7 +78,11 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
     raytracing_alpha = 0.0
     raytracing_beta = 0.0
 
+
     def __init__(self):
+        self.workspace_units_to_m = 1.0
+        self.workspace_units_label = "m"
+
         super().__init__()
 
         self.runaction = widget.OWAction("Compute", self)
@@ -423,8 +427,8 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = OWVlsPgmCoefficientsCalculator()
-    w.workspace_units_to_m = 1.0
-    w.workspace_units_label = "m"
+    # w.workspace_units_to_m = 1.0
+    # w.workspace_units_label = "m"
     w.show()
     app.exec()
     w.saveSettings()
