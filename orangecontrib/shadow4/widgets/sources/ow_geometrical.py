@@ -246,23 +246,24 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         self.angular_distribution_box_2 = oasysgui.widgetBox(angular_distribution_box, "", addSpace=False,
                                                              orientation="vertical")
 
-        gui.comboBox(self.angular_distribution_box_2, self, "angular_distribution_limits",
-                     label="Angular Distribution Limits", labelWidth=355,
-                     items=["No Limits", "Horizontal", "Vertical", "Both"], orientation="horizontal",
-                     callback=self.set_AngularDistributionLimits)
+        if False: # No Gaussian limits for the moment (code kept just in case we want that in the future)
+            gui.comboBox(self.angular_distribution_box_2, self, "angular_distribution_limits",
+                         label="Angular Distribution Limits", labelWidth=355,
+                         items=["No Limits", "Horizontal", "Vertical", "Both"], orientation="horizontal",
+                         callback=self.set_AngularDistributionLimits)
 
-        self.le_horizontal_lim_x_plus = oasysgui.lineEdit(self.angular_distribution_box_2, self,
-                                                          "horizontal_lim_x_plus", "Horizontal Limit X(+) [rad]",
-                                                          labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_horizontal_lim_x_minus = oasysgui.lineEdit(self.angular_distribution_box_2, self,
-                                                           "horizontal_lim_x_minus", "Horizontal Limit X(-) [rad]",
-                                                           labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_vertical_lim_z_plus = oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_lim_z_plus",
-                                                        "Vertical Limit Z(+) [rad]", labelWidth=260, valueType=float,
-                                                        orientation="horizontal")
-        self.le_vertical_lim_z_minus = oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_lim_z_minus",
-                                                         "Vertical Limit Z(-) [rad]", labelWidth=260, valueType=float,
-                                                         orientation="horizontal")
+            self.le_horizontal_lim_x_plus = oasysgui.lineEdit(self.angular_distribution_box_2, self,
+                                                              "horizontal_lim_x_plus", "Horizontal Limit X(+) [rad]",
+                                                              labelWidth=260, valueType=float, orientation="horizontal")
+            self.le_horizontal_lim_x_minus = oasysgui.lineEdit(self.angular_distribution_box_2, self,
+                                                               "horizontal_lim_x_minus", "Horizontal Limit X(-) [rad]",
+                                                               labelWidth=260, valueType=float, orientation="horizontal")
+            self.le_vertical_lim_z_plus = oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_lim_z_plus",
+                                                            "Vertical Limit Z(+) [rad]", labelWidth=260, valueType=float,
+                                                            orientation="horizontal")
+            self.le_vertical_lim_z_minus = oasysgui.lineEdit(self.angular_distribution_box_2, self, "vertical_lim_z_minus",
+                                                             "Vertical Limit Z(-) [rad]", labelWidth=260, valueType=float,
+                                                             orientation="horizontal")
 
         oasysgui.lineEdit(self.angular_distribution_box_2, self, "horizontal_sigma_x", "Horizontal Sigma (X) [rad]",
                           labelWidth=260, valueType=float, orientation="horizontal")
@@ -497,10 +498,11 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         self.spatial_type_box_3.setVisible(self.spatial_type == 3)
 
     def set_AngularDistributionLimits(self):
-        self.le_horizontal_lim_x_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
-        self.le_horizontal_lim_x_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
-        self.le_vertical_lim_z_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
-        self.le_vertical_lim_z_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
+        if False:
+            self.le_horizontal_lim_x_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
+            self.le_horizontal_lim_x_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 2)
+            self.le_vertical_lim_z_plus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
+            self.le_vertical_lim_z_minus.setEnabled(self.angular_distribution_limits != 0 and self.angular_distribution_limits != 1)
 
     def set_AngularDistribution(self):
         self.angular_distribution_box_1.setVisible(self.angular_distribution == 0 or self.angular_distribution == 1)
@@ -629,15 +631,13 @@ class OWGeometrical(GenericElement, WidgetDecorator):
                                                 vdiv2=self.vertical_div_z_plus,
                                                )
         elif self.angular_distribution == 2:  # Gaussian
-            if self.angular_distribution_limits != 0:
-                raise Exception("Not yet implemented")
             gs.set_angular_distribution_gaussian(sigdix=self.horizontal_sigma_x,
                                                  sigdiz=self.vertical_sigma_z,
                                                  )
         elif self.angular_distribution == 3:  # cone
             gs.set_angular_distribution_cone(cone_max=self.cone_external_half_aperture,
-                                                cone_min=self.cone_internal_half_aperture,
-                                                )
+                                             cone_min=self.cone_internal_half_aperture,
+                                             )
 
         elif self.angular_distribution == 4:  # Zero (collimated) - New in shadow4
             gs.set_angular_distribution_collimated()
