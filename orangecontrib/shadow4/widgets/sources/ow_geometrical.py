@@ -704,10 +704,21 @@ class OWGeometrical(GenericElement, WidgetDecorator):
 
         light_source = self.get_lightsource()
 
+        # script
+        script = light_source.to_python_code()
+        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+        script += "\nrays = beam.get_rays()"
+        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+        self.shadow4_script.set_code(script)
+
+
+        print(light_source.info())
+
+        print(light_source.get_info())
+
         self.progressBarSet(5)
 
         # run shadow4
-
         t00 = time.time()
         # beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
         output_beam = light_source.get_beam()
@@ -719,19 +730,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         #
         self._plot_results(output_beam, None, progressBarValue=80)
 
-        #
-        # script
-        #
-        script = light_source.to_python_code()
-        # script += "\n\n\n# run shadow4"
-        # script += "\nbeam = light_source.get_beam(N=%d, ISTAR1=%d)" % \
-        #           (self.number_of_rays, self.seed)
 
-        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        script += "\nrays = beam.get_rays()"
-        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-
-        self.shadow4_script.set_code(script)
 
         self.progressBarFinished()
 
