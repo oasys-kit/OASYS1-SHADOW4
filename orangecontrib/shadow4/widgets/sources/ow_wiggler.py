@@ -57,9 +57,12 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     # number of points in advanced parameters
     ng_e = Setting(101)
     ng_j = Setting(501)
+    psi_interval_number_of_points = Setting(101)
 
     epsi_dx = Setting(0.0)
     epsi_dz = Setting(0.0)
+
+    flag_interpolation = Setting(1)
 
     plot_wiggler_graph = 1
 
@@ -134,9 +137,14 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         left_box_adv = oasysgui.widgetBox(tab_advanced, "Advanced settings", addSpace=False, orientation="vertical", height=200)
         oasysgui.lineEdit(left_box_adv, self, "ng_e", "Number of Points in energy scan", labelWidth=260, tooltip="ng_e", valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_adv, self, "ng_j", "Number of Points in e trajectory (per period)", labelWidth=280, tooltip="ng_j", valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "psi_interval_number_of_points", "Number of Points in sampling vertical angle", labelWidth=280, tooltip="psi_interval_number_of_points", valueType=int, orientation="horizontal")
+
 
         oasysgui.lineEdit(left_box_adv, self, "epsi_dx", "Distance from waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
         oasysgui.lineEdit(left_box_adv, self, "epsi_dz", "Distance from waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
+
+        orangegui.comboBox(left_box_adv, self, "flag_interpolation", tooltip="flag_interpolation", label="Sample psi via interpolation",
+                           items=["No (accurate)", "Yes (good for mono or quasi monochromatic)"], labelWidth=260, orientation="horizontal")
 
 
         # wiggler plots
@@ -213,7 +221,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     def get_lightsource(self):
         # syned
         electron_beam = self.get_electron_beam()
-        print("\n\n>>>>>> ElectronBeam info: ", electron_beam.info(), type(electron_beam))
 
         if self.type_of_properties == 3:
             flag_emittance = 0
@@ -231,6 +238,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                     emax                     = self.e_max,     # Photon energy scan to energy (in eV)
                     ng_e                     = self.ng_e,      # Photon energy scan number of points
                     ng_j                     = self.ng_j ,     # Number of points in electron trajectory (per period) for internal calculation only
+                    psi_interval_number_of_points = self.psi_interval_number_of_points,
+                    flag_interpolation       = self.flag_interpolation,  # Use intyerpolation to sample psi (0=No, 1=Yes)
                     flag_emittance           = flag_emittance, # Use emittance (0=No, 1=Yes)
                     shift_x_flag             = 0,
                     shift_x_value            = 0.0,
@@ -253,6 +262,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                 emax                      = self.e_max,
                 ng_e                      = ng_e,
                 ng_j                      = self.ng_j,
+                psi_interval_number_of_points=self.psi_interval_number_of_points,
+                flag_interpolation=self.flag_interpolation,  # Use intyerpolation to sample psi (0=No, 1=Yes)
                 flag_emittance            = flag_emittance,  # Use emittance (0=No, 1=Yes)
                 shift_x_flag              = 4,
                 shift_x_value             = 0.0,
@@ -276,7 +287,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                         shift_betax_flag=self.shift_betax_flag,
                         shift_betax_value=self.shift_betax_value)
 
-        print(">>>>>> \n\n S4Wiggler info: ", sourcewiggler.info())
+        print(">>>>>> \n\n S4Wiggler get_info: \n", sourcewiggler.get_info())
 
         # S4WigglerLightSource
         lightsource = S4WigglerLightSource(name='wiggler',
@@ -285,7 +296,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                                            nrays=self.number_of_rays,
                                            seed=self.seed)
 
-        print("\n\n>>>>>> S4WigglerLightSource info: ", lightsource.info())
+        print("\n\n>>>>>> S4WigglerLightSource info: \n", lightsource.info())
 
         return lightsource
 
@@ -299,12 +310,28 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
         light_source = self.get_lightsource()
 
-        self.progressBarSet(5)
+        #
+        # script
+        #
+        script = light_source.to_python_code()
+        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+        script += "\nrays = beam.get_rays()"
+        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+
+        self.shadow4_script.set_code(script)
+
+
+
         #
         # run shadow4
         #
+        print(">>>> calculating spectra...")
+        self.progressBarSet(5)
+
+
+        self.progressBarSet(10)
         t00 = time.time()
-        print(">>>> starting calculation...")
+        print(">>>> starting shadow calculation...")
         output_beam = light_source.get_beam()
         photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
@@ -315,16 +342,6 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         #
         self._plot_results(output_beam, None, progressBarValue=80)
         self.refresh_specific_wiggler_plots(light_source, photon_energy, flux, spectral_power)
-
-        #
-        # script
-        #
-        script = light_source.to_python_code()
-        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        script += "\nrays = beam.get_rays()"
-        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-
-        self.shadow4_script.set_code(script)
 
         self.progressBarFinished()
 
