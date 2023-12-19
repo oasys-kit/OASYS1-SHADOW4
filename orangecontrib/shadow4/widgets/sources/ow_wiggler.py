@@ -320,12 +320,9 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
         self.shadow4_script.set_code(script)
 
-
-
         #
         # run shadow4
         #
-        print(">>>> calculating spectra...")
         self.progressBarSet(5)
 
 

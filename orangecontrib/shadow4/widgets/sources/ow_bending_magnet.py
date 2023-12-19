@@ -4,6 +4,7 @@ import numpy
 
 from orangewidget import gui
 from orangewidget.settings import Setting
+from orangewidget import gui as orangegui
 
 from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
@@ -11,6 +12,7 @@ from oasys.util.oasys_util import EmittingStream
 
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from orangecontrib.shadow4.widgets.gui.plots import plot_data1D
 
 
 from syned.beamline.beamline import Beamline
@@ -46,7 +48,8 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
     emin                   = Setting(1000.0)  # Photon energy scan from energy (in eV)
     emax                   = Setting(1000.1)  # Photon energy scan to energy (in eV)
     ng_e                   = Setting(100)     # Photon energy scan number of points
-    ng_j                   = Setting(100) # Number of points in electron trajectory (per period) for internal calculation only
+
+    plot_bm_graph = 1
 
 
     def __init__(self):
@@ -65,20 +68,89 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(box_2, self, "number_of_rays", "Number of Rays", tooltip="Number of Rays", labelWidth=250, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(box_2, self, "seed", "Seed", tooltip="Seed (0=clock)", labelWidth=250, valueType=int, orientation="horizontal")
 
-        box_3 = oasysgui.widgetBox(tab_bas, "Optional parameters for internal calculation", addSpace=True, orientation="vertical")
+
+        # bm adv settings
+        tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced Setting")
+
+        box_3 = oasysgui.widgetBox(tab_advanced, "Optional parameters for internal calculation", addSpace=True, orientation="vertical")
         oasysgui.lineEdit(box_3, self, "ng_e", "Spectrum number of points", tooltip="ng_e", labelWidth=250, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(box_3, self, "ng_j", "Electron trajectory number of points", tooltip="ng_j", labelWidth=250, valueType=int, orientation="horizontal")
+
+        self.add_specific_bm_plots()
 
         gui.rubber(self.controlArea)
         gui.rubber(self.mainArea)
 
 
+    def add_specific_bm_plots(self):
+        bm_plot_tab = oasysgui.widgetBox(self.main_tabs, addToLayout=0, margin=4)
+
+        self.main_tabs.insertTab(1, bm_plot_tab, "BM Plots")
+
+        view_box = oasysgui.widgetBox(bm_plot_tab, "Plotting Style", addSpace=False, orientation="horizontal")
+        view_box_1 = oasysgui.widgetBox(view_box, "", addSpace=False, orientation="vertical", width=350)
+
+        self.bm_view_type_combo = orangegui.comboBox(view_box_1, self,
+                                            "plot_bm_graph",
+                                                          label="Plot Graphs?",
+                                                          labelWidth=220,
+                                                          items=["No", "Yes"],
+                                                          callback=self.refresh_specific_bm_plots,
+                                                          sendSelectedValue=False,
+                                                          orientation="horizontal")
+
+        self.bm_tab = []
+        self.bm_tabs = oasysgui.tabWidget(bm_plot_tab)
+
+        current_tab = self.bm_tabs.currentIndex()
+
+        size = len(self.bm_tab)
+        indexes = range(0, size)
+        for index in indexes:
+            self.bm_tabs.removeTab(size-1-index)
+
+        self.bm_tab = [
+            orangegui.createTabPage(self.bm_tabs, "Wiggler Spectrum"),
+            orangegui.createTabPage(self.bm_tabs, "Wiggler Spectral power")
+        ]
+
+        for tab in self.bm_tab:
+            tab.setFixedHeight(self.IMAGE_HEIGHT)
+            tab.setFixedWidth(self.IMAGE_WIDTH)
+
+        self.bm_plot_canvas = [None, None]
+
+        self.bm_tabs.setCurrentIndex(current_tab)
+
+    def refresh_specific_bm_plots(self, lightsource=None, e=None, f=None, w=None):
+
+        if self.plot_bm_graph == 0:
+            for bm_plot_slot_index in range(6):
+                current_item = self.bm_tab[bm_plot_slot_index].layout().itemAt(0)
+                self.bm_tab[bm_plot_slot_index].layout().removeItem(current_item)
+                plot_widget_id = oasysgui.QLabel() # TODO: is there a better way to clean this??????????????????????
+                self.bm_tab[bm_plot_slot_index].layout().addWidget(plot_widget_id)
+        else:
+
+            if lightsource is None: return
+
+            self.plot_widget_item(e,f,0,
+                                  title="BM spectrum (current = %5.1f)"%self.ring_current,
+                                  xtitle="Photon energy [eV]",ytitle=r"Photons/s/0.1%bw")
+
+            self.plot_widget_item(e,w,1,
+                                  title="BM spectrum (current = %5.1f)"%self.ring_current,
+                                  xtitle="Photon energy [eV]",ytitle="Spectral power [W/eV]")
+
+    def plot_widget_item(self,x,y,bm_plot_slot_index,title="",xtitle="",ytitle=""):
+
+        self.bm_tab[bm_plot_slot_index].layout().removeItem(self.bm_tab[bm_plot_slot_index].layout().itemAt(0))
+        plot_widget_id = plot_data1D(x.copy(),y.copy(),title=title,xtitle=xtitle,ytitle=ytitle,symbol='.')
+        self.bm_tab[bm_plot_slot_index].layout().addWidget(plot_widget_id)
+
+
     def checkFields(self):
         self.number_of_rays = congruence.checkPositiveNumber(self.number_of_rays, "Number of rays")
         self.seed = congruence.checkPositiveNumber(self.seed, "Seed")
-        # self.energy = congruence.checkPositiveNumber(self.energy, "Energy")
-        # self.delta_e = congruence.checkPositiveNumber(self.delta_e, "Delta Energy")
-        # self.undulator_length = congruence.checkPositiveNumber(self.undulator_length, "Undulator Length")
 
     def get_lightsource(self):
         # syned electron beam
@@ -102,23 +174,8 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
                              emin=self.emin,  # Photon energy scan from energy (in eV)
                              emax=self.emax,  # Photon energy scan to energy (in eV)
                              ng_e=self.ng_e,  # Photon energy scan number of points
-                             ng_j=self.ng_j,
-                             # Number of points in electron trajectory (per period) for internal calculation only
                              flag_emittance=flag_emittance,  # when sampling rays: Use emittance (0=No, 1=Yes)
                              )
-
-
-        # bm = S4BendingMagnet.initialize_from_magnetic_field_divergence_and_electron_energy(
-        #     magnetic_field=self.magnetic_field,
-        #     divergence=self.divergence,
-        #     electron_energy_in_GeV=electron_beam.energy(),
-        #     emin=self.emin,# Photon energy scan from energy (in eV)
-        #     emax=self.emax,# Photon energy scan to energy (in eV)
-        #     ng_e=self.ng_e,# Photon energy scan number of points
-        #     ng_j=self.ng_j,# Number of points in electron trajectory (per period) for internal calculation only
-        #     flag_emittance=flag_emittance,# when sampling rays: Use emittance (0=No, 1=Yes)
-        #     )
-
 
         print("\n\n>>>>>> BM info: ", bm.info())
 
@@ -144,24 +201,6 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
 
         light_source = self.get_lightsource()
 
-        self.progressBarSet(5)
-
-
-        # run shadow4
-
-        t00 = time.time()
-        print(">>>> starting calculation...")
-        output_beam = light_source.get_beam()
-        # todo:
-        # photon_energy, flux, spectral_power = light_source.calculate_spectrum()
-        t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
-
-
-        #
-        # beam plots
-        #
-        self._plot_results(output_beam, None, progressBarValue=80)
 
         #
         # script
@@ -171,6 +210,28 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         script += "\nrays = beam.get_rays()"
         script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
         self.shadow4_script.set_code(script)
+
+
+        self.progressBarSet(5)
+
+
+        # run shadow4
+
+        t00 = time.time()
+        print(">>>> starting calculation...")
+        output_beam = light_source.get_beam()
+        photon_energy, flux, spectral_power = light_source.calculate_spectrum()
+        t11 = time.time() - t00
+        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+
+
+        #
+        # beam plots
+        #
+        self._plot_results(output_beam, None, progressBarValue=80)
+
+        self.refresh_specific_bm_plots(light_source, photon_energy, flux, spectral_power)
+
 
         self.progressBarFinished()
 
@@ -188,13 +249,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
                 if not data.get_light_source() is None:
                     if isinstance(data.get_light_source().get_magnetic_structure(), BendingMagnet):
                         light_source = data.get_light_source()
-
-                        # self.energy =  round(light_source.get_magnetic_structure().resonance_energy(light_source.get_electron_beam().gamma()), 3)
-                        # self.delta_e = 0.0
-                        # self.undulator_length = light_source.get_magnetic_structure().length()
-
                         self.populate_fields_from_syned_electron_beam(light_source.get_electron_beam())
-
                     else:
                         raise ValueError("Syned light source not congruent")
                 else:
