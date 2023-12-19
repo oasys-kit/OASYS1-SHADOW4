@@ -51,7 +51,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
     e_min = Setting(0.4)
     e_max = Setting(0.4)
-    number_of_rays = Setting(500)
+    number_of_rays = Setting(15000)
     seed = Setting(5676561)
 
     # number of points in advanced parameters
@@ -62,7 +62,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     epsi_dx = Setting(0.0)
     epsi_dz = Setting(0.0)
 
-    flag_interpolation = Setting(1)
+    flag_interpolation = Setting(2)
 
     plot_wiggler_graph = 1
 
@@ -144,7 +144,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_adv, self, "epsi_dz", "Distance from waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
 
         orangegui.comboBox(left_box_adv, self, "flag_interpolation", tooltip="flag_interpolation", label="Sample psi via interpolation",
-                           items=["No (accurate)", "Yes (good for mono or quasi monochromatic)"], labelWidth=260, orientation="horizontal")
+                           items=["No (accurate, exact Bessel)", "Yes (good for mono or quasi monochromatic)", "No (accurate, approx Bessel)"], labelWidth=260, orientation="horizontal")
 
 
         # wiggler plots
