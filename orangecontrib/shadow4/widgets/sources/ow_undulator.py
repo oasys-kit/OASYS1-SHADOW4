@@ -84,9 +84,14 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_10, self, "emax", "Max photon energy [eV]", labelWidth=260, tooltip="emax", valueType=float, orientation="horizontal")
         oasysgui.lineEdit(left_box_10, self, "maxangle", "Max elevation angle for radiation theta [rad]", labelWidth=260, tooltip="maxangle", valueType=float, orientation="horizontal")
 
+        # sampling
+        left_box_12 = oasysgui.widgetBox(tab_undulator, "Sampling rays", addSpace=False, orientation="vertical")
+        oasysgui.lineEdit(left_box_12, self, "number_of_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(left_box_12, self, "seed", "Seed", tooltip="Seed (0=clock)", labelWidth=250, valueType=int, orientation="horizontal")
 
-        # internal parameters
-        left_box_11 = oasysgui.widgetBox(tab_undulator, "Internal calculation parameters", addSpace=False, orientation="vertical")
+        # advanced settings
+        tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced Setting")
+        left_box_11 = oasysgui.widgetBox(tab_advanced, "Advanced Setting", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(left_box_11, self, "ng_e", "Points in Photon energy (if polychromatic)", tooltip="ng_e", labelWidth=250, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "ng_t", "Points in theta [elevation]", tooltip="ng_t", labelWidth=250, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "ng_p", "Points in phi [azimuthal]", tooltip="ng_p", labelWidth=250, valueType=int, orientation="horizontal")
@@ -96,10 +101,6 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         orangegui.comboBox(left_box_11, self, "flag_size", label="Size sampling in real space",
                            items=["point", "Gaussian", "FT(Divergences)"], labelWidth=260, orientation="horizontal")
 
-        # sampling
-        left_box_12 = oasysgui.widgetBox(tab_undulator, "Sampling rays", addSpace=False, orientation="vertical")
-        oasysgui.lineEdit(left_box_12, self, "number_of_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(left_box_12, self, "seed", "Seed", tooltip="Seed (0=clock)", labelWidth=250, valueType=int, orientation="horizontal")
 
 
         # undulator plots
@@ -146,7 +147,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 orangegui.createTabPage(self.undulator_tabs, "Photon source size"),
             ]
 
-            self.undulator_plot_canvas = [None,None,None,None,]
+            self.undulator_plot_canvas = [None, None, None, None,]
         else:
             self.undulator_tab = [
                 orangegui.createTabPage(self.undulator_tabs, "Radiation (polar)"),
@@ -158,7 +159,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 orangegui.createTabPage(self.undulator_tabs, "Spectral Power"),
             ]
 
-            self.undulator_plot_canvas = [None,None,None,None,None,None,None,]
+            self.undulator_plot_canvas = [None, None, None, None, None, None, None,]
 
         for tab in self.undulator_tab:
             tab.setFixedHeight(self.IMAGE_HEIGHT)
@@ -194,8 +195,6 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         electron_beam = self.get_electron_beam()
         print("\n\n>>>>>> ElectronBeam info: ", electron_beam.info(), type(electron_beam))
 
-        ng_j = 501 # trajectory points
-
         if self.type_of_properties == 3:
             flag_emittance = 0
         else:
@@ -216,7 +215,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             ng_p=self.ng_p,  # Number of points in angle phi
             ng_j=self.ng_j,  # Number of points in electron trajectory (per period) for internal calculation only
             code_undul_phot=code_undul_phot,  # internal, pysru, srw
-            flag_emittance=self.flag_emittance,  # when sampling rays: Use emittance (0=No, 1=Yes)
+            flag_emittance=flag_emittance,  # when sampling rays: Use emittance (0=No, 1=Yes)
             flag_size=self.flag_size,  # when sampling rays: 0=point,1=Gaussian,2=FT(Divergences)
             )
 
@@ -245,6 +244,17 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
 
         light_source = self.get_lightsource()
 
+        #
+        # script
+        #
+        script = light_source.to_python_code()
+        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+        script += "\nrays = beam.get_rays()"
+        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+
+
+        self.shadow4_script.set_code(script)
+
         self.progressBarSet(5)
         #
         # run shadow4
@@ -265,17 +275,6 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         #todo:
         # self.refresh_specific_undulator_plots(light_source, photon_energy, flux, spectral_power)
 
-
-        #
-        # script
-        #
-        script = light_source.to_python_code()
-        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        script += "\nrays = beam.get_rays()"
-        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-
-
-        self.shadow4_script.set_code(script)
 
         self.progressBarFinished()
 
@@ -327,31 +326,29 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         self.undulator_tab[undulator_plot_slot_index].layout().addWidget(plot_widget_id)
 
     def receive_syned_data(self, data):
-        pass
-        # sys.stdout = EmittingStream(textWritten=self.writeStdOut)
-        # if data is not None:
-        #     if isinstance(data, Beamline):
-        #         if not data.get_light_source() is None:
-        #             if isinstance(data.get_light_source().get_magnetic_structure(), InsertionDevice):
-        #                 print(data.get_light_source().get_magnetic_structure(), InsertionDevice)
-        #                 light_source = data.get_light_source()
-        #
-        #                 self.magnetic_field_source = 0
-        #                 self.set_visibility()
-        #
-        #                 w = light_source.get_magnetic_structure()
-        #                 self.number_of_periods = int(w.number_of_periods())
-        #                 self.id_period = w.period_length()
-        #                 self.k_value = w.K_vertical()
-        #
-        #                 self.populate_fields_from_electron_beam(light_source.get_electron_beam())
-        #
-        #             else:
-        #                 raise ValueError("Syned light source not congruent")
-        #         else:
-        #             raise ValueError("Syned data not correct: light source not present")
-        #     else:
-        #         raise ValueError("Syned data not correct")
+        sys.stdout = EmittingStream(textWritten=self._write_stdout)
+        if data is not None:
+            if isinstance(data, Beamline):
+                if not data.get_light_source() is None:
+                    if isinstance(data.get_light_source().get_magnetic_structure(), InsertionDevice):
+                        print(data.get_light_source().get_magnetic_structure(), InsertionDevice)
+                        light_source = data.get_light_source()
+
+                        self.set_visibility()
+
+                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
+                        w = light_source.get_magnetic_structure()
+                        self.k_value = w.K_vertical()
+                        self.id_period = w.period_length()
+                        self.number_of_periods = w.number_of_periods()
+
+                    else:
+                        raise ValueError("Syned light source not congruent")
+                else:
+                    raise ValueError("Syned data not correct: light source not present")
+            else:
+                raise ValueError("Syned data not correct")
+
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
