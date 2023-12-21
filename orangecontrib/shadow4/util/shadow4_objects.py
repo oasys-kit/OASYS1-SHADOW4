@@ -38,12 +38,14 @@ class ShadowData:
         def get_additional_parameter(self, name):
             return self.__additional_parameters[name]
 
-    def __init__(self, beam=None, number_of_rays=0, beamline=None):
+    def __init__(self, beam=None, footprint=None, number_of_rays=0, beamline=None):
         if (beam is None):
             if number_of_rays > 0: self.__beam = S4Beam(number_of_rays)
             else:                  self.__beam = S4Beam()
+            self.__footprint = None
         else:
-            self.__beam = beam
+            self.__beam      = beam
+            self.__footprint = footprint
 
         self.__scanning_data = None
         self.__initial_flux  = None
@@ -56,6 +58,14 @@ class ShadowData:
     @beam.setter
     def beam(self, beam):
         self.__beam = beam
+
+    @property
+    def footprint(self):
+        return self.__footprint
+
+    @footprint.setter
+    def footprint(self, footprint):
+        self._footprint = footprint
 
     @property
     def beamline(self):
