@@ -1,6 +1,7 @@
-
+import numpy
 from oasys.widgets import gui as oasysgui
-
+from silx.gui.plot.StackView import StackViewMainWindow
+from silx.gui.plot import Plot2D
 
 def plot_data1D(x, y,
                 title="", xtitle="", ytitle="",
@@ -68,3 +69,75 @@ def plot_data1D(x, y,
 
     return plot_widget_id
 
+def plot_data2D(data2D, dataX, dataY, title="", xtitle="", ytitle=""):
+
+    origin = (dataX[0],dataY[0])
+    scale = (dataX[1]-dataX[0],dataY[1]-dataY[0])
+
+    data_to_plot = data2D.T
+
+    colormap = {"name":"temperature", "normalization":"linear", "autoscale":True, "vmin":0, "vmax":0, "colors":256}
+
+    plot_widget_id = Plot2D()
+    plot_widget_id.resetZoom()
+    plot_widget_id.setXAxisAutoScale(True)
+    plot_widget_id.setYAxisAutoScale(True)
+    plot_widget_id.setGraphGrid(False)
+    plot_widget_id.setKeepDataAspectRatio(True)
+    plot_widget_id.yAxisInvertedAction.setVisible(False)
+    plot_widget_id.setXAxisLogarithmic(False)
+    plot_widget_id.setYAxisLogarithmic(False)
+    plot_widget_id.getMaskAction().setVisible(False)
+    plot_widget_id.getRoiAction().setVisible(False)
+    plot_widget_id.getColormapAction().setVisible(False)
+    plot_widget_id.setKeepDataAspectRatio(False)
+    plot_widget_id.addImage(numpy.array(data_to_plot),
+                                                 legend="",
+                                                 scale=scale,
+                                                 origin=origin,
+                                                 colormap=colormap,
+                                                 replace=True)
+
+    plot_widget_id.setActiveImage("")
+    plot_widget_id.setGraphXLabel(xtitle)
+    plot_widget_id.setGraphYLabel(ytitle)
+    plot_widget_id.setGraphTitle(title)
+
+    return plot_widget_id
+
+def plot_data3D(data3D, dataE, dataX, dataY,
+                title="", xtitle="", ytitle="",
+                callback_for_title=(lambda idx: "")):
+
+    xmin = numpy.min(dataX)
+    xmax = numpy.max(dataX)
+    ymin = numpy.min(dataY)
+    ymax = numpy.max(dataY)
+
+
+    stepX = dataX[1]-dataX[0]
+    stepY = dataY[1]-dataY[0]
+    if len(dataE) > 1: stepE = dataE[1]-dataE[0]
+    else: stepE = 1.0
+
+    if stepE == 0.0: stepE = 1.0
+    if stepX == 0.0: stepX = 1.0
+    if stepY == 0.0: stepY = 1.0
+
+    dim0_calib = (dataE[0],stepE)
+    dim1_calib = (ymin, stepY)
+    dim2_calib = (xmin, stepX)
+
+
+    data_to_plot = numpy.swapaxes(data3D,1,2)
+
+    colormap = {"name":"temperature", "normalization":"linear", "autoscale":True, "vmin":0, "vmax":0, "colors":256}
+
+    plot_widget_id = StackViewMainWindow()
+    plot_widget_id.setGraphTitle(title)
+    plot_widget_id.setLabels(["Photon Energy [eV]",ytitle,xtitle])
+    plot_widget_id.setColormap(colormap=colormap)
+    plot_widget_id.setStack(numpy.array(data_to_plot), calibrations=[dim0_calib, dim1_calib, dim2_calib] )
+    plot_widget_id.setTitleCallback( callback_for_title )
+
+    return plot_widget_id
