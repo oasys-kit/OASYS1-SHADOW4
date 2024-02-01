@@ -197,6 +197,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             orangegui.createTabPage(self.undulator_tabs, "Radiation (polar)"),
             orangegui.createTabPage(self.undulator_tabs, "Polarization (polar)"),
             orangegui.createTabPage(self.undulator_tabs, "Radiation (interpolated)"),
+            orangegui.createTabPage(self.undulator_tabs, "Far field"),
             orangegui.createTabPage(self.undulator_tabs, "Photon source size"),
             orangegui.createTabPage(self.undulator_tabs, "Power Density (interpolated)"),
             orangegui.createTabPage(self.undulator_tabs, "Flux spectrum"),
@@ -205,7 +206,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             orangegui.createTabPage(self.undulator_tabs, "e velocity"),
         ]
 
-        self.undulator_plot_canvas = [None, None, None, None, None, None, None, None, None,]
+        self.undulator_plot_canvas = [None, None, None, None, None, None, None, None, None, None]
 
         for tab in self.undulator_tab:
             tab.setFixedHeight(self.IMAGE_HEIGHT)
@@ -430,9 +431,18 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 self.plot_undulator_item3D(2, radiation_interpolated, photon_energy, 1e6 * vx, 1e6 * vz,
                                  title="radiation", xtitle="vx [urad]", ytitle="vz [rad]")
 
+            # far field
+            try:
+                theta, radial_flux, mean_photon_energy, distance, magnification = self.lightsource.get_photon_size_farfield()
+                self.plot_undulator_item1D(3, theta * 1e6, radial_flux,
+                                           title="Far field distribution (for size calculation)", xtitle="theta [urad]",
+                                           ytitle="Intensity [arbitrary units]")
+            except:
+                pass
+
             # backpropagated far field
             x, y = self.lightsource.get_photon_size_distribution()
-            self.plot_undulator_item1D(3, x * 1e6, y,
+            self.plot_undulator_item1D(4, x * 1e6, y,
                                        title="Photon emission size distribution", xtitle="Distance [um]",
                                        ytitle="Intensity [arbitrary units]")
 
@@ -442,25 +452,25 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 title="power density W/mrad2/eV"
             else:
                 title="power density W/mrad2"
-            self.plot_undulator_item2D(4, intens_xy, 1e6 * vx, 1e6 * vz,
+            self.plot_undulator_item2D(5, intens_xy, 1e6 * vx, 1e6 * vz,
                              title=title, xtitle="vx [urad]", ytitle="vz [rad]")
 
             # spectra
             e, f, w = self.lightsource.calculate_spectrum()
-            self.plot_undulator_item1D(5, e, f,
+            self.plot_undulator_item1D(6, e, f,
                                   title="Undulator spectrum", xtitle="Photon energy [eV]", ytitle=r"Photons/s/0.1%bw")
 
-            self.plot_undulator_item1D(6, e, w,
+            self.plot_undulator_item1D(7, e, w,
                                   title="Undulator spectral power",
                                   xtitle="Photon energy [eV]", ytitle="Spectral power [W/eV]")
 
             # trajectory
             try:
                 yy, xx, beta_x = self.lightsource.get_result_trajectory()
-                self.plot_undulator_item1D(7, yy, xx,
+                self.plot_undulator_item1D(8, yy, xx,
                                       title="electron trajectory", xtitle="Y [m]", ytitle="X [m]", symbol='')
 
-                self.plot_undulator_item1D(8, yy, beta_x,
+                self.plot_undulator_item1D(9, yy, beta_x,
                                       title="electron velocity", xtitle="Y [m]", ytitle="X [m]", symbol='')
             except:
                 pass
