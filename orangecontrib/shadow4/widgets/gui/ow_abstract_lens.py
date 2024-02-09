@@ -1,9 +1,16 @@
-import numpy
+import numpy, copy
+
+from PyQt5.QtWidgets import QMessageBox
+
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
+
 from syned.beamline.element_coordinates import ElementCoordinates
+
 from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
+from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData
+
 
 class OWAbstractLens(OWOpticalElement):
     surface_shape           = Setting(2)
@@ -18,6 +25,10 @@ class OWAbstractLens(OWOpticalElement):
     attenuation_coefficient = Setting(0.0)
     radius                  = Setting(100.0)
     interthickness          = Setting(30.0)
+
+    inputs = copy.deepcopy(OWOpticalElement.inputs)
+    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
+
 
     def __init__(self):
         super().__init__(has_footprint=False)
@@ -108,6 +119,16 @@ class OWAbstractLens(OWOpticalElement):
 
     def select_file_prerefl(self):
         self.le_file_prerefl.setText(oasysgui.selectFileFromDialog(self, self.prerefl_file, "Select File Prerefl", file_extension_filter="Data Files (*.dat)"))
+
+    def set_PreReflPreProcessorData(self, data):
+        if data is not None:
+            if data.prerefl_data_file != PreReflPreProcessorData.NONE:
+                self.prerefl_file = data.prerefl_data_file
+                self.le_file_prerefl.setText(self.prerefl_file)
+                self.ri_calculation_mode = 1
+                self.set_ri_calculation_mode()
+            else:
+                QMessageBox.warning(self, "Warning", "Incompatible Preprocessor Data", QMessageBox.Ok)
 
     # ----------------------------------------------------
     # from OpticalElement

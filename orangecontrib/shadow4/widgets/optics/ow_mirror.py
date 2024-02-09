@@ -40,8 +40,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
 
 
     inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
-    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "setPreReflPreProcessorData"))
-    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
+    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
+    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "set_VlsPgmPreProcessorData"))
 
     #########################################################
     # reflectivity
@@ -162,7 +162,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
     # preprocessor
     #########################################################
 
-    def setPreReflPreProcessorData(self, data):
+    def set_PreReflPreProcessorData(self, data):
         if data is not None:
             if data.prerefl_data_file != PreReflPreProcessorData.NONE:
                 self.file_refl = data.prerefl_data_file
@@ -172,7 +172,7 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
             else:
                 QMessageBox.warning(self, "Warning", "Incompatible Preprocessor Data", QMessageBox.Ok)
 
-    def setVlsPgmPreProcessorData(self, data):
+    def set_VlsPgmPreProcessorData(self, data):
         if data is not None:
             self.surface_shape_type = 0
             self.surface_shape_tab_visibility()
