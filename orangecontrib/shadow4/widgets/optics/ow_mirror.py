@@ -195,7 +195,6 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
         # possible change of limits to match with the surface data file (must be done before creating mirror)
         if self.modified_surface: self.congruence_surface_data_file()
 
-
         #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
         #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
         #  Side:  SOURCE = 0  IMAGE = 1
