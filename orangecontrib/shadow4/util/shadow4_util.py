@@ -510,8 +510,8 @@ try:
                 self.plot_canvas = gui.plotWindow(roi=False, control=False, position=True, logScale=True, fit=True)
                 self.plot_canvas.setDefaultPlotLines(True)
                 self.plot_canvas.setActiveCurveColor(color='blue')
-                self.plot_canvas.setMinimumWidth(590*x_scale_factor)
-                self.plot_canvas.setMaximumWidth(590*x_scale_factor)
+                self.plot_canvas.setMinimumWidth(int(590 * x_scale_factor))
+                self.plot_canvas.setMaximumWidth(int(590 * x_scale_factor))
 
                 self.info_box = ShadowPlot.InfoBoxWidget(x_scale_factor, y_scale_factor, is_2d=False)
 
@@ -520,8 +520,8 @@ try:
                 layout.addWidget(   self.info_box, 0, 1, 1, 1)
                 layout.addWidget(self.plot_canvas, 0, 0, 1, 1)
 
-                layout.setColumnMinimumWidth(0, 600*x_scale_factor)
-                layout.setColumnMinimumWidth(1, 230*x_scale_factor)
+                layout.setColumnMinimumWidth(0, int(600 * x_scale_factor))
+                layout.setColumnMinimumWidth(1, int(230 * x_scale_factor))
 
                 self.setLayout(layout)
 
@@ -573,10 +573,10 @@ try:
                     y_fwhm             = ticket['fwhm_quote']
 
                     self.plot_canvas._backend.ax.add_patch(FancyArrowPatch([x_fwhm_i, y_fwhm],
-                                                              [x_fwhm_f, y_fwhm],
-                                                              arrowstyle=ArrowStyle.CurveAB(head_width=2, head_length=4),
-                                                              color='b',
-                                                              linewidth=1.5))
+                                                                           [x_fwhm_f, y_fwhm],
+                                                                           arrowstyle=ArrowStyle.CurveAB(head_width=2, head_length=4),
+                                                                           color='b',
+                                                                           linewidth=1.5))
 
                 if histogram.size > 1:
                     if min(histogram) < 0: self.plot_canvas.setGraphYLimits(min(histogram), max(histogram))
@@ -625,8 +625,8 @@ try:
                 layout.addWidget(self.info_box,    0, 1, 1, 1)
                 layout.addWidget(self.plot_canvas, 0, 0, 1, 1)
 
-                layout.setColumnMinimumWidth(0, int(600*x_scale_factor))
-                layout.setColumnMinimumWidth(1, int(230*x_scale_factor))
+                layout.setColumnMinimumWidth(0, int(600 * x_scale_factor))
+                layout.setColumnMinimumWidth(1, int(230 * x_scale_factor))
 
                 self.setLayout(layout)
 
