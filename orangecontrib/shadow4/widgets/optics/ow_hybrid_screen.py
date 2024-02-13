@@ -24,7 +24,7 @@ from hybrid_methods.coherence.hybrid_screen import HybridListener, HybridScreenM
     HybridCalculationType, HybridPropagationType, HybridDiffractionPlane, \
     HybridInputParameters, HybridCalculationResult, HybridGeometryAnalysis
 
-from shadow4.hybrid.s4_hybrid_screen import S4HybridOE, S4HybridBeam, IMPLEMENTATION
+from shadow4_hybrid.s4_hybrid_screen import S4HybridOE, S4HybridBeam, IMPLEMENTATION
 
 class HybridScreenNew(AutomaticElement, HybridListener):
     inputs = [("Shadow Data", ShadowData, "set_shadow_data"),
