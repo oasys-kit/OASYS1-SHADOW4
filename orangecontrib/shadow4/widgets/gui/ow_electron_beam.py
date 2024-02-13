@@ -23,7 +23,7 @@ class OWElectronBeam(GenericElement):
     # source_name = Setting("Undefined")
 
     electron_energy_in_GeV = Setting(1.9)
-    electron_energy_spread = Setting(0.001)
+    electron_energy_spread = Setting(0.000)
     ring_current           = Setting(0.4)
     # number_of_bunches      = Setting(400) #TODO: to be deleted in syned?
 
@@ -90,7 +90,8 @@ class OWElectronBeam(GenericElement):
         self.electron_beam_box = oasysgui.widgetBox(self.tab_electron_beam, "Electron Beam/Machine Parameters", addSpace=False, orientation="vertical")
 
         oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_in_GeV", "Energy [GeV]",  tooltip="electron_energy_in_GeV", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_spread", "Energy Spread", tooltip="electron_energy_spread", labelWidth=260, valueType=float, orientation="horizontal")
+        # todo: include and manage it in the future....
+        # oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_spread", "Energy Spread", tooltip="electron_energy_spread", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.electron_beam_box, self, "ring_current", "Ring Current [A]",        tooltip="ring_current",           labelWidth=260, valueType=float, orientation="horizontal")
 
         gui.comboBox(self.electron_beam_box, self, "type_of_properties", tooltip="type_of_properties", label="Electron Beam Properties", labelWidth=350,

@@ -402,6 +402,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
             grating = S4PlaneGrating(
                 name="Plane Grating",
                 boundary_shape=self.get_boundary_shape(),
+                ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
                 ruling_coeff_quadratic=self.ruling_coeff_quadratic,
                 ruling_coeff_cubic=self.ruling_coeff_cubic,

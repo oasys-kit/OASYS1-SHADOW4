@@ -117,8 +117,12 @@ def plot_data3D(data3D, dataE, dataX, dataY,
 
     stepX = dataX[1]-dataX[0]
     stepY = dataY[1]-dataY[0]
-    if len(dataE) > 1: stepE = dataE[1]-dataE[0]
-    else: stepE = 1.0
+    if isinstance(dataE, list):
+        if len(dataE) > 1: stepE = dataE[1] - dataE[0]
+        else: stepE = 1.0
+    else:
+        if dataE.size > 1: stepE = dataE[1] - dataE[0]
+        else: stepE = 1.0
 
     if stepE == 0.0: stepE = 1.0
     if stepX == 0.0: stepX = 1.0
