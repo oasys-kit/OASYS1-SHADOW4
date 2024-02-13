@@ -56,7 +56,7 @@ from setuptools import find_packages, setup
 import subprocess
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.18'
+VERSION = '0.0.19'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
@@ -91,8 +91,9 @@ SETUP_REQUIRES = (
 
 INSTALL_REQUIRES = (
                     'oasys1>=1.2.130',
-                    'shadow4>=0.1.17',
+                    'shadow4>=0.1.19',
                     'xoppylib', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
+                    'oasys-hybrid-methods>=1.0.5'
                     )
 
 PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
