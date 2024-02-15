@@ -12,6 +12,7 @@ from oasys.util.oasys_objects import OasysThicknessErrorsData
 
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, ShadowPlot
+from orangecontrib.shadow4.util.python_script import PythonScript
 
 from PyQt5.QtGui import QImage, QPixmap,  QPalette, QFont, QColor, QTextCursor
 from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout, QMessageBox
@@ -24,7 +25,7 @@ from hybrid_methods.coherence.hybrid_screen import HybridListener, HybridScreenM
     HybridCalculationType, HybridPropagationType, HybridDiffractionPlane, \
     HybridInputParameters, HybridCalculationResult, HybridGeometryAnalysis
 
-from shadow4_hybrid.s4_hybrid_screen import S4HybridOE, S4HybridBeam, IMPLEMENTATION
+from shadow4_hybrid.s4_hybrid_screen import S4HybridOE, S4HybridBeam, S4HybridScreen, S4HybridScreenElement
 
 class HybridScreenNew(AutomaticElement, HybridListener):
     inputs = [("Shadow Data", ShadowData, "set_shadow_data"),
@@ -111,6 +112,13 @@ class HybridScreenNew(AutomaticElement, HybridListener):
         main_tabs = oasysgui.tabWidget(self.mainArea)
         plot_tab = oasysgui.createTabPage(main_tabs, "Plots")
         out_tab = oasysgui.createTabPage(main_tabs, "Output")
+        script_tab = oasysgui.createTabPage(main_tabs, "Script")
+
+        self.shadow4_script = PythonScript()
+        self.shadow4_script.code_area.setFixedHeight(400)
+
+        script_box = gui.widgetBox(script_tab, "Python script", addSpace=True, orientation="horizontal")
+        script_box.layout().addWidget(self.shadow4_script)
 
         view_box = oasysgui.widgetBox(plot_tab, "", addSpace=False, orientation="horizontal")
         view_box_1 = oasysgui.widgetBox(view_box, "", addSpace=False, orientation="vertical", width=350)
@@ -426,9 +434,28 @@ class HybridScreenNew(AutomaticElement, HybridListener):
                                                              random_seed=None,  # TODO: add field
                                                              **additional_parameters)
                     try:
-                        hybrid_screen = HybridScreenManager.Instance().create_hybrid_screen_manager(IMPLEMENTATION, self.calculation_type)
 
-                        calculation_result = hybrid_screen.run_hybrid_method(input_parameters)
+                        beamline = self.__input_data.beamline.duplicate()
+                        element = S4HybridScreenElement(hybrid_screen=S4HybridScreen(calculation_type=self.calculation_type),
+                                                        hybrid_input_parameters=input_parameters)
+
+                        print(element.info())
+
+                        beamline.append_beamline_element(element)
+
+                        #
+                        # script
+                        #
+                        script = beamline.to_python_code()
+                        script += "\n\n\n# test plot"
+                        script += "\nif True:"
+                        script += "\n   from srxraylib.plot.gol import plot_scatter"
+                        script += "\n   plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
+                        script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
+                        self.shadow4_script.set_code(script)
+
+                        self.progressBarInit()
+                        calculation_result, _ = element.trace_beam()
 
                         # PARAMETERS IN SET MODE
                         self.n_bins_x                                   = int(input_parameters.n_bins_x)
@@ -441,21 +468,21 @@ class HybridScreenNew(AutomaticElement, HybridListener):
                         if self.view_type==1: self.plot_results(calculation_result)
 
                         if self.propagation_type == HybridPropagationType.BOTH:
-                            shadow_data_ff = ShadowData(beam=calculation_result.far_field_beam.wrapped_beam, beamline=self.__input_data.beamline)
+                            shadow_data_ff = ShadowData(beam=calculation_result.far_field_beam.wrapped_beam, beamline=beamline)
                             shadow_data_ff.scanning_data = self.__input_data.scanning_data
                             shadow_data_ff.initial_flux  = self.__input_data.initial_flux
-                            shadow_data_nf = ShadowData(beam=calculation_result.near_field_beam.wrapped_beam, beamline=self.__input_data.beamline)
+                            shadow_data_nf = ShadowData(beam=calculation_result.near_field_beam.wrapped_beam, beamline=beamline)
                             shadow_data_nf.scanning_data = self.__input_data.scanning_data
                             shadow_data_nf.initial_flux  = self.__input_data.initial_flux
                             self.send("Output Data (Far Field)",  shadow_data_ff)
                             self.send("Output Data (Near Field)", shadow_data_nf)
                         elif self.propagation_type == HybridPropagationType.FAR_FIELD:
-                            shadow_data_ff = ShadowData(beam=calculation_result.far_field_beam.wrapped_beam, beamline=self.__input_data.beamline)
+                            shadow_data_ff = ShadowData(beam=calculation_result.far_field_beam.wrapped_beam, beamline=beamline)
                             shadow_data_ff.scanning_data = self.__input_data.scanning_data
                             shadow_data_ff.initial_flux  = self.__input_data.initial_flux
                             self.send("Output Data (Far Field)",  shadow_data_ff)
                         elif self.propagation_type == HybridPropagationType.NEAR_FIELD:
-                            shadow_data_nf = ShadowData(beam=calculation_result.near_field_beam.wrapped_beam, beamline=self.__input_data.beamline)
+                            shadow_data_nf = ShadowData(beam=calculation_result.near_field_beam.wrapped_beam, beamline=beamline)
                             shadow_data_nf.scanning_data = self.__input_data.scanning_data
                             shadow_data_nf.initial_flux  = self.__input_data.initial_flux
                             self.send("Output Data (Near Field)", shadow_data_nf)
