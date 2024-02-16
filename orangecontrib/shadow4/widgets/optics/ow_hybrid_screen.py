@@ -149,7 +149,9 @@ class HybridScreenNew(AutomaticElement, HybridListener):
                             "Diffraction by Mirror Size + Figure Errors",
                             "Diffraction by Grating Size + Figure Errors",
                             "Diffraction by Lens Size",
-                            "Diffraction by Lens Size + Thickness Errors"],
+                            "Diffraction by Lens Size + Thickness Errors",
+                            "Diffraction by KB Size",
+                            "Diffraction by KB Size + Figure Errors"],
                      callback=self.set_calculation_type,
                      sendSelectedValue=False, orientation="horizontal")
 
@@ -352,7 +354,9 @@ class HybridScreenNew(AutomaticElement, HybridListener):
 
         if self.calculation_type in [HybridCalculationType.MIRROR_OR_GRATING_SIZE,
                                      HybridCalculationType.MIRROR_SIZE_AND_ERROR_PROFILE,
-                                     HybridCalculationType.GRATING_SIZE_AND_ERROR_PROFILE] and self.diffraction_plane != HybridDiffractionPlane.BOTH_2D:
+                                     HybridCalculationType.GRATING_SIZE_AND_ERROR_PROFILE,
+                                     HybridCalculationType.KB_SIZE,
+                                     HybridCalculationType.KB_SIZE_AND_ERROR_PROFILE] and self.diffraction_plane != HybridDiffractionPlane.BOTH_2D:
             self.cb_propagation_type.setEnabled(True)
         else:
             self.cb_propagation_type.setEnabled(False)
@@ -361,15 +365,21 @@ class HybridScreenNew(AutomaticElement, HybridListener):
         self.set_propagation_type()
 
     def set_calculation_type(self):
+        if self.calculation_type in [HybridCalculationType.KB_SIZE, HybridCalculationType.KB_SIZE_AND_ERROR_PROFILE]:
+            self.diffraction_plane = HybridDiffractionPlane.BOTH_2X1D
+            self.set_diffraction_plane()
+            self.cb_diffraction_plane.setEnabled(False)
+        else:
+            self.cb_diffraction_plane.setEnabled(False)
+
         if self.calculation_type in [HybridCalculationType.MIRROR_OR_GRATING_SIZE,
                                      HybridCalculationType.MIRROR_SIZE_AND_ERROR_PROFILE,
-                                     HybridCalculationType.GRATING_SIZE_AND_ERROR_PROFILE] and self.diffraction_plane != HybridDiffractionPlane.BOTH_2D:
+                                     HybridCalculationType.GRATING_SIZE_AND_ERROR_PROFILE,
+                                     HybridCalculationType.KB_SIZE,
+                                     HybridCalculationType.KB_SIZE_AND_ERROR_PROFILE] and self.diffraction_plane != HybridDiffractionPlane.BOTH_2D:
             self.cb_propagation_type.setEnabled(True)
-            #self.cb_analyze_geometry.setEnabled(False)
-            #self.analyze_geometry = 0
         else:
             self.cb_propagation_type.setEnabled(False)
-            #self.cb_analyze_geometry.setEnabled(True)
             self.propagation_type = HybridPropagationType.FAR_FIELD
 
         self.set_propagation_type()
@@ -408,10 +418,9 @@ class HybridScreenNew(AutomaticElement, HybridListener):
 
                     self.check_fields()
 
-                    beamline         = self.__input_data.beamline
-                    beamline_element = beamline.get_beamline_element_at(-1)
+                    beamline = self.__input_data.beamline
 
-                    additional_parameters = {"beamline" : beamline}
+                    additional_parameters = {}
 
                     if self.calculation_type == HybridCalculationType.CRL_SIZE_AND_ERROR_PROFILE:
                         additional_parameters["crl_error_profiles"] = self.crl_error_profiles
@@ -421,9 +430,21 @@ class HybridScreenNew(AutomaticElement, HybridListener):
                         additional_parameters["crl_coords_to_m"]    = self.crl_coords_to_m
                         additional_parameters["crl_thickness_to_m"] = self.crl_thickness_to_m
 
+                    if self.calculation_type in [HybridCalculationType.KB_SIZE, HybridCalculationType.KB_SIZE_AND_ERROR_PROFILE]:
+                        if beamline.get_beamline_elements_number() < 2: raise ValueError("Calculation with KB not possible: not enough elements in the beamline")
+
+                        kb_mirror_1_element = beamline.get_beamline_element_at(-2)
+                        kb_mirror_2_element = beamline.get_beamline_element_at(-1)
+                        beam             = S4HybridBeam(beam=[kb_mirror_1_element.get_input_beam().duplicate(), kb_mirror_2_element.get_input_beam().duplicate()])
+                        optical_element  = S4HybridOE(optical_element=[kb_mirror_1_element, kb_mirror_2_element])
+                    else:
+                        beamline_element = beamline.get_beamline_element_at(-1)
+                        beam             = S4HybridBeam(beam=beamline_element.get_input_beam().duplicate())
+                        optical_element  = S4HybridOE(optical_element=beamline_element)
+
                     input_parameters = HybridInputParameters(listener=self,
-                                                             beam=S4HybridBeam(beam=self.__input_data.beam.duplicate()),
-                                                             optical_element=S4HybridOE(optical_element=beamline_element),
+                                                             beam=beam,
+                                                             optical_element=optical_element,
                                                              diffraction_plane=self.diffraction_plane,
                                                              propagation_type=self.propagation_type,
                                                              n_bins_x=int(self.n_bins_x),
