@@ -59,7 +59,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
     ng_t = Setting(100)  # Number of points in angle theta
     ng_p = Setting(11)  # Number of points in angle phi
     ng_j = Setting(20)  # Number of points in electron trajectory (per period) for internal calculation only
-    code_undul_phot = Setting(2) # "internal",  # internal, pysru, srw
+    code_undul_phot = Setting(0) # "internal",  # internal, pysru, srw
     flag_emittance = Setting(0)  # when sampling rays: Use emittance (0=No, 1=Yes)
     flag_size = Setting(2)  # when sampling rays: 0=point,1=Gaussian,2=FT(Divergences)
 
@@ -169,19 +169,21 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_11, self, "distance", "Distance to far field plane [m]", tooltip="distance",
                           labelWidth=300, valueType=float, orientation="horizontal")
 
-        self.box_backpropagation_wofry = oasysgui.widgetBox(left_box_11)
-        oasysgui.lineEdit(self.box_backpropagation_wofry, self, "magnification", "for internal/wofry backpropagation, the magnification",
+        self.box_backpropagation_internal_wofry = oasysgui.widgetBox(left_box_11)
+        oasysgui.lineEdit(self.box_backpropagation_internal_wofry, self, "magnification", "for backpropagation, the magnification",
                           tooltip="magnification", labelWidth=300, valueType=float, orientation="horizontal")
+
+        self.box_backpropagation_wofry = oasysgui.widgetBox(left_box_11)
         orangegui.comboBox(self.box_backpropagation_wofry, self, "pysru_source", label="Cartesian source coordinates", tooltip="pysru_source",
                            items=["Interpolated from polar", "Recalculated"], labelWidth=260, orientation="horizontal")
 
         self.box_backpropagation_srw = oasysgui.widgetBox(left_box_11)
-        oasysgui.lineEdit(self.box_backpropagation_srw, self, "srw_range", "for SRW, the range factor", tooltip="srw_range",
+        oasysgui.lineEdit(self.box_backpropagation_srw, self, "srw_range", "the SRW range factor", tooltip="srw_range",
                           labelWidth=300, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.box_backpropagation_srw, self, "srw_resolution", "for SRW, the resolution factor", tooltip="srw_resolution",
+        oasysgui.lineEdit(self.box_backpropagation_srw, self, "srw_resolution", "the SRW resolution factor", tooltip="srw_resolution",
                           labelWidth=300, valueType=float, orientation="horizontal")
-        orangegui.comboBox(self.box_backpropagation_srw, self, "srw_semianalytical", label="Apply semianalytical phase treatment", tooltip="srw_semianalytical",
-                           items=["No", "Yes"], labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(self.box_backpropagation_srw, self, "srw_semianalytical", label="Use SRW semianalytic propagator", tooltip="srw_semianalytical",
+                           items=["No (standard)", "Yes"], labelWidth=260, orientation="horizontal")
 
 
         # undulator plots
@@ -224,7 +226,6 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             orangegui.createTabPage(self.undulator_tabs, "Radiation (polar)"),
             orangegui.createTabPage(self.undulator_tabs, "Polarization (polar)"),
             orangegui.createTabPage(self.undulator_tabs, "Radiation (far field)"),
-            orangegui.createTabPage(self.undulator_tabs, "Far field (1D)"),
             orangegui.createTabPage(self.undulator_tabs, "Backpropagated radiation"),
             orangegui.createTabPage(self.undulator_tabs, "Power Density"),
             orangegui.createTabPage(self.undulator_tabs, "Flux spectrum"),
@@ -233,7 +234,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             orangegui.createTabPage(self.undulator_tabs, "e velocity"),
         ]
 
-        self.undulator_plot_canvas = [None, None, None, None, None, None, None, None, None, None]
+        self.undulator_plot_canvas = [None, None, None, None, None, None, None, None, None]
 
         for tab in self.undulator_tab:
             tab.setFixedHeight(self.IMAGE_HEIGHT)
@@ -251,6 +252,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         self.box_photon_energy_harmonic.setVisible(self.set_at_resonance == 1)
         self.box_maxangle.setVisible(              self.set_at_resonance == 0)
 
+        self.box_backpropagation_internal_wofry.setVisible(self.flag_size == 2 and self.code_undul_phot <= 1)
         self.box_backpropagation_wofry.setVisible(self.flag_size == 2 and self.code_undul_phot == 1)
         self.box_backpropagation_srw.setVisible(self.flag_size == 2 and self.code_undul_phot == 2)
 
@@ -467,23 +469,25 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 self.plot_undulator_item3D(2, radiation_interpolated, photon_energy, 1e6 * vx, 1e6 * vz,
                                  title="far field radiation", xtitle="vx [urad]", ytitle="vz [rad]")
 
-            # far field
-            if self.code_undul_phot == 0:
-                theta, radial_e_amplitude, mean_photon_energy, distance, magnification = self.lightsource.get_photon_size_farfield()
-                self.plot_undulator_item1D(3, theta * 1e6, numpy.abs(radial_e_amplitude)**2,
-                                           title="Far field distribution (for size calculation)", xtitle="theta [urad]",
-                                           ytitle="Intensity [arbitrary units]")
-            else:
-                pass
+            # # far field 1D
+            # if self.code_undul_phot == 0:
+            #     theta, radial_e_amplitude, mean_photon_energy, distance, magnification = self.lightsource.get_photon_size_farfield()
+            #     self.plot_undulator_item1D(3, theta * 1e6, numpy.abs(radial_e_amplitude)**2,
+            #                                title="Far field distribution (for size calculation)", xtitle="theta [urad]",
+            #                                ytitle="Intensity [arbitrary units]")
+            # else:
+            #     pass
 
             # backpropagated far field
+            dict1 = self.lightsource.get_result_dictionary()
             if self.code_undul_phot == 0:
-                x, y = self.lightsource.get_photon_size_distribution()
-                self.plot_undulator_item1D(4, x * 1e6, y,
+                x = dict1['BACKPROPAGATED_r']
+                y = dict1['BACKPROPAGATED_radiation'].sum(axis=0)
+                self.plot_undulator_item1D(3, x * 1e6, y,
                                            title="Backpropagated radiation (size distribution)", xtitle="Distance [um]",
                                            ytitle="Intensity [arbitrary units]")
             else:
-                dict1 = self.lightsource.get_result_dictionary()
+
                 if is_monochromatic:
                     # out['CART_BACKPROPAGATED_e_amplitude_sigma'] = BPwSigma[:, :, :, 0]
                     # out['CART_BACKPROPAGATED_e_amplitude_pi'] = BPwPi[:, :, :, 0]
@@ -491,13 +495,13 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                     #     BPwPi[:, :, :, 0]) ** 2
                     # out['CART_BACKPROPAGATED_x'] = BPx  # length in m
                     # out['CART_BACKPROPAGATED_y'] = BPy  # length in m
-                    self.plot_undulator_item2D(4,
+                    self.plot_undulator_item2D(3,
                                                dict1['CART_BACKPROPAGATED_radiation'][0],
                                                1e6 * dict1['CART_BACKPROPAGATED_x'],
                                                1e6 * dict1['CART_BACKPROPAGATED_y'],
                                                title="Backpropagated radiation (size distribution)", xtitle="x [um]", ytitle="z [um]")
                 else:
-                    self.plot_undulator_item3D(4,
+                    self.plot_undulator_item3D(3,
                                                dict1['CART_BACKPROPAGATED_radiation'],
                                                dict1['photon_energy'],
                                                1e6 * dict1['CART_BACKPROPAGATED_x'],
@@ -510,25 +514,25 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 title="power density W/mrad2/eV"
             else:
                 title="power density W/mrad2"
-            self.plot_undulator_item2D(5, intens_xy, 1e6 * vx, 1e6 * vz,
+            self.plot_undulator_item2D(4, intens_xy, 1e6 * vx, 1e6 * vz,
                              title=title, xtitle="vx [urad]", ytitle="vz [rad]")
 
             # spectra
             e, f, w = self.lightsource.calculate_spectrum()
-            self.plot_undulator_item1D(6, e, f,
+            self.plot_undulator_item1D(5, e, f,
                                   title="Undulator spectrum", xtitle="Photon energy [eV]", ytitle=r"Photons/s/0.1%bw")
 
-            self.plot_undulator_item1D(7, e, w,
+            self.plot_undulator_item1D(6, e, w,
                                   title="Undulator spectral power",
                                   xtitle="Photon energy [eV]", ytitle="Spectral power [W/eV]")
 
             # trajectory
             try:
                 yy, xx, beta_x = self.lightsource.get_result_trajectory()
-                self.plot_undulator_item1D(8, yy, xx,
+                self.plot_undulator_item1D(7, yy, xx,
                                       title="electron trajectory", xtitle="Y [m]", ytitle="X [m]", symbol='')
 
-                self.plot_undulator_item1D(9, yy, beta_x,
+                self.plot_undulator_item1D(8, yy, beta_x,
                                       title="electron velocity", xtitle="Y [m]", ytitle="X [m]", symbol='')
             except:
                 pass
