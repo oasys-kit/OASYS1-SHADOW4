@@ -1,5 +1,6 @@
 import numpy
-import sys, os
+import os
+from scipy.optimize import root
 
 from PyQt5.QtWidgets import QDialog, QGridLayout, QWidget, QDialogButtonBox, QFileDialog
 
@@ -158,8 +159,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 6 : self.oe_names[7]}
 
     def __init__(self, show_automatic_box=True, has_footprint=True, switch_icons=True):
-        super().__init__(show_automatic_box=show_automatic_box, has_footprint=has_footprint)
         self.__switch_icons = switch_icons
+        super().__init__(show_automatic_box=show_automatic_box, has_footprint=has_footprint)
 
     def create_basic_settings_subtabs(self, tabs_basic_settings):
         subtab_surface_shape            = oasysgui.createTabPage(tabs_basic_settings, "Surface Shape")  # to be populated
@@ -210,12 +211,13 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     def populate_tab_surface_shape(self, subtab_surface_shape):
         box_1 = oasysgui.widgetBox(subtab_surface_shape, "Surface Shape", addSpace=True, orientation="vertical")
 
-        gui.comboBox(box_1, self, "surface_shape_type", label="Figure",
-                     labelWidth=390,
-                     items=["Plane", "Sphere", "Ellipsoid", "Hyperboloid", "Paraboloid", "Toroid", "Conic coefficients"],
-                     valueType=int,
-                     sendSelectedValue=False, orientation="horizontal", callback=self.surface_shape_tab_visibility,
-                     tooltip="surface_shape_type")
+        self.surface_shape_type_combo = \
+            gui.comboBox(box_1, self, "surface_shape_type", label="Figure",
+                         labelWidth=390,
+                         items=["Plane", "Sphere", "Ellipsoid", "Hyperboloid", "Paraboloid", "Toroid", "Conic coefficients"],
+                         valueType=int,
+                         sendSelectedValue=False, orientation="horizontal", callback=self.surface_shape_tab_visibility,
+                         tooltip="surface_shape_type")
 
         #########
         ######### Focusing parameters
@@ -232,10 +234,11 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                      orientation="horizontal", tooltip="focus_location", callback=self.surface_shape_tab_visibility)
 
         self.surface_shape_internal_external_box = oasysgui.widgetBox(self.surface_shape_parameters_box, "", addSpace=False, orientation="vertical")
-        gui.comboBox(self.surface_shape_internal_external_box, self, "surface_shape_parameters", label="Type",
-                     items=["internal/calculated", "external/user_defined"], labelWidth=240,
-                     callback=self.surface_shape_tab_visibility, sendSelectedValue=False, orientation="horizontal",
-                     tooltip="surface_shape_parameters")
+        self.surface_shape_parameters_combo = \
+            gui.comboBox(self.surface_shape_internal_external_box, self, "surface_shape_parameters", label="Type",
+                         items=["internal/calculated", "external/user_defined"], labelWidth=240,
+                         callback=self.surface_shape_tab_visibility, sendSelectedValue=False, orientation="horizontal",
+                         tooltip="surface_shape_parameters")
 
 
 
@@ -378,10 +381,11 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     def populate_tab_dimensions(self, subtab_dimensions):
         dimension_box = oasysgui.widgetBox(subtab_dimensions, "Dimensions", addSpace=True, orientation="vertical", width=SUBTAB_INNER_BOX_WIDTH)
 
-        gui.comboBox(dimension_box, self, "is_infinite", label="Limits Check",
-                     items=["Finite o.e. dimensions", "Infinite o.e. dimensions"],
-                     callback=self.dimensions_tab_visibility, sendSelectedValue=False, orientation="horizontal",
-                     tooltip="is_infinite")
+        self.is_infinite_combo = \
+            gui.comboBox(dimension_box, self, "is_infinite", label="Limits Check",
+                         items=["Finite o.e. dimensions", "Infinite o.e. dimensions"],
+                         callback=self.dimensions_tab_visibility, sendSelectedValue=False, orientation="horizontal",
+                         tooltip="is_infinite")
 
         self.dimdet_box = oasysgui.widgetBox(dimension_box, "", addSpace=False, orientation="vertical")
 
@@ -974,15 +978,13 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                 self.c9 = round(parent.conic_coefficient_8, 10)
                 self.c10= round(parent.conic_coefficient_9, 10)
 
-                c = self.c1*(X**2) + self.c2*(Y**2) + self.c4*X*Y + self.c7*X + self.c8*Y + self.c10
-                b = self.c5*Y + self.c6*X + self.c9
-                a = self.c3
+                def equation_to_solve(Z):
+                    return self.c1*(X**2) + self.c2*(Y**2) + self.c3*(Z**2) + self.c4*X*Y + self.c5*Y*Z + self.c6*X*Z + self.c7*X + self.c8*Y + self.c9*Z + self.c10
 
-                if a != 0.0:
-                    z_values = (-b + sign*numpy.sqrt(b**2 - 4*a*c))/(2*a)
-                    z_values[b**2 - 4*a*c < 0] = numpy.nan
-                else:
-                    z_values = -c/b
+                z_start = numpy.zeros((bin_x + 1, bin_y + 1))
+                result = root(equation_to_solve, z_start, method='df-sane', tol=None)
+
+                z_values = result.x if result.success else z_start
 
             self.zz = z_values
 

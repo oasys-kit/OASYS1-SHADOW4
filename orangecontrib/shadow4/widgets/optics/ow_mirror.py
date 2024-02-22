@@ -1,13 +1,12 @@
 import numpy
 import sys
+import copy
 
 from PyQt5.QtWidgets import QMessageBox
 
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
-
-from syned.beamline.shape import Side       #  Side:  SOURCE = 0  IMAGE = 1
 
 from shadow4.beamline.optical_elements.mirrors.s4_toroid_mirror import S4ToroidMirror, S4ToroidMirrorElement
 from shadow4.beamline.optical_elements.mirrors.s4_conic_mirror import S4ConicMirror, S4ConicMirrorElement
@@ -21,28 +20,10 @@ from shadow4.beamline.optical_elements.mirrors.s4_numerical_mesh_mirror import S
 from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirror
 from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirrorElement
 
-
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape, SUBTAB_INNER_BOX_WIDTH
-from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData, PreReflPreProcessorData, VlsPgmPreProcessorData
 
-from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData, VlsPgmPreProcessorData
-import copy
-
-class OWMirror(OWOpticalElementWithSurfaceShape):
-    name        = "Generic Mirror"
-    description = "Shadow Mirror"
-    icon        = "icons/plane_mirror.png"
-
-    priority = 1.2
-
-    def get_oe_type(self):
-        return "mirror", "Mirror"
-
-
-    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
-    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
-    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "set_VlsPgmPreProcessorData"))
-
+class _OWMirror(OWOpticalElementWithSurfaceShape):
     #########################################################
     # reflectivity
     #########################################################
@@ -58,8 +39,8 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
     coating_density = Setting(2.33)
     coating_roughness = Setting(0.0)
 
-    def __init__(self):
-        super(OWMirror, self).__init__()
+    def __init__(self, switch_icons=True):
+        super(_OWMirror, self).__init__(switch_icons=switch_icons)
 
         self.reflection_angle_deg_le.setEnabled(False)
         self.reflection_angle_rad_le.setEnabled(False)
@@ -432,6 +413,21 @@ class OWMirror(OWOpticalElementWithSurfaceShape):
 
         self.reflection_angle_deg = self.incidence_angle_deg
         self.reflection_angle_mrad = self.incidence_angle_mrad
+
+class OWMirror(_OWMirror):
+    name        = "Generic Mirror"
+    description = "Shadow Mirror"
+    icon        = "icons/plane_mirror.png"
+
+    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
+    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "set_VlsPgmPreProcessorData"))
+
+    priority = 1.2
+
+    def get_oe_type(self):
+        return "mirror", "Mirror"
+
 
 
 if __name__ == "__main__":
