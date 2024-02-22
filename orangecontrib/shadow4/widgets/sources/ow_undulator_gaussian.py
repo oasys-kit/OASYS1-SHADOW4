@@ -168,7 +168,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
                     if isinstance(data.get_light_source().get_magnetic_structure(), Undulator):
                         light_source = data.get_light_source()
 
-                        self.energy =  round(light_source.get_magnetic_structure().resonance_energy(light_source.get_electron_beam().gamma()), 3)
+                        self.energy =  round(light_source.get_magnetic_structure().resonance_energy(light_source.get_electron_beam().gamma()))
                         self.delta_e = 0.0
                         self.undulator_length = light_source.get_magnetic_structure().length()
 

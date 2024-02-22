@@ -73,8 +73,9 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
     srw_resolution = Setting(50)
     srw_semianalytical = Setting(0)
     magnification = Setting(0.05)
-    pysru_source = Setting(0)
-
+    flag_backprop_recalculate_source = Setting(0)
+    flag_backprop_weight = Setting(0)
+    weight_ratio = Setting(0.5)
 
     plot_undulator_graph = 1
 
@@ -94,22 +95,15 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_3, self, "number_of_periods", "Number of Periods", labelWidth=260, tooltip="number_of_periods", valueType=int, orientation="horizontal")
 
 
-
-        # # photon energy Box
-        # left_box_10 = oasysgui.widgetBox(tab_undulator, "Sampling intervals", addSpace=False, orientation="vertical")
-        # oasysgui.lineEdit(left_box_10, self, "emin", "Min photon energy [eV]", labelWidth=260, tooltip="emin", valueType=float, orientation="horizontal")
-        # oasysgui.lineEdit(left_box_10, self, "emax", "Max photon energy [eV]", labelWidth=260, tooltip="emax", valueType=float, orientation="horizontal")
-        # oasysgui.lineEdit(left_box_10, self, "maxangle", "Max elevation angle for radiation theta [rad]", labelWidth=300, tooltip="maxangle", valueType=float, orientation="horizontal")
-
         # NEW photon energy box
         left_box_10 = oasysgui.widgetBox(tab_undulator, "Photon energy, angle acceptance", addSpace=False, orientation="vertical")
         orangegui.comboBox(left_box_10, self, "set_at_resonance",
-                     label="Set photon energy", addSpace=False, tooltip="emin",
+                     label="Set photon energy", addSpace=False, tooltip="set_at_resonance",
                     items=['User defined', 'Set to resonance'],
                     valueType=int, orientation="horizontal", labelWidth=250, callback=self.set_visibility)
 
         orangegui.comboBox(left_box_10, self, "is_monochromatic",
-                     label="Mono/polychromatic", addSpace=False, tooltip="emin",
+                     label="Mono/polychromatic", addSpace=False, tooltip="is_monochromatic",
                     items=['Polychromatic', 'Monochromatic',],
                     valueType=int, orientation="horizontal", labelWidth=250, callback=self.set_visibility)
 
@@ -119,7 +113,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
 
         self.box_photon_energy_center = oasysgui.widgetBox(left_box_10)
         oasysgui.lineEdit(self.box_photon_energy_center, self, "photon_energy", "Photon energy [eV]",
-                        tooltip="Photon energy [eV]", labelWidth=250, valueType=float, orientation="horizontal")
+                        tooltip="photon_energy", labelWidth=250, valueType=float, orientation="horizontal")
 
         self.box_photon_energy_harmonic = oasysgui.widgetBox(left_box_10)
         oasysgui.lineEdit(self.box_photon_energy_harmonic, self, "harmonic", "Photon energy [N x Resonance]; N: ",
@@ -132,50 +126,49 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         self.box_maxangle = oasysgui.widgetBox(left_box_10)
         oasysgui.lineEdit(self.box_maxangle, self, "maxangle", "Max elevation angle for radiation theta [rad]", labelWidth=300, tooltip="maxangle", valueType=float, orientation="horizontal")
 
-
-
-
-        #
-        # self.set_UseResonance()
-
-
-        #self.box_photon_energy.setEnabled(False)
-        #
-        # oasysgui.lineEdit(left_box_4, self, "delta_e", "Photon energy width [eV] (0=monochr.)", tooltip="Photon energy interval [eV] (0=monochromatic)", labelWidth=250, valueType=float, orientation="horizontal")
-
-
-
-
         # sampling
         left_box_12 = oasysgui.widgetBox(tab_undulator, "Sampling rays", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(left_box_12, self, "number_of_rays", "Number of rays", labelWidth=260, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_12, self, "seed", "Seed", tooltip="Seed (0=clock)", labelWidth=250, valueType=int, orientation="horizontal")
 
+        #
         # advanced settings
+        #
         tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced Setting")
-        left_box_11 = oasysgui.widgetBox(tab_advanced, "Advanced Setting", addSpace=False, orientation="vertical")
+
+        # arrays
+        left_box_11 = oasysgui.widgetBox(tab_advanced, "Array dimensions", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(left_box_11, self, "ng_e", "Points in Photon energy (if polychromatic)", tooltip="ng_e", labelWidth=300, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "ng_t", "Points (in size or theta [elevation])", tooltip="ng_t", labelWidth=300, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "ng_p", "Points in phi [azimuthal]", tooltip="ng_p", labelWidth=300, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_11, self, "ng_j", "Points in electron trajectory (per period)", tooltip="ng_j", labelWidth=300, valueType=int, orientation="horizontal")
+
+        # code far field
+        left_box_11 = oasysgui.widgetBox(tab_advanced, "Far field simulation", addSpace=False, orientation="vertical")
         orangegui.comboBox(left_box_11, self, "code_undul_phot", label="Code (for far fielf and backpropagation)", tooltip="code_undul_phot",
                            items=["internal", "pysru+wofry", "srw"], labelWidth=260, orientation="horizontal",
                            callback=self.set_visibility)
+        oasysgui.lineEdit(left_box_11, self, "distance", "Distance to far field plane [m]", tooltip="distance",
+                          labelWidth=300, valueType=float, orientation="horizontal")
+
+        # size sampling/ backpropagation
+        left_box_11 = oasysgui.widgetBox(tab_advanced, "Size/backpropagation", addSpace=False, orientation="vertical")
+
         orangegui.comboBox(left_box_11, self, "flag_size", label="Size sampling in real space", tooltip="flag_size",
                            items=["point", "Gaussian", "Far field backpropagated"], labelWidth=260, orientation="horizontal",
                            callback=self.set_visibility)
 
-
-        oasysgui.lineEdit(left_box_11, self, "distance", "Distance to far field plane [m]", tooltip="distance",
-                          labelWidth=300, valueType=float, orientation="horizontal")
-
         self.box_backpropagation_internal_wofry = oasysgui.widgetBox(left_box_11)
         oasysgui.lineEdit(self.box_backpropagation_internal_wofry, self, "magnification", "for backpropagation, the magnification",
                           tooltip="magnification", labelWidth=300, valueType=float, orientation="horizontal")
-
-        self.box_backpropagation_wofry = oasysgui.widgetBox(left_box_11)
-        orangegui.comboBox(self.box_backpropagation_wofry, self, "pysru_source", label="Cartesian source coordinates", tooltip="pysru_source",
-                           items=["Interpolated from polar", "Recalculated"], labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(self.box_backpropagation_internal_wofry, self, "flag_backprop_recalculate_source", label="Source for backpropagation", tooltip="flag_backprop_recalculate_source",
+                           items=["Reused (from polar)", "Recalculated"], labelWidth=260, orientation="horizontal")
+        orangegui.comboBox(self.box_backpropagation_internal_wofry, self, "flag_backprop_weight", label="Gaussian weight on backpropagated radiation", tooltip="flag_backprop_weight",
+                           items=["No", "Yes"], labelWidth=260, orientation="horizontal", callback=self.set_visibility)
+        self.box_backpropagation_internal_wofry_weight_vaue = oasysgui.widgetBox(self.box_backpropagation_internal_wofry)
+        oasysgui.lineEdit(self.box_backpropagation_internal_wofry_weight_vaue, self, "weight_ratio",
+                          "Weight factor (sigma/halfwindow)",
+                          tooltip="weight_ratio", labelWidth=300, valueType=float, orientation="horizontal")
 
         self.box_backpropagation_srw = oasysgui.widgetBox(left_box_11)
         oasysgui.lineEdit(self.box_backpropagation_srw, self, "srw_range", "the SRW range factor", tooltip="srw_range",
@@ -184,6 +177,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                           labelWidth=300, valueType=float, orientation="horizontal")
         orangegui.comboBox(self.box_backpropagation_srw, self, "srw_semianalytical", label="Use SRW semianalytic propagator", tooltip="srw_semianalytical",
                            items=["No (standard)", "Yes"], labelWidth=260, orientation="horizontal")
+
 
 
         # undulator plots
@@ -253,63 +247,11 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         self.box_maxangle.setVisible(              self.set_at_resonance == 0)
 
         self.box_backpropagation_internal_wofry.setVisible(self.flag_size == 2 and self.code_undul_phot <= 1)
-        self.box_backpropagation_wofry.setVisible(self.flag_size == 2 and self.code_undul_phot == 1)
         self.box_backpropagation_srw.setVisible(self.flag_size == 2 and self.code_undul_phot == 2)
 
-        # self.box_harmonic.setVisible(self.set_at_resonance == 1)
-        #
-        # orangegui.comboBox(left_box_10, self, "set_at_resonance",
-        #                    label="Set photon energy", addSpace=False, tooltip="emin",
-        #                    items=['User defined', 'Set to resonance'],
-        #                    valueType=int, orientation="horizontal", labelWidth=250, callback=self.set_visibility)
-        #
-        # orangegui.comboBox(left_box_10, self, "is_monochromatic",
-        #                    label="Mono/polychromatic", addSpace=False, tooltip="emin",
-        #                    items=['Monochromatic', 'Polychromatic'],
-        #                    valueType=int, orientation="horizontal", labelWidth=250, callback=self.set_visibility)
-        #
-        # self.box_photon_energy_min_max = oasysgui.widgetBox(left_box_10)
-        # oasysgui.lineEdit(self.box_photon_energy_min_max, self, "emin", "Min photon energy [eV]", labelWidth=260,
-        #                   tooltip="emin", valueType=float, orientation="horizontal")
-        # oasysgui.lineEdit(self.box_photon_energy_min_max, self, "emax", "Max photon energy [eV]", labelWidth=260,
-        #                   tooltip="emax", valueType=float, orientation="horizontal")
-        #
-        # self.box_photon_energy_center = oasysgui.widgetBox(left_box_10)
-        # oasysgui.lineEdit(self.box_photon_energy_center, self, "photon_energy", "Photon energy [eV]",
-        #                   tooltip="Photon energy [eV]", labelWidth=250, valueType=float, orientation="horizontal")
-        #
-        # self.box_photon_energy_width = oasysgui.widgetBox(left_box_10)
-        # oasysgui.lineEdit(self.box_photon_energy_width, self, "delta_e", "Photon energy width [eV] (0=monochr.)",
-        #                   tooltip="delta_e", labelWidth=250, valueType=float, orientation="horizontal")
-        #
-        # self.box_photon_energy_harmonic = oasysgui.widgetBox(left_box_10)
-        # oasysgui.lineEdit(self.box_harmonic, self, "harmonic", "Photon energy [N x Resonance]; N: ",
-        #                   tooltip="harmonic", labelWidth=250, valueType=float, orientation="horizontal")
-        #
-        # self.box_maxangle = oasysgui.widgetBox(left_box_10)
-        # oasysgui.lineEdit(self.box_photon_energy, self, "maxangle", "Max elevation angle for radiation theta [rad]",
-        #                   labelWidth=300, tooltip="maxangle", valueType=float, orientation="horizontal")
-
-
-        # self.box_maxangle = oasysgui.widgetBox(left_box_10)
-        # self.conventional_sinusoidal_box.setVisible(self.magnetic_field_source == 0)
-        # self.b_from_file_box.setVisible(self.magnetic_field_source == 1)
-        # self.b_from_harmonics_box.setVisible(self.magnetic_field_source == 2)
-
-    # def select_file_with_B_vs_Y(self):
-    #     self.le_file_with_b_vs_y.setText(oasysgui.selectFileFromDialog(self, self.file_with_b_vs_y, "Open File With B vs Y"))
-    #
-    # def select_file_with_harmonics(self):
-    #     self.le_file_with_harmonics.setText(oasysgui.selectFileFromDialog(self, self.file_with_harmonics, "Open File With Harmonics"))
-    #
-    # def set_shift_X_flag(self):
-    #     self.shift_x_value_box.setVisible(self.shift_x_flag==5)
-    #     self.shift_x_value_box_hidden.setVisible(self.shift_x_flag!=5)
-    #
-    # def set_shift_beta_X_flag(self):
-    #     self.shift_betax_value_box.setVisible(self.shift_betax_flag==5)
-    #     self.shift_betax_value_box_hidden.setVisible(self.shift_betax_flag!=5)
-
+        self.box_backpropagation_internal_wofry_weight_vaue.setVisible(self.flag_backprop_weight == 1) # self.flag_size == 2 and
+                                                                      # self.code_undul_phot == 2 and
+                                                                      # self.flag_backprop_weight == 1)
     def get_lightsource(self):
         # syned
         electron_beam = self.get_electron_beam()
@@ -342,7 +284,9 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             srw_range=self.srw_range,
             srw_resolution=self.srw_resolution,
             srw_semianalytical=self.srw_semianalytical,
-            pysru_source=self.pysru_source,
+            flag_backprop_recalculate_source=self.flag_backprop_recalculate_source,
+            flag_backprop_weight=self.flag_backprop_weight,
+            weight_ratio=self.weight_ratio,
             )
 
 
@@ -362,7 +306,6 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         print("\n\n>>>>>> S4undulatorLightSource info: ", lightsource.info())
 
         return lightsource
-
 
     def run_shadow4(self):
 
@@ -416,16 +359,8 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                                            number_of_rays=self.number_of_rays,
                                            beamline=S4Beamline(light_source=light_source)))
 
-    # def plot_undulator_item(self, x, y, undulator_plot_slot_index, title="", xtitle="", ytitle=""):
-    #     self.undulator_tab[undulator_plot_slot_index].layout().removeItem(self.undulator_tab[undulator_plot_slot_index].layout().itemAt(0))
-    #     plot_widget_id = plot_data1D(x.copy(), y.copy(), title=title, xtitle=xtitle, ytitle=ytitle, symbol='.')
-    #     self.undulator_tab[undulator_plot_slot_index].layout().addWidget(plot_widget_id)
-
     def get_title_for_stack_view_flux(self, idx):
-        # todo: improve
-        # return "Units: Photons/s/eV/rad2; Photon energy index: %d"%(idx)
-        # photon_energy = self.sourceundulator.get_result_photon_energy()
-        photon_energy = self.lightsource.get_result_photon_energy()
+        photon_energy = self.lightsource.get_result_dictionary()['photon_energy']
         return "Units: Photons/s/eV/rad2; Photon energy: %8.3f eV"%(photon_energy[idx])
 
     def refresh_specific_undulator_plots(self):
@@ -439,19 +374,31 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 self.undulator_tab[undulator_plot_slot_index].layout().addWidget(plot_widget_id)
         else:
             is_monochromatic = self.lightsource.get_magnetic_structure().is_monochromatic()
-
+            dict_results = self.lightsource.get_result_dictionary()
             # radiation
-            radiation, photon_energy, theta, phi = self.lightsource.get_result_radiation_polar()
+            # radiation, photon_energy, theta, phi = self.lightsource.get_result_radiation_polar()
+            radiation     = dict_results['radiation']
+            photon_energy = dict_results['photon_energy']
+            theta         = dict_results['theta']
+            phi           = dict_results['phi']
+
+            #
+            # radiation (polar)
+            #
             if is_monochromatic:
                 self.plot_undulator_item2D(0, radiation[0], 1e6 * theta, phi,
-                                           title="radiation (photons/s/eV/rad2)", xtitle="theta [urad]",
+                                           title="radiation (photons/s/eV/rad2)",
+                                           xtitle="theta [urad]",
                                            ytitle="phi [rad]")
             else:
                 self.plot_undulator_item3D(0, radiation, photon_energy, 1e6 * theta, phi,
-                                           title="radiation (photons/s/eV/rad2)", xtitle="theta [urad]",
+                                           title="radiation (photons/s/eV/rad2)",
+                                           xtitle="theta [urad]",
                                            ytitle="phi [rad]")
+            #
             # polarization
-            polarization = self.lightsource.get_result_polarisation()
+            #
+            polarization = dict_results['polarization']
             if is_monochromatic:
                 self.plot_undulator_item2D(1, polarization[0], 1e6 * theta, phi,
                                  title="polarization |Es|/(|Es|+|Ep|)", xtitle="theta [urad]", ytitle="phi [rad]")
@@ -459,9 +406,13 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 self.plot_undulator_item3D(1, polarization, photon_energy, 1e6 * theta, phi,
                                  title="polarization |Es|/(|Es|+|Ep|)", xtitle="theta [urad]", ytitle="phi [rad]")
 
-            # radiation interpolated
-            radiation_interpolated, photon_energy, vx, vz = self.lightsource.get_radiation_interpolated_cartesian(
-                npointsx=100, npointsz=100, thetamax=None)
+            #
+            # radiation cartesian
+            #
+            radiation_interpolated = dict_results['CART_radiation']
+            vx = dict_results['CART_x']
+            vz = dict_results['CART_y']
+
             if is_monochromatic:
                 self.plot_undulator_item2D(2, radiation_interpolated[0], 1e6 * vx, 1e6 * vz,
                                  title="far field radiation", xtitle="vx [urad]", ytitle="vz [rad]")
@@ -469,46 +420,34 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 self.plot_undulator_item3D(2, radiation_interpolated, photon_energy, 1e6 * vx, 1e6 * vz,
                                  title="far field radiation", xtitle="vx [urad]", ytitle="vz [rad]")
 
-            # # far field 1D
-            # if self.code_undul_phot == 0:
-            #     theta, radial_e_amplitude, mean_photon_energy, distance, magnification = self.lightsource.get_photon_size_farfield()
-            #     self.plot_undulator_item1D(3, theta * 1e6, numpy.abs(radial_e_amplitude)**2,
-            #                                title="Far field distribution (for size calculation)", xtitle="theta [urad]",
-            #                                ytitle="Intensity [arbitrary units]")
-            # else:
-            #     pass
-
+            #
             # backpropagated far field
-            dict1 = self.lightsource.get_result_dictionary()
+            #
             if self.code_undul_phot == 0:
-                x = dict1['BACKPROPAGATED_r']
-                y = dict1['BACKPROPAGATED_radiation'].sum(axis=0)
+                x = dict_results['BACKPROPAGATED_r']
+                y = dict_results['BACKPROPAGATED_radiation'].sum(axis=0)
                 self.plot_undulator_item1D(3, x * 1e6, y,
                                            title="Backpropagated radiation (size distribution)", xtitle="Distance [um]",
                                            ytitle="Intensity [arbitrary units]")
             else:
 
                 if is_monochromatic:
-                    # out['CART_BACKPROPAGATED_e_amplitude_sigma'] = BPwSigma[:, :, :, 0]
-                    # out['CART_BACKPROPAGATED_e_amplitude_pi'] = BPwPi[:, :, :, 0]
-                    # out['CART_BACKPROPAGATED_radiation'] = numpy.abs(BPwSigma[:, :, :, 0]) ** 2 + numpy.abs(
-                    #     BPwPi[:, :, :, 0]) ** 2
-                    # out['CART_BACKPROPAGATED_x'] = BPx  # length in m
-                    # out['CART_BACKPROPAGATED_y'] = BPy  # length in m
                     self.plot_undulator_item2D(3,
-                                               dict1['CART_BACKPROPAGATED_radiation'][0],
-                                               1e6 * dict1['CART_BACKPROPAGATED_x'],
-                                               1e6 * dict1['CART_BACKPROPAGATED_y'],
+                                               dict_results['CART_BACKPROPAGATED_radiation'][0],
+                                               1e6 * dict_results['CART_BACKPROPAGATED_x'],
+                                               1e6 * dict_results['CART_BACKPROPAGATED_y'],
                                                title="Backpropagated radiation (size distribution)", xtitle="x [um]", ytitle="z [um]")
                 else:
                     self.plot_undulator_item3D(3,
-                                               dict1['CART_BACKPROPAGATED_radiation'],
-                                               dict1['photon_energy'],
-                                               1e6 * dict1['CART_BACKPROPAGATED_x'],
-                                               1e6 * dict1['CART_BACKPROPAGATED_y'],
+                                               dict_results['CART_BACKPROPAGATED_radiation'],
+                                               dict_results['photon_energy'],
+                                               1e6 * dict_results['CART_BACKPROPAGATED_x'],
+                                               1e6 * dict_results['CART_BACKPROPAGATED_y'],
                                                title="Backpropagated radiation (size distribution)", xtitle="x [um]", ytitle="z [um]")
 
+            #
             # power density
+            #
             intens_xy, vx, vz = self.lightsource.get_power_density_interpolated_cartesian()
             if is_monochromatic:
                 title="power density W/mrad2/eV"
@@ -538,195 +477,11 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                 pass
 
             print("\n\n")
-            # print("Total power (integral [sum] of spectral power) [W]: ",spectral_power.sum()*(photon_energy[1]-photon_energy[0]))
             print("Total power (integral [trapz] of spectral power) [W]: ",
                   numpy.trapz(w, photon_energy))
             print("Total number of photons (integral [trapz] of flux): ",
                   numpy.trapz(f / (1e-3 * photon_energy), photon_energy))
             print("\n\n")
-
-
-            #
-            # tabs_canvas_index += 1
-            # self.plot_data2D(1e-6 * intens_xy, 1e6 * vx, 1e6 * vz,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="power density W/mrad2", xtitle="vx [urad]", ytitle="vz [rad]")
-
-            #     plot_data2D(radiation[0], 1e6 * theta, phi,
-            #                      0, 0, title="radiation (photons/s/eV/rad2)",
-            #                      xtitle="theta [urad]", ytitle="phi [rad]")
-            #
-            #     # tabs_canvas_index += 1
-            #     # self.plot_data2D(polarization[0], 1e6 * theta, phi,
-            #     #                  tabs_canvas_index, plot_canvas_index, title="polarization |Es|/(|Es|+|Ep|)",
-            #     #                  xtitle="theta [urad]", ytitle="phi [rad]")
-            #     #
-            #     # tabs_canvas_index += 1
-            #     # radiation_interpolated, photon_energy, vx, vz = self.sourceundulator.get_radiation_interpolated_cartesian()
-            #     # self.plot_data2D(radiation_interpolated[0], 1e6 * vx, 1e6 * vz,
-            #     #                  tabs_canvas_index, plot_canvas_index, title="radiation", xtitle="vx [urad]",
-            #     #                  ytitle="vz [rad]")
-            #     #
-            #     # tabs_canvas_index += 1
-            #     # x, y = self.sourceundulator.get_photon_size_distribution()
-            #     # self.plot_data1D(x * 1e6, y,
-            #     #                  tabs_canvas_index, plot_canvas_index,
-            #     #                  title="Photon emission size distribution", xtitle="Distance [um]",
-            #     #                  ytitle="Intensity [arbitrary units]")
-            #
-
-            # tabs_canvas_index += 1
-            # self.plot_data3D(polarization, photon_energy, 1e6 * theta, phi,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="polarization |Es|/(|Es|+|Ep|)", xtitle="theta [urad]", ytitle="phi [rad]",
-            #                  callback_for_title=self.get_title_for_stack_view_polarization)
-            #
-            # tabs_canvas_index += 1
-            # radiation_interpolated, photon_energy, vx, vz = self.sourceundulator.get_radiation_interpolated_cartesian()
-            # self.plot_data3D(radiation_interpolated, photon_energy, 1e6 * vx, 1e6 * vz,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="radiation", xtitle="vx [urad]", ytitle="vz [rad]",
-            #                  callback_for_title=self.get_title_for_stack_view_flux)
-            #
-            # tabs_canvas_index += 1
-            # x, y = self.sourceundulator.get_photon_size_distribution()
-            # self.plot_data1D(x * 1e6, y,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="Photon emission size distribution", xtitle="Distance [um]",
-            #                  ytitle="Intensity [arbitrary units]")
-            #
-            # if polychromatic, plot power density
-            #
-
-            # intens_xy, vx, vz = self.sourceundulator.get_power_density_interpolated_cartesian()
-            #
-            # tabs_canvas_index += 1
-            # self.plot_data2D(1e-6 * intens_xy, 1e6 * vx, 1e6 * vz,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="power density W/mrad2", xtitle="vx [urad]", ytitle="vz [rad]")
-            #
-            # #
-            # # if polychromatic, plot flux(energy)
-            # #
-            #
-            # flux, spectral_power, photon_energy = self.sourceundulator.get_flux_and_spectral_power()
-            #
-            # tabs_canvas_index += 1
-            # self.plot_data1D(photon_energy, flux,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="Flux", xtitle="Photon Energy [eV]", ytitle="Flux [photons/s/0.1%bw]")
-            #
-            # tabs_canvas_index += 1
-            # self.plot_data1D(photon_energy, spectral_power,
-            #                  tabs_canvas_index, plot_canvas_index,
-            #                  title="Spectral Power", xtitle="Photon Energy [eV]", ytitle="Spectral Power [W/eV]")
-            #
-            # print("\n\n")
-            # # print("Total power (integral [sum] of spectral power) [W]: ",spectral_power.sum()*(photon_energy[1]-photon_energy[0]))
-            # print("Total power (integral [trapz] of spectral power) [W]: ",
-            #       numpy.trapz(spectral_power, photon_energy))
-            # print("Total number of photons (integral [trapz] of flux): ",
-            #       numpy.trapz(flux / (1e-3 * photon_energy), photon_energy))
-            # print("\n\n")
-
-    # def XXXXXXXXXplot_undulator_results(self):
-    #     if self.plot_aux_graph == 1:
-    #         try:
-    #
-    #             radiation,photon_energy,theta,phi = self.sourceundulator.get_radiation_polar()
-    #
-    #             tabs_canvas_index = 0
-    #             plot_canvas_index = 0
-    #             polarization = self.sourceundulator.get_result_polarization()
-    #
-    #
-    #             if self.delta_e == 0.0:
-    #                 self.plot_data2D(radiation[0], 1e6*theta, phi,
-    #                                  tabs_canvas_index, plot_canvas_index, title="radiation (photons/s/eV/rad2)", xtitle="theta [urad]", ytitle="phi [rad]")
-    #
-    #                 tabs_canvas_index += 1
-    #                 self.plot_data2D(polarization[0], 1e6*theta, phi,
-    #                                  tabs_canvas_index, plot_canvas_index, title="polarization |Es|/(|Es|+|Ep|)", xtitle="theta [urad]", ytitle="phi [rad]")
-    #
-    #                 tabs_canvas_index += 1
-    #                 radiation_interpolated,photon_energy,vx,vz = self.sourceundulator.get_radiation_interpolated_cartesian()
-    #                 self.plot_data2D(radiation_interpolated[0], 1e6*vx, 1e6*vz,
-    #                                  tabs_canvas_index, plot_canvas_index, title="radiation", xtitle="vx [urad]", ytitle="vz [rad]")
-    #
-    #                 tabs_canvas_index += 1
-    #                 x,y = self.sourceundulator.get_photon_size_distribution()
-    #                 self.plot_data1D(x*1e6,y,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="Photon emission size distribution", xtitle="Distance [um]", ytitle="Intensity [arbitrary units]")
-    #
-    #             else:
-    #                 self.plot_data3D(radiation, photon_energy, 1e6*theta, phi,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="radiation (photons/s/eV/rad2)", xtitle="theta [urad]", ytitle="phi [rad]",
-    #                                  callback_for_title=self.get_title_for_stack_view_flux)
-    #
-    #                 tabs_canvas_index += 1
-    #                 self.plot_data3D(polarization, photon_energy, 1e6*theta, phi,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="polarization |Es|/(|Es|+|Ep|)", xtitle="theta [urad]", ytitle="phi [rad]",
-    #                                  callback_for_title=self.get_title_for_stack_view_polarization)
-    #
-    #                 tabs_canvas_index += 1
-    #                 radiation_interpolated,photon_energy,vx,vz = self.sourceundulator.get_radiation_interpolated_cartesian()
-    #                 self.plot_data3D(radiation_interpolated, photon_energy, 1e6*vx, 1e6*vz,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="radiation", xtitle="vx [urad]", ytitle="vz [rad]",
-    #                                  callback_for_title=self.get_title_for_stack_view_flux)
-    #
-    #                 tabs_canvas_index += 1
-    #                 x,y = self.sourceundulator.get_photon_size_distribution()
-    #                 self.plot_data1D(x*1e6,y,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="Photon emission size distribution", xtitle="Distance [um]", ytitle="Intensity [arbitrary units]")
-    #                 #
-    #                 # if polychromatic, plot power density
-    #                 #
-    #
-    #                 intens_xy,vx,vz = self.sourceundulator.get_power_density_interpolated_cartesian()
-    #
-    #                 tabs_canvas_index += 1
-    #                 self.plot_data2D(1e-6*intens_xy,1e6*vx,1e6*vz,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="power density W/mrad2", xtitle="vx [urad]", ytitle="vz [rad]")
-    #
-    #
-    #                 #
-    #                 # if polychromatic, plot flux(energy)
-    #                 #
-    #
-    #
-    #                 flux,spectral_power,photon_energy = self.sourceundulator.get_flux_and_spectral_power()
-    #
-    #                 tabs_canvas_index += 1
-    #                 self.plot_data1D(photon_energy,flux,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="Flux", xtitle="Photon Energy [eV]", ytitle="Flux [photons/s/0.1%bw]")
-    #
-    #
-    #                 tabs_canvas_index += 1
-    #                 self.plot_data1D(photon_energy,spectral_power,
-    #                                  tabs_canvas_index, plot_canvas_index,
-    #                                  title="Spectral Power", xtitle="Photon Energy [eV]", ytitle="Spectral Power [W/eV]")
-    #
-    #                 print("\n\n")
-    #                 # print("Total power (integral [sum] of spectral power) [W]: ",spectral_power.sum()*(photon_energy[1]-photon_energy[0]))
-    #                 print("Total power (integral [trapz] of spectral power) [W]: ",numpy.trapz(spectral_power,photon_energy))
-    #                 print("Total number of photons (integral [trapz] of flux): ",numpy.trapz(flux/(1e-3*photon_energy),photon_energy))
-    #                 print("\n\n")
-    #
-    #
-    #
-    #
-    #         except Exception as exception:
-    #             QtWidgets.QMessageBox.critical(self, "Error",
-    #                                        str(exception),
-    #                 QtWidgets.QMessageBox.Ok)
-
 
     def plot_undulator_item1D(self, undulator_plot_slot_index, x, y, title="", xtitle="", ytitle="", symbol='.'):
         self.undulator_tab[undulator_plot_slot_index].layout().removeItem(self.undulator_tab[undulator_plot_slot_index].layout().itemAt(0))
@@ -755,14 +510,18 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
                         print(data.get_light_source().get_magnetic_structure(), InsertionDevice)
                         light_source = data.get_light_source()
 
-                        self.set_visibility()
-
+                        # electron parameters
                         self.populate_fields_from_electron_beam(light_source.get_electron_beam())
+                        # undulator parameters
                         w = light_source.get_magnetic_structure()
-                        self.k_value = w.K_vertical()
-                        self.id_period = w.period_length()
+                        self.K_vertical        = w.K_vertical()
+                        self.period_length     = w.period_length()
                         self.number_of_periods = w.number_of_periods()
+                        #others
+                        self.set_at_resonance = 1
+                        self.is_monochromatic = 1
 
+                        self.set_visibility()
                     else:
                         raise ValueError("Syned light source not congruent")
                 else:
