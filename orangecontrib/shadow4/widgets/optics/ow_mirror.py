@@ -428,8 +428,6 @@ class OWMirror(_OWMirror):
     def get_oe_type(self):
         return "mirror", "Mirror"
 
-
-
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline
     def get_test_beam():

@@ -285,8 +285,14 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             #
             self.progressBarInit()
             output_beam, footprint = element.trace_beam()
+
+            self._post_trace_operations(output_beam, footprint, element, beamline)
+
             self._set_plot_quality()
             self._plot_results(output_beam, footprint, progressBarValue=80)
+
+            self._plot_additional_results(output_beam, footprint, element, beamline)
+
             self.progressBarFinished()
 
             #
@@ -296,6 +302,9 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
         except Exception as exception:
             self.prompt_exception(exception)
             self._initialize_tabs()
+
+    def _post_trace_operations(self, output_beam, footprint, element, beamline): pass
+    def _plot_additional_results(self, output_beam, footprint, element, beamline): pass
 
     def receive_syned_data(self, data): raise Exception("Not yet implemented")
 
