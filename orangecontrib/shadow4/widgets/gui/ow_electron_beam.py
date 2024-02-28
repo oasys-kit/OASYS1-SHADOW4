@@ -51,8 +51,9 @@ class OWElectronBeam(GenericElement):
     electron_beam_etap_v = Setting(0.0)
 
     type_of_properties = Setting(1)
+    flag_energy_spread = Setting(0)
 
-    def __init__(self):
+    def __init__(self, show_energy_spread=False):
         super().__init__(show_automatic_box=False, has_footprint=False)
 
         self.runaction = widget.OWAction("Run Shadow4/Source", self)
@@ -90,9 +91,18 @@ class OWElectronBeam(GenericElement):
         self.electron_beam_box = oasysgui.widgetBox(self.tab_electron_beam, "Electron Beam/Machine Parameters", addSpace=False, orientation="vertical")
 
         oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_in_GeV", "Energy [GeV]",  tooltip="electron_energy_in_GeV", labelWidth=260, valueType=float, orientation="horizontal")
-        # todo: include and manage it in the future....
-        # oasysgui.lineEdit(self.electron_beam_box, self, "electron_energy_spread", "Energy Spread", tooltip="electron_energy_spread", labelWidth=260, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.electron_beam_box, self, "ring_current", "Ring Current [A]",        tooltip="ring_current",           labelWidth=260, valueType=float, orientation="horizontal")
+
+        if show_energy_spread:
+            gui.comboBox(self.electron_beam_box, self, "flag_energy_spread", tooltip="flag_energy_spread", label="Energy Spread", labelWidth=350,
+                     items=["No (zero)", "Yes"],
+                     callback=self.set_TypeOfProperties,
+                     sendSelectedValue=False, orientation="horizontal")
+        else:
+            self.flag_energy_spread = 0
+        self.box_energy_spread = oasysgui.widgetBox(self.electron_beam_box, "", addSpace=False, orientation="vertical")
+        oasysgui.lineEdit(self.box_energy_spread, self, "electron_energy_spread", "Energy Spread DE/E", tooltip="electron_energy_spread", labelWidth=260, valueType=float, orientation="horizontal")
+
 
         gui.comboBox(self.electron_beam_box, self, "type_of_properties", tooltip="type_of_properties", label="Electron Beam Properties", labelWidth=350,
                      items=["From 2nd Moments", "From Size/Divergence", "From Twiss parameters","Zero emittance"],
@@ -126,11 +136,11 @@ class OWElectronBeam(GenericElement):
         oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_etap_h",      "\u03B7'x",       tooltip="electron_beam_etap_h",     labelWidth=75, valueType=float, orientation="horizontal")
 
 
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_emittance_v", "\u03B5y [m.rad]",tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_alpha_v",     "\u03B1y",        tooltip="",labelWidth=75,valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_beta_v",      "\u03B2y [m]",    tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_eta_v",       "\u03B7y",        tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_etap_v",      "\u03B7'y",       tooltip="",labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_emittance_v", "\u03B5y [m.rad]",tooltip="electron_beam_emittance_v",labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_alpha_v",     "\u03B1y",        tooltip="electron_beam_alpha_v",    labelWidth=75,valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_beta_v",      "\u03B2y [m]",    tooltip="electron_beam_beta_v",     labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_eta_v",       "\u03B7y",        tooltip="electron_beam_eta_v",      labelWidth=75, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_etap_v",      "\u03B7'y",       tooltip="electron_beam_etap_v",     labelWidth=75, valueType=float, orientation="horizontal")
 
         self.set_TypeOfProperties()
 
@@ -138,9 +148,16 @@ class OWElectronBeam(GenericElement):
 
 
     def set_TypeOfProperties(self):
+        print(">>>>>>>>> abstract set_TypeOfProperties", self.flag_energy_spread)
         self.left_box_2_1.setVisible(self.type_of_properties == 0)
         self.left_box_2_2.setVisible(self.type_of_properties == 1)
         self.left_box_2_3.setVisible(self.type_of_properties == 2)
+        self.box_energy_spread.setVisible(self.flag_energy_spread == 1)
+        self.set_visibility_energy_spread()
+
+    def set_visibility_energy_spread(self): # to be filled in the upper class
+        print(">>>>>>>>> abstract set_visibility_energy_spread")
+        pass
 
 
     def check_data(self):

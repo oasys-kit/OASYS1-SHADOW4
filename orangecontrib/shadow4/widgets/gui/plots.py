@@ -145,3 +145,79 @@ def plot_data3D(data3D, dataE, dataX, dataY,
     plot_widget_id.setTitleCallback( callback_for_title )
 
     return plot_widget_id
+
+
+def plot_multi_data1D(x, y_list,
+                      title="", xtitle="",
+                      ytitle="",
+                      ytitles=[""],
+                      colors=['green'],
+                      replace=True,
+                      control=False,
+                      xrange=None,
+                      yrange=None,
+                      symbol=['']):
+    if len(y_list) != len(ytitles):
+        ytitles = ytitles * len(y_list)
+
+    if len(y_list) != len(colors):
+        colors = colors * len(y_list)
+
+    if len(y_list) != len(symbol):
+        symbol = symbol * len(y_list)
+
+    # if tabs_canvas_index is None: tabs_canvas_index = 0  # back compatibility?
+
+    # self.tab[tabs_canvas_index].layout().removeItem(self.tab[tabs_canvas_index].layout().itemAt(0))
+
+    plot_widget_id = oasysgui.plotWindow(parent=None,
+                                                              backend=None,
+                                                              resetzoom=True,
+                                                              autoScale=False,
+                                                              logScale=True,
+                                                              grid=True,
+                                                              curveStyle=True,
+                                                              colormap=False,
+                                                              aspectRatio=False,
+                                                              yInverted=False,
+                                                              copy=True,
+                                                              save=True,
+                                                              print_=True,
+                                                              control=control,
+                                                              position=True,
+                                                              roi=False,
+                                                              mask=False,
+                                                              fit=False)
+
+    plot_widget_id.setDefaultPlotLines(True)
+    plot_widget_id.setActiveCurveColor(color='blue')
+    plot_widget_id.setGraphXLabel(xtitle)
+    plot_widget_id.setGraphYLabel(ytitle)
+
+    # self.tab[tabs_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
+
+    for i in range(len(y_list)):
+        plot_widget_id.addCurve(x, y_list[i],
+                                                     ytitles[i],
+                                                     xlabel=xtitle,
+                                                     ylabel=ytitle,
+                                                     symbol='',
+                                                     color=colors[i])
+    #
+    plot_widget_id.getLegendsDockWidget().setFixedHeight(150)
+    plot_widget_id.getLegendsDockWidget().setVisible(True)
+    plot_widget_id.setActiveCurve(ytitles[0])
+    plot_widget_id.replot()
+
+    if xrange is not None:
+        plot_widget_id.setGraphXLimits(xrange[0], xrange[1])
+    if yrange is not None:
+        plot_widget_id.setGraphYLimits(yrange[0], yrange[1])
+
+    return plot_widget_id
+    # if numpy.amin(numpy.array(y_list)) < 0:
+    #     self.plot_canvas[plot_canvas_index].setGraphYLimits(numpy.amin(numpy.array(y_list))*1.01, numpy.amax(numpy.array(y_list))*1.01)
+    # else:
+    #     self.plot_canvas[plot_canvas_index].setGraphYLimits(numpy.amin(numpy.array(y_list))*0.99, numpy.amax(numpy.array(y_list))*1.01)
+
+    # self.progressBarSet(progressBarValue)

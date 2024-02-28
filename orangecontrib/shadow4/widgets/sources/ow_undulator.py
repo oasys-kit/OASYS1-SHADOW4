@@ -77,7 +77,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
     flag_backprop_weight = Setting(0)
     weight_ratio = Setting(0.5)
 
-    plot_undulator_graph = 1
+    plot_undulator_graph = Setting(1)
 
     beam_out = None
     lightsource = None # store lightsource after calculation
