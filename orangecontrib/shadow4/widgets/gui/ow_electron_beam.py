@@ -148,7 +148,6 @@ class OWElectronBeam(GenericElement):
 
 
     def set_TypeOfProperties(self):
-        print(">>>>>>>>> abstract set_TypeOfProperties", self.flag_energy_spread)
         self.left_box_2_1.setVisible(self.type_of_properties == 0)
         self.left_box_2_2.setVisible(self.type_of_properties == 1)
         self.left_box_2_3.setVisible(self.type_of_properties == 2)
@@ -156,7 +155,6 @@ class OWElectronBeam(GenericElement):
         self.set_visibility_energy_spread()
 
     def set_visibility_energy_spread(self): # to be filled in the upper class
-        print(">>>>>>>>> abstract set_visibility_energy_spread")
         pass
 
 
