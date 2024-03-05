@@ -151,20 +151,30 @@ def plot_multi_data1D(x, y_list,
                       title="", xtitle="",
                       ytitle="",
                       ytitles=[""],
-                      colors=['green'],
+                      colors=None, #['green'],
                       replace=True,
                       control=False,
                       xrange=None,
                       yrange=None,
-                      symbol=['']):
-    if len(y_list) != len(ytitles):
-        ytitles = ytitles * len(y_list)
+                      symbol=[''],
+                      flag_common_abscissas=1,
+                    ):
+    if isinstance(y_list, list):
+        ntimes = len(y_list)
+    else:
+        ntimes = y_list.shape[0]
 
-    if len(y_list) != len(colors):
-        colors = colors * len(y_list)
+    if ntimes != len(ytitles):
+        ytitles = ytitles * ntimes
 
-    if len(y_list) != len(symbol):
-        symbol = symbol * len(y_list)
+    if colors is None:
+        colors = [None] * ntimes
+    else:
+        if ntimes != len(colors):
+            colors = colors * ntimes
+
+    if ntimes != len(symbol):
+        symbol = symbol * ntimes
 
     # if tabs_canvas_index is None: tabs_canvas_index = 0  # back compatibility?
 
@@ -196,13 +206,24 @@ def plot_multi_data1D(x, y_list,
 
     # self.tab[tabs_canvas_index].layout().addWidget(self.plot_canvas[plot_canvas_index])
 
-    for i in range(len(y_list)):
-        plot_widget_id.addCurve(x, y_list[i],
-                                                     ytitles[i],
-                                                     xlabel=xtitle,
-                                                     ylabel=ytitle,
-                                                     symbol='',
-                                                     color=colors[i])
+
+    if flag_common_abscissas:
+        for i in range(ntimes):
+            plot_widget_id.addCurve(x, y_list[i],
+                                                         ytitles[i],
+                                                         xlabel=xtitle,
+                                                         ylabel=ytitle,
+                                                         symbol='',
+                                                         color=colors[i])
+    else:
+        for i in range(ntimes):
+            plot_widget_id.addCurve(x[i], y_list[i],
+                                                         ytitles[i],
+                                                         xlabel=xtitle,
+                                                         ylabel=ytitle,
+                                                         symbol='',
+                                                         color=colors[i])
+
     #
     plot_widget_id.getLegendsDockWidget().setFixedHeight(150)
     plot_widget_id.getLegendsDockWidget().setVisible(True)
@@ -215,9 +236,3 @@ def plot_multi_data1D(x, y_list,
         plot_widget_id.setGraphYLimits(yrange[0], yrange[1])
 
     return plot_widget_id
-    # if numpy.amin(numpy.array(y_list)) < 0:
-    #     self.plot_canvas[plot_canvas_index].setGraphYLimits(numpy.amin(numpy.array(y_list))*1.01, numpy.amax(numpy.array(y_list))*1.01)
-    # else:
-    #     self.plot_canvas[plot_canvas_index].setGraphYLimits(numpy.amin(numpy.array(y_list))*0.99, numpy.amax(numpy.array(y_list))*1.01)
-
-    # self.progressBarSet(progressBarValue)

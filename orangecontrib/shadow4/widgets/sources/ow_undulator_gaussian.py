@@ -51,12 +51,13 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
     harmonic_number = Setting(1)
     period_length = Setting(0.020)
 
-    flux_peak = Setting('1e10')
+    flag_autoset_flux_central_cone = Setting(0)
+    flux_central_cone = Setting('1e10')
     plot_npoints = Setting(100)
-    plot_emin = Setting(1000.0)
-    plot_emax = Setting(10000.0)
+    plot_Kmin = Setting(0.2)
+    plot_Kmax = Setting(2.0)
+    plot_max_harmonic_number = Setting(11)
 
-    # beam_out = None
     lightsource = None # store lightsource after calculation
 
     def __init__(self):
@@ -85,18 +86,30 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced Setting")
         # arrays
         left_box_11 = oasysgui.widgetBox(tab_advanced, "Flux normalization", addSpace=False, orientation="vertical")
-        # define as string to allow scientific notation (e.g. 2e11)
-        oasysgui.lineEdit(left_box_11, self, "flux_peak", "Set flux to [photons/s/0.1%bw]", tooltip="flux_peak",
+
+        orangegui.comboBox(left_box_11, self,
+                           "flag_autoset_flux_central_cone",
+                           label="Auto calculate central cone flux",
+                           labelWidth=220,
+                           items=["No", "Yes"],
+                           callback=self.set_visibility,
+                           sendSelectedValue=False,
+                           orientation="horizontal")
+
+        self.box_flux_central_cone = oasysgui.widgetBox(left_box_11, orientation="vertical")
+        oasysgui.lineEdit(self.box_flux_central_cone, self, "flux_central_cone", "Set flux to [photons/s/0.1%bw]", tooltip="flux_central_cone",
                           labelWidth=250, valueType=str, orientation="horizontal")
 
 
         left_box_11 = oasysgui.widgetBox(tab_advanced, "Specific parameters for undulator plots", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(left_box_11, self, "plot_npoints", "Number of energy points", tooltip="plot_npoints",
                           labelWidth=250, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(left_box_11, self, "plot_emin", "Min photon energy [eV]", tooltip="plot_emin",
+        oasysgui.lineEdit(left_box_11, self, "plot_Kmin", "Minimum K", tooltip="plot_Kmin",
                           labelWidth=250, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(left_box_11, self, "plot_emax", "Max photon energy [eV]", tooltip="plot_emax",
+        oasysgui.lineEdit(left_box_11, self, "plot_Kmax", "Maximum K", tooltip="plot_Kmax",
                           labelWidth=250, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_11, self, "plot_max_harmonic_number", "Maximum harmonic number", tooltip="plot_max_harmonic_number",
+                          labelWidth=250, valueType=int, orientation="horizontal")
 
 
         # undulator plots
@@ -108,26 +121,14 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         gui.rubber(self.mainArea)
 
     def set_visibility_energy_spread(self): # to be filled in the upper class
-        print(">>>>>>>>> local set_visibility_energy_spread", self.flag_energy_spread)
-        try: # avoir error when calling this method from the base class
+        try: # avoid error when calling this method from the base class
             self.box_energy_spread_local.setVisible(self.flag_energy_spread == 1)
         except:
             pass
-    def set_visibility(self):
-        self.set_visibility_energy_spread()
 
-        # self.box_photon_energy_min_max.setVisible( self.set_at_resonance == 0 and self.is_monochromatic == 0)
-        # self.box_photon_energy_center.setVisible(  self.set_at_resonance == 0 and self.is_monochromatic == 1)
-        # self.box_photon_energy_width.setVisible(   self.set_at_resonance == 1 and self.is_monochromatic == 0)
-        # self.box_photon_energy_harmonic.setVisible(self.set_at_resonance == 1)
-        # self.box_maxangle.setVisible(              self.set_at_resonance == 0)
-        #
-        # self.box_backpropagation_internal_wofry.setVisible(self.flag_size == 2 and self.code_undul_phot <= 1)
-        # self.box_backpropagation_srw.setVisible(self.flag_size == 2 and self.code_undul_phot == 2)
-        #
-        # self.box_backpropagation_internal_wofry_weight_vaue.setVisible(self.flag_backprop_weight == 1) # self.flag_size == 2 and
-        #                                                               # self.code_undul_phot == 2 and
-        #                                                               # self.flag_backprop_weight == 1)
+    def set_visibility(self):
+        self.box_flux_central_cone.setVisible(self.flag_autoset_flux_central_cone == 0)
+        self.set_visibility_energy_spread()
 
     def add_specific_undulator_plots(self):
 
@@ -179,7 +180,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
     def plot_undulator_multi_data1D(self, undulator_plot_slot_index, x, y, title="", xtitle="", ytitle="", ytitles=[""], symbol='.'):
         self.undulator_tab[undulator_plot_slot_index].layout().removeItem(self.undulator_tab[undulator_plot_slot_index].layout().itemAt(0))
-        plot_widget_id = plot_multi_data1D(x, y, title=title, xtitle=xtitle, ytitle=ytitle, ytitles=ytitles) #, symbol=symbol)
+        plot_widget_id = plot_multi_data1D(x, y, title=title, xtitle=xtitle, ytitle=ytitle, ytitles=ytitles, flag_common_abscissas=0) #, symbol=symbol)
         self.undulator_tab[undulator_plot_slot_index].layout().addWidget(plot_widget_id)
 
     def refresh_specific_undulator_plots(self):
@@ -201,16 +202,23 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
                                   title="Undulator spectral power",
                                   xtitle="Photon energy [eV]", ytitle="Spectral power [W/eV]")
 
-            ener = numpy.linspace(self.plot_emin, self.plot_emax, self.plot_npoints)
-            Sx, Spx, Sz, Spz = self.lightsource.get_scans_for_plots(ener)
+            # size and divergence
+            Energies, SizeH, SizeV, DivergenceH, DivergenceV, Labels = \
+            self.lightsource.get_size_and_divergence_vs_photon_energy(self.plot_Kmin, self.plot_Kmax,
+                                                                      max_harmonic_number=self.plot_max_harmonic_number)
 
-            self.plot_undulator_multi_data1D(2, ener, [1e6 * Sx, 1e6 * Sz],
-                                  title="Undulator sizes", xtitle="Photon energy [eV]", ytitle=r"Size RMS [um]",
-                                  ytitles=["Horizontal", "Vertical"])
+            Energies2 = numpy.concatenate((Energies, Energies))
+            Sizes = numpy.concatenate((SizeH, SizeV))
+            Divergences = numpy.concatenate((DivergenceH, DivergenceV))
+            Labels2 = ["H " + item for item in Labels] + ["V " + item for item in Labels]
 
-            self.plot_undulator_multi_data1D(3, ener, [1e6 * Spx, 1e6 * Spz],
-                                  title="Undulator divergences", xtitle="Photon energy [eV]", ytitle=r"Divergence angle RMS [urad]",
-                                  ytitles=["Horizontal", "Vertical"])
+            self.plot_undulator_multi_data1D(2, Energies2, 1e6 * Sizes,
+                                  title="Undulator size", xtitle="Photon energy [eV]", ytitle=r"Size (Sigma) [um]",
+                                  ytitles=Labels2)
+
+            self.plot_undulator_multi_data1D(3, Energies2, 1e6 * Divergences,
+                                  title="Undulator divergence", xtitle="Photon energy [eV]", ytitle=r"Divergence angle (Sigma) [urad]",
+                                  ytitles=Labels2)
 
     def checkFields(self):
         self.number_of_rays = congruence.checkPositiveNumber(self.number_of_rays, "Number of rays")
@@ -222,7 +230,6 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
     def get_lightsource(self):
         # syned electron beam
         electron_beam = self.get_electron_beam()
-        print("\n\n>>>>>> electron_beam info: ", electron_beam.info())
 
         if self.type_of_properties == 3:
             flag_emittance = 0
@@ -234,14 +241,13 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
             number_of_periods=self.undulator_length / self.period_length,  # syned Undulator parameter
             photon_energy=self.energy,
             delta_e=self.delta_e,
-            # ng_e=11,  # Photon energy scan number of points
+            ng_e=self.plot_npoints,  # Photon energy scan number of points
             flag_emittance=flag_emittance,  # when sampling rays: Use emittance (0=No, 1=Yes)
             flag_energy_spread=self.flag_energy_spread,
             harmonic_number=self.harmonic_number,
-            flux_peak=float(self.flux_peak),
+            flag_autoset_flux_central_cone=self.flag_autoset_flux_central_cone,
+            flux_central_cone=float(self.flux_central_cone),
         )
-
-        print("\n\n>>>>>> Undulator info: ", sourceundulator.info())
 
         if self.delta_e == 0:
             sourceundulator.set_energy_monochromatic(self.energy)
@@ -273,8 +279,6 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         # script
         #
         script = light_source.to_python_code()
-        # script += "\n\n\n# run shadow4"
-        # script += "\nbeam = light_source.get_beam(NRAYS=%d, SEED=%d)" % (self.number_of_rays, self.seed)
         script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
         script += "\nrays = beam.get_rays()"
         script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
@@ -318,6 +322,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
                         self.delta_e = 0.0
                         self.undulator_length = light_source.get_magnetic_structure().length()
                         self.period_length = light_source.get_magnetic_structure().period_length()
+                        self.plot_Kmax = light_source.get_magnetic_structure().K_vertical()
 
 
                         self.populate_fields_from_electron_beam(light_source.get_electron_beam())
