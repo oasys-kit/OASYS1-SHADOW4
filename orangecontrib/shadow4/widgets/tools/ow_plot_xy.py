@@ -60,6 +60,9 @@ class PlotXY(AutomaticElement):
     number_of_bins_h = Setting(100)
     number_of_bins_v = Setting(100)
 
+    flip_h = Setting(0)
+    flip_v = Setting(0)
+
     title = Setting("X,Z")
 
     autosave           = Setting(0)
@@ -182,7 +185,7 @@ class PlotXY(AutomaticElement):
 
         gui.button(incremental_box, self, "Clear", callback=self.clear_results)
 
-        histograms_box = oasysgui.widgetBox(tab_gen, "Histograms settings", addSpace=True, orientation="vertical", height=120)
+        histograms_box = oasysgui.widgetBox(tab_gen, "Histograms settings", addSpace=True, orientation="vertical", height=200)
 
         oasysgui.lineEdit(histograms_box, self, "number_of_bins_h", "Number of Bins H", labelWidth=250, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(histograms_box, self, "number_of_bins_v", "Number of Bins V", labelWidth=250, valueType=int, orientation="horizontal")
@@ -190,7 +193,16 @@ class PlotXY(AutomaticElement):
                                          items=["No", "Yes"],
                                          sendSelectedValue=False, orientation="horizontal", callback=self.set_is_conversion_active)
 
+        gui.comboBox(histograms_box, self, "flip_h", label="Flip H Axis", labelWidth=250,
+                                         items=["No", "Yes"],
+                                         sendSelectedValue=False, orientation="horizontal")
+        gui.comboBox(histograms_box, self, "flip_v", label="Flip V Axis", labelWidth=250,
+                                         items=["No", "Yes"],
+                                         sendSelectedValue=False, orientation="horizontal")
+
         self.set_autosave()
+
+
 
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
         plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots")
@@ -324,7 +336,9 @@ class PlotXY(AutomaticElement):
                                                      xum=xum,
                                                      yum=yum,
                                                      ref=self.weight_column_index,
-                                                     flux=flux)
+                                                     flux=flux,
+                                                     flip_h=self.flip_h==1,
+                                                     flip_v=self.flip_v==1)
 
                 self.cumulated_ticket = None
                 self.plotted_ticket = ticket

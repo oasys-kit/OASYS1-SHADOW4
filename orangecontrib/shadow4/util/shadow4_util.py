@@ -630,7 +630,7 @@ try:
 
                 self.setLayout(layout)
 
-            def plot_xy(self, beam, var_x, var_y, title, xtitle, ytitle, xrange=None, yrange=None, nolost=1, nbins=100, nbins_h=None, nbins_v=None, xum="", yum="", ref=23, is_footprint=False, ticket_to_add=None, flux=None):
+            def plot_xy(self, beam, var_x, var_y, title, xtitle, ytitle, xrange=None, yrange=None, nolost=1, nbins=100, nbins_h=None, nbins_v=None, xum="", yum="", ref=23, is_footprint=False, ticket_to_add=None, flux=None, flip_h=False, flip_v=False):
                 matplotlib.rcParams['axes.formatter.useoffset']='False'
 
                 if nbins_h is None: nbins_h = nbins
@@ -680,7 +680,12 @@ try:
                                                   "colors":256})
 
                     # PyMCA inverts axis!!!! histogram must be calculated reversed
-                    self.plot_canvas.setImage(ticket['histogram'].T, origin=origin, scale=scale)
+
+                    data_2D = ticket['histogram'].T
+                    if flip_h: data_2D = numpy.flip(data_2D, axis=0)
+                    if flip_v: data_2D = numpy.flip(data_2D, axis=1)
+
+                    self.plot_canvas.setImage(data_2D, origin=origin, scale=scale)
                 else:
                     self.plot_canvas.clear()
 
