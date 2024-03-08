@@ -56,7 +56,7 @@ from setuptools import find_packages, setup
 import subprocess
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.36'
+VERSION = '0.0.37'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
@@ -90,14 +90,12 @@ SETUP_REQUIRES = (
                   )
 
 INSTALL_REQUIRES = (
-                    'oasys1>=1.2.140',
+                    'oasys1>=1.2.145',
                     'shadow4>=0.1.27',
                     'xoppylib', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
                     )
 
 PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
-
-
 
 PACKAGE_DATA = {
     "orangecontrib.shadow4.widgets.sources":["icons/*.png", "icons/*.jpg"],
@@ -110,7 +108,6 @@ PACKAGE_DATA = {
 
 NAMESPACE_PACAKGES = ["orangecontrib","orangecontrib.shadow4", "orangecontrib.shadow4.widgets"]
 
-
 ENTRY_POINTS = {
     'oasys.addons' : ("SHADOW4 = orangecontrib.shadow4", ),
     'oasys.widgets' : (
@@ -120,6 +117,7 @@ ENTRY_POINTS = {
             "SHADOW4 Tools = orangecontrib.shadow4.widgets.tools",
             "SHADOW3 \u21d4 SHADOW4 = orangecontrib.shadow4.widgets.compatibility",
     ),
+    'oasys.menus' : ("shadow4menu = orangecontrib.shadow4.menu",)
     }
 
 if __name__ == '__main__':

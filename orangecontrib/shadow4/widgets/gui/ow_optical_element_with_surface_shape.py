@@ -601,12 +601,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         if not os.path.isfile(surface_data_file): raise Exception("File %s not found." % surface_data_file)
 
-        ask_for_fix = False
-        if self.is_infinite == 1:
-            ask_for_fix = True
-        else:
-            if self.oe_shape != 0:
-                ask_for_fix = True
+        ask_for_fix = self.is_infinite == 1 or self.oe_shape != 0
 
         if ask_for_fix:
             if xx is None or yy is None or zz is None: xx, yy, zz = read_surface_file(surface_data_file)
@@ -685,6 +680,83 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     # S4 objects
     #########################################################
 
+    def _post_trace_operations(self, output_beam, footprint, element, beamline):
+        from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirrorElement
+        from shadow4.beamline.optical_elements.gratings.s4_additional_numerical_mesh_grating import S4AdditionalNumericalMeshGrating
+        from shadow4.beamline.optical_elements.crystals.s4_additional_numerical_mesh_crystal import S4AdditionalNumericalMeshCrystalElement
+        from shadow4.optical_surfaces.s4_conic import S4Conic
+
+        from syned.beamline.shape import Ellipsoid, EllipticalCylinder, \
+            Sphere, SphericalCylinder, \
+            Toroid, \
+            Hyperboloid, HyperbolicCylinder, \
+            Paraboloid, ParabolicCylinder, Convexity, Side, Direction
+
+        if isinstance(element, S4AdditionalNumericalMeshMirrorElement):    surface_shape = element.get_optical_element().ideal_mirror().get_surface_shape()
+        elif isinstance(element, S4AdditionalNumericalMeshGrating):        surface_shape = element.get_optical_element().ideal_grating().get_surface_shape()
+        elif isinstance(element, S4AdditionalNumericalMeshCrystalElement): surface_shape = element.get_optical_element().ideal_crystal().get_surface_shape()
+        else:                                                              surface_shape = element.get_optical_element().get_surface_shape()
+
+        if isinstance(surface_shape, Toroid):
+            self.conic_coefficient_0 = 0.0
+            self.conic_coefficient_1 = 0.0
+            self.conic_coefficient_2 = 0.0
+            self.conic_coefficient_3 = 0.0
+            self.conic_coefficient_4 = 0.0
+            self.conic_coefficient_5 = 0.0
+            self.conic_coefficient_6 = 0.0
+            self.conic_coefficient_7 = 0.0
+            self.conic_coefficient_8 = 0.0
+            self.conic_coefficient_9 = 0.0
+        else:
+            switch_convexity = 0 if surface_shape.get_convexity() == Convexity.DOWNWARD else 1
+
+            if isinstance(surface_shape, (Ellipsoid, EllipticalCylinder)):
+                conic = S4Conic.initialize_as_ellipsoid_from_focal_distances(p=surface_shape.get_p_focus(),
+                                                                             q=surface_shape.get_q_focus(),
+                                                                             theta1=surface_shape.get_grazing_angle(),
+                                                                             cylindrical=1 if isinstance(surface_shape, EllipticalCylinder) else 0,
+                                                                             cylangle=(0.0 if surface_shape.get_cylinder_direction()==Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, EllipticalCylinder) else 0.0,
+                                                                             switch_convexity=switch_convexity)
+            elif isinstance(surface_shape, (Hyperboloid, HyperbolicCylinder)):
+                conic = S4Conic.initialize_as_hyperboloid_from_focal_distances(p=surface_shape.get_p_focus(),
+                                                                               q=surface_shape.get_q_focus(),
+                                                                               theta1=surface_shape.get_grazing_angle(),
+                                                                               cylindrical=1 if isinstance(surface_shape, HyperbolicCylinder) else 0,
+                                                                               cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, HyperbolicCylinder) else 0.0,
+                                                                               switch_convexity=switch_convexity)
+            elif isinstance(surface_shape, (Sphere, SphericalCylinder)):
+                conic = S4Conic.initialize_as_sphere_from_curvature_radius(radius=surface_shape.get_radius(),
+                                                                           cylindrical=1 if isinstance(surface_shape, SphericalCylinder) else 0,
+                                                                           cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, SphericalCylinder) else 0.0,
+                                                                           switch_convexity=switch_convexity)
+            elif isinstance(surface_shape, (Paraboloid, ParabolicCylinder)):
+                if surface_shape.get_at_infinity() == Side.IMAGE:
+                    p = surface_shape.get_pole_to_focus()
+                    q = 1e10
+                else:
+                    p = 1e10
+                    q = surface_shape.get_pole_to_focus()
+
+                conic = S4Conic.initialize_as_paraboloid_from_focal_distances(p=p,
+                                                                              q=q,
+                                                                              theta1=surface_shape.get_grazing_angle(),
+                                                                              cylindrical=1 if isinstance(surface_shape, ParabolicCylinder) else 0,
+                                                                              cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, ParabolicCylinder) else 0.0,
+                                                                              switch_convexity=switch_convexity)
+
+            self.conic_coefficient_0 = conic.ccc[0]
+            self.conic_coefficient_1 = conic.ccc[1]
+            self.conic_coefficient_2 = conic.ccc[2]
+            self.conic_coefficient_3 = conic.ccc[3]
+            self.conic_coefficient_4 = conic.ccc[4]
+            self.conic_coefficient_5 = conic.ccc[5]
+            self.conic_coefficient_6 = conic.ccc[6]
+            self.conic_coefficient_7 = conic.ccc[7]
+            self.conic_coefficient_8 = conic.ccc[8]
+            self.conic_coefficient_9 = conic.ccc[9]
+
+
     def get_focusing_grazing_angle(self):
         if self.focii_and_continuation_plane == 0: # coincident
             if self.angles_respect_to == 0:
@@ -709,7 +781,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         else:                                      return self.image_side_focal_distance
 
     def get_boundary_shape(self):
-        if self.is_infinite: return None
+        if self.is_infinite == 1: return None
         else:
             if self.oe_shape == 0: # Rectangular
                 return Rectangle(x_left=-self.dim_x_minus, x_right=self.dim_x_plus,
@@ -938,12 +1010,12 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
             self.setLayout(layout)
 
-        def calculate_surface(self, parent, bin_x=100, bin_y=100, sign=-1):
-            if parent.is_infinite == 0:
-                x_min = -10
-                x_max = 10
-                y_min = -10
-                y_max = 10
+        def calculate_surface(self, parent, bin_x=100, bin_y=100):
+            if parent.is_infinite == 1:
+                x_min = -0.01
+                x_max = 0.01
+                y_min = -0.01
+                y_max = 0.01
             else:
                 x_min = -parent.dim_x_minus
                 x_max = parent.dim_x_plus

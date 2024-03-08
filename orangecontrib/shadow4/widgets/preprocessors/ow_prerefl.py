@@ -17,7 +17,7 @@ from oasys.widgets import congruence
 
 from oasys.util.oasys_util import EmittingStream
 from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData
-from orangecontrib.shadow.util.shadow_util import ShadowPhysics
+from orangecontrib.shadow4.util.shadow4_util import ShadowPhysics
 
 class OWPrerefl(OWWidget):
     name = "PreRefl"
