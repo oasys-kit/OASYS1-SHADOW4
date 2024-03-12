@@ -75,7 +75,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
         #
         box_2 = oasysgui.widgetBox(tab_bas, "Sampling rays", addSpace=True, orientation="vertical")
-        oasysgui.lineEdit(box_2, self, "energy", "Set resonance at energy [eV]", tooltip="energy", labelWidth=250, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box_2, self, "energy", "Set photon energy [eV]", tooltip="energy", labelWidth=250, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(box_2, self, "delta_e", "Delta Energy [eV]", tooltip="delta_e", labelWidth=250, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(box_2, self, "number_of_rays", "Number of Rays", tooltip="number_of_rays", labelWidth=250, valueType=int, orientation="horizontal")
         oasysgui.lineEdit(box_2, self, "seed", "Seed", tooltip="seed", labelWidth=250, valueType=int, orientation="horizontal")
