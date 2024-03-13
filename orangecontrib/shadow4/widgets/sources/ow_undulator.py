@@ -84,7 +84,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
 
 
     def __init__(self):
-        super().__init__()
+        super().__init__(show_energy_spread=True)
 
         tab_undulator = oasysgui.createTabPage(self.tabs_control_area, "Undulator Setting")
 
@@ -287,8 +287,8 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             flag_backprop_recalculate_source=self.flag_backprop_recalculate_source,
             flag_backprop_weight=self.flag_backprop_weight,
             weight_ratio=self.weight_ratio,
+            flag_energy_spread=self.flag_energy_spread,
             )
-
 
         # S4undulatorLightSource
         lightsource = S4UndulatorLightSource(name='undulator',
