@@ -438,21 +438,21 @@ if __name__ == "__main__":
                                      sigma_yp=1.37498e-06)
 
         # Gaussian undulator
-        from shadow4.sources.undulator.s4_undulator import S4Undulator
-        sourceundulator = S4Undulator(
+        from shadow4.sources.undulator.s4_undulator_gaussian import S4UndulatorGaussian
+        sourceundulator = S4UndulatorGaussian(
             period_length=0.0159999,
             number_of_periods=100,
-            emin=2700.136,
-            emax=2700.136,
+            photon_energy=2700.136,
+            delta_e=0.0,
             flag_emittance=1,  # Use emittance (0=No, 1=Yes)
         )
         sourceundulator.set_energy_monochromatic(2700.14)
 
-        from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
-        light_source = S4UndulatorLightSource(name='GaussianUndulator', electron_beam=electron_beam,
+        from shadow4.sources.undulator.s4_undulator_gaussian_light_source import S4UndulatorGaussianLightSource
+        light_source = S4UndulatorGaussianLightSource(name='GaussianUndulator', electron_beam=electron_beam,
                                               magnetic_structure=sourceundulator, nrays=5000, seed=5676561)
 
-        beam = light_source.get_beam_in_gaussian_approximation()
+        beam = light_source.get_beam()
 
         return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
 

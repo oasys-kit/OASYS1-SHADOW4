@@ -686,16 +686,18 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         from shadow4.beamline.optical_elements.crystals.s4_additional_numerical_mesh_crystal import S4AdditionalNumericalMeshCrystalElement
         from shadow4.optical_surfaces.s4_conic import S4Conic
 
-        from syned.beamline.shape import Ellipsoid, EllipticalCylinder, \
+        from syned.beamline.shape import Plane, Ellipsoid, EllipticalCylinder, \
             Sphere, SphericalCylinder, \
             Toroid, \
             Hyperboloid, HyperbolicCylinder, \
+            Conic, \
             Paraboloid, ParabolicCylinder, Convexity, Side, Direction
 
         if isinstance(element, S4AdditionalNumericalMeshMirrorElement):    surface_shape = element.get_optical_element().ideal_mirror().get_surface_shape()
         elif isinstance(element, S4AdditionalNumericalMeshGrating):        surface_shape = element.get_optical_element().ideal_grating().get_surface_shape()
         elif isinstance(element, S4AdditionalNumericalMeshCrystalElement): surface_shape = element.get_optical_element().ideal_crystal().get_surface_shape()
         else:                                                              surface_shape = element.get_optical_element().get_surface_shape()
+
 
         if isinstance(surface_shape, Toroid):
             self.conic_coefficient_0 = 0.0
@@ -711,6 +713,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         else:
             switch_convexity = 0 if surface_shape.get_convexity() == Convexity.DOWNWARD else 1
 
+            if isinstance(surface_shape, Plane):
+                conic = S4Conic.initialize_as_plane()
             if isinstance(surface_shape, (Ellipsoid, EllipticalCylinder)):
                 conic = S4Conic.initialize_as_ellipsoid_from_focal_distances(p=surface_shape.get_p_focus(),
                                                                              q=surface_shape.get_q_focus(),
@@ -726,7 +730,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                                                cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, HyperbolicCylinder) else 0.0,
                                                                                switch_convexity=switch_convexity)
             elif isinstance(surface_shape, (Sphere, SphericalCylinder)):
-                conic = S4Conic.initialize_as_sphere_from_curvature_radius(radius=surface_shape.get_radius(),
+                conic = S4Conic.initialize_as_sphere_from_external_parameters(radius=surface_shape.get_radius(),
                                                                            cylindrical=1 if isinstance(surface_shape, SphericalCylinder) else 0,
                                                                            cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, SphericalCylinder) else 0.0,
                                                                            switch_convexity=switch_convexity)
@@ -745,16 +749,19 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                                               cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, ParabolicCylinder) else 0.0,
                                                                               switch_convexity=switch_convexity)
 
-            self.conic_coefficient_0 = conic.ccc[0]
-            self.conic_coefficient_1 = conic.ccc[1]
-            self.conic_coefficient_2 = conic.ccc[2]
-            self.conic_coefficient_3 = conic.ccc[3]
-            self.conic_coefficient_4 = conic.ccc[4]
-            self.conic_coefficient_5 = conic.ccc[5]
-            self.conic_coefficient_6 = conic.ccc[6]
-            self.conic_coefficient_7 = conic.ccc[7]
-            self.conic_coefficient_8 = conic.ccc[8]
-            self.conic_coefficient_9 = conic.ccc[9]
+            if isinstance(surface_shape, Conic):
+                pass
+            else:
+                self.conic_coefficient_0 = conic.ccc[0]
+                self.conic_coefficient_1 = conic.ccc[1]
+                self.conic_coefficient_2 = conic.ccc[2]
+                self.conic_coefficient_3 = conic.ccc[3]
+                self.conic_coefficient_4 = conic.ccc[4]
+                self.conic_coefficient_5 = conic.ccc[5]
+                self.conic_coefficient_6 = conic.ccc[6]
+                self.conic_coefficient_7 = conic.ccc[7]
+                self.conic_coefficient_8 = conic.ccc[8]
+                self.conic_coefficient_9 = conic.ccc[9]
 
 
     def get_focusing_grazing_angle(self):
