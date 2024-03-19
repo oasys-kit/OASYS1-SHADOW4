@@ -56,11 +56,11 @@ from setuptools import find_packages, setup
 import subprocess
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.38'
+VERSION = '0.0.39'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
-README_FILE = os.path.join(os.path.dirname(__file__), 'README.txt')
+README_FILE = os.path.join(os.path.dirname(__file__), 'README.md')
 LONG_DESCRIPTION = open(README_FILE).read()
 AUTHOR = 'M. Sanchez del Rio, L. Rebuffi'
 AUTHOR_EMAIL = 'srio@esrf.eu'
@@ -91,7 +91,7 @@ SETUP_REQUIRES = (
 
 INSTALL_REQUIRES = (
                     'oasys1>=1.2.145',
-                    'shadow4>=0.1.28',
+                    'shadow4>=0.1.29',
                     'xoppylib', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
                     )
 
@@ -126,6 +126,7 @@ if __name__ == '__main__':
           version = VERSION,
           description = DESCRIPTION,
           long_description = LONG_DESCRIPTION,
+          long_description_content_type='text/markdown',
           author = AUTHOR,
           author_email = AUTHOR_EMAIL,
           url = URL,
