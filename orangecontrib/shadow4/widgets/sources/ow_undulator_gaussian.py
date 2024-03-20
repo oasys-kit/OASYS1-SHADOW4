@@ -41,7 +41,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
     undulator_length = Setting(4.0)
     energy = Setting(15000.0)
-    delta_e = Setting(1500.0)
+    delta_e = Setting(0)
     number_of_rays = Setting(5000)
     seed = Setting(5676561)
 
@@ -248,11 +248,6 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
             flag_autoset_flux_central_cone=self.flag_autoset_flux_central_cone,
             flux_central_cone=float(self.flux_central_cone),
         )
-
-        if self.delta_e == 0:
-            sourceundulator.set_energy_monochromatic(self.energy)
-        else:
-            sourceundulator.set_energy_box(self.energy-0.5*self.delta_e, self.energy+0.5*self.delta_e,)
 
         # S4UndulatorLightSource
         lightsource = S4UndulatorGaussianLightSource(name='GaussianUndulator',

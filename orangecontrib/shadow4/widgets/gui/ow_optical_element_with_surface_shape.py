@@ -696,8 +696,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         if isinstance(element, S4AdditionalNumericalMeshMirrorElement):    surface_shape = element.get_optical_element().ideal_mirror().get_surface_shape()
         elif isinstance(element, S4AdditionalNumericalMeshGrating):        surface_shape = element.get_optical_element().ideal_grating().get_surface_shape()
         elif isinstance(element, S4AdditionalNumericalMeshCrystalElement): surface_shape = element.get_optical_element().ideal_crystal().get_surface_shape()
-        else:                                                              surface_shape = element.get_optical_element().get_surface_shape()
-
+        else:                                                              surface_shape = element.get_optical_element().get_surface_shape_instance()
 
         if isinstance(surface_shape, Toroid):
             self.conic_coefficient_0 = 0.0
