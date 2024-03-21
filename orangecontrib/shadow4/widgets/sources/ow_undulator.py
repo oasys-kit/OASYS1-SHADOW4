@@ -448,12 +448,12 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             #
             # power density
             #
-            intens_xy, vx, vz = self.lightsource.get_power_density_interpolated_cartesian()
+            intens_xy, vx, vz = self.lightsource.get_power_density_interpolated_cartesian() # in W/rad2
             if is_monochromatic:
                 title="power density W/mrad2/eV"
             else:
                 title="power density W/mrad2"
-            self.plot_undulator_item2D(4, intens_xy, 1e6 * vx, 1e6 * vz,
+            self.plot_undulator_item2D(4, 1e-6 * intens_xy, 1e6 * vx, 1e6 * vz,
                              title=title, xtitle="vx [urad]", ytitle="vz [rad]")
 
             # spectra
