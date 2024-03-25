@@ -680,7 +680,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     # S4 objects
     #########################################################
 
-    def _post_trace_operations(self, output_beam, footprint, element, beamline):
+    def _post_trace_operations(self, output_beam, footprint, element, beamline): # todo: to review
         from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirrorElement
         from shadow4.beamline.optical_elements.gratings.s4_additional_numerical_mesh_grating import S4AdditionalNumericalMeshGrating
         from shadow4.beamline.optical_elements.crystals.s4_additional_numerical_mesh_crystal import S4AdditionalNumericalMeshCrystalElement
@@ -688,7 +688,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         from syned.beamline.shape import Plane, Ellipsoid, EllipticalCylinder, \
             Sphere, SphericalCylinder, \
-            Toroid, \
+            Toroid, NumericalMesh, \
             Hyperboloid, HyperbolicCylinder, \
             Conic, \
             Paraboloid, ParabolicCylinder, Convexity, Side, Direction
@@ -710,11 +710,16 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             self.conic_coefficient_8 = 0.0
             self.conic_coefficient_9 = 0.0
         else:
-            switch_convexity = 0 if surface_shape.get_convexity() == Convexity.DOWNWARD else 1
+            # todo: review this, creating problems
+            switch_convexity = 0
+            try:
+                switch_convexity = 0 if surface_shape.get_convexity() == Convexity.DOWNWARD else 1
+            except:
+                pass
 
             if isinstance(surface_shape, Plane):
                 conic = S4Conic.initialize_as_plane()
-            if isinstance(surface_shape, (Ellipsoid, EllipticalCylinder)):
+            elif isinstance(surface_shape, (Ellipsoid, EllipticalCylinder)):
                 conic = S4Conic.initialize_as_ellipsoid_from_focal_distances(p=surface_shape.get_p_focus(),
                                                                              q=surface_shape.get_q_focus(),
                                                                              theta1=surface_shape.get_grazing_angle(),
@@ -747,6 +752,12 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                                                               cylindrical=1 if isinstance(surface_shape, ParabolicCylinder) else 0,
                                                                               cylangle=(0.0 if surface_shape.get_cylinder_direction() == Direction.TANGENTIAL else 90.0) if isinstance(surface_shape, ParabolicCylinder) else 0.0,
                                                                               switch_convexity=switch_convexity)
+            elif isinstance(surface_shape, Conic):
+                pass
+            elif isinstance(surface_shape, NumericalMesh):
+                conic = S4Conic.initialize_as_plane() # todo: to something here...
+            else:
+                raise Exception("surface_shape type not considered" + repr(surface_shape))
 
             if isinstance(surface_shape, Conic):
                 pass

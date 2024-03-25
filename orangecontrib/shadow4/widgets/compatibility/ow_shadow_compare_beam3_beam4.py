@@ -320,7 +320,7 @@ class OWShadowCompareBeam3Beam4(widget.OWWidget):
 
         fail = 0
         try:
-            beam3 = self.input_beam._beam
+            beam3 = self.input_beam._beam.duplicate()
         except:
             print(">>> Error retrieving beam3")
             fail = 1

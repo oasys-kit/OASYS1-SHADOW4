@@ -430,14 +430,11 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 order=self.order,
                 f_ruling=0 if (self.f_ruling == 0) else 5,
                 #
-                surface_calculation=SurfaceCalculation.EXTERNAL,
+                # surface_calculation=SurfaceCalculation.EXTERNAL,
+                radius=self.spherical_radius,
                 is_cylinder=self.is_cylinder,
                 cylinder_direction=self.cylinder_orientation, #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
                 convexity=numpy.logical_not(self.surface_curvature).astype(int), #  Convexity: NONE = -1  UPWARD = 0  DOWNWARD = 1
-                radius=self.spherical_radius,
-                p_focus=0.0,
-                q_focus=0.0,
-                grazing_angle=0.0,
             )
         elif self.surface_shape_type == 5:
             grating = S4ToroidGrating(
