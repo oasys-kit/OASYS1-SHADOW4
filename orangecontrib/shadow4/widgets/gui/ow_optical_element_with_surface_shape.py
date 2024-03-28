@@ -322,14 +322,14 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.focusing_external_toroid = oasysgui.widgetBox(self.focusing_box, "", addSpace=False, orientation="vertical",
                                                          height=150)
         self.le_torus_major_radius = oasysgui.lineEdit(self.focusing_external_toroid, self, "torus_major_radius",
-                                                       "Torus Major Radius [m] (Rtan-Rsag)", labelWidth=260, valueType=float,
+                                                       "Toroid Major Radius [m] (optical, Rtan)", labelWidth=260, valueType=float,
                                                        orientation="horizontal", tooltip="torus_major_radius")
         self.le_torus_minor_radius = oasysgui.lineEdit(self.focusing_external_toroid, self, "torus_minor_radius",
-                                                       "Torus Minor Radius [m] (Rsag)", labelWidth=260, valueType=float,
+                                                       "Toroid Minor Radius [m] (Rsag)", labelWidth=260, valueType=float,
                                                        orientation="horizontal", tooltip="torus_minor_radius")
 
 
-        gui.comboBox(self.focusing_external_toroid, self, "toroidal_mirror_pole_location", label="Torus pole location",
+        gui.comboBox(self.focusing_external_toroid, self, "toroidal_mirror_pole_location", label="Toroid pole location",
                      labelWidth=145,
                      items=["lower/outer (concave/concave)",
                             "lower/inner (concave/convex)",
@@ -901,7 +901,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             axis.plot_surface(X, Y, z_values, rstride=1, cstride=1, cmap=cm.autumn, linewidth=0.5, antialiased=True)
 
             if parent.surface_shape_type == 5:
-                axis.set_title("Surface from Torus equation:\n" +
+                axis.set_title("Surface from Toroid equation:\n" +
                                "[(Z + R + r)" + u"\u00B2" +
                                " + Y" + u"\u00B2" +
                                " + X" + u"\u00B2" +
@@ -970,7 +970,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
             container = oasysgui.widgetBox(widget, "", addSpace=False, orientation="vertical", width=220)
 
             if parent.surface_shape_type == 5:
-                surface_box = oasysgui.widgetBox(container, "Torus Parameters", addSpace=False, orientation="vertical", width=220, height=375)
+                surface_box = oasysgui.widgetBox(container, "Toroid Parameters", addSpace=False, orientation="vertical", width=220, height=375)
 
                 le_torus_major_radius = oasysgui.lineEdit(surface_box, self, "torus_major_radius" , "R" , labelWidth=60, valueType=float, orientation="horizontal")
                 le_torus_minor_radius = oasysgui.lineEdit(surface_box, self, "torus_minor_radius" , "r" , labelWidth=60, valueType=float, orientation="horizontal")
