@@ -20,6 +20,9 @@ from oasys.util.oasys_util import write_surface_file
 
 from shadow4.optical_surfaces.s4_toroid import S4Toroid
 from shadow4.optical_surfaces.s4_conic import S4Conic
+from shadow4.optical_surfaces.s4_mesh import S4Mesh
+
+from shadow4.beamline.optical_elements.mirrors.s4_additional_numerical_mesh_mirror import S4AdditionalNumericalMeshMirror
 
 #todo: add S4Mesh and S4AdditionalMesh
 
@@ -72,6 +75,10 @@ class ShowSurfaceShapeDialog(QDialog):
         if self.parent is not None:
 
             optical_element = self.parent.get_optical_element_instance()
+
+            if isinstance(optical_element, S4AdditionalNumericalMeshMirror):
+                optical_element = optical_element.get_ideal()
+
             optical_surface = optical_element.get_optical_surface_instance()
 
             if isinstance(optical_surface, S4Conic):
@@ -88,18 +95,18 @@ class ShowSurfaceShapeDialog(QDialog):
                 self.c10 = round(ccc[9], 10)
                 self.is_torus = 0
             elif isinstance(optical_surface, S4Toroid):
-                self.torus_major_radius = optical_surface.r_maj
-                self.torus_minor_radius = optical_surface.r_min
+                self.torus_major_radius = round(optical_surface.r_maj, 10)
+                self.torus_minor_radius = round(optical_surface.r_min, 10)
                 self.f_torus = optical_surface.f_torus
                 self.is_torus = 1
             else:
-                raise Exception("optical surface not yet implemented")
+                raise Exception("optical surface not implemented", optical_surface)
 
             if not parent.is_infinite:
-                self.x_min = -parent.dim_x_minus
-                self.x_max = parent.dim_x_plus
-                self.y_min = -parent.dim_y_minus
-                self.y_max = parent.dim_y_plus
+                self.x_min = round(-parent.dim_x_minus, 10)
+                self.x_max = round(parent.dim_x_plus,   10)
+                self.y_min = round(-parent.dim_y_minus, 10)
+                self.y_max = round(parent.dim_y_plus,   10)
 
         #
         # initialize window
@@ -117,7 +124,7 @@ class ShowSurfaceShapeDialog(QDialog):
 
         self.figure_canvas = FigureCanvas3D(ax=self.axis, fig=figure, show_legend=False, show_buttons=False)
         self.figure_canvas.setFixedWidth(700)
-        self.figure_canvas.setFixedHeight(650)
+        self.figure_canvas.setFixedHeight(700)
 
         self.refresh()
 
@@ -127,41 +134,47 @@ class ShowSurfaceShapeDialog(QDialog):
         if self.is_torus:
             surface_box = oasysgui.widgetBox(container, "Toroid Parameters", addSpace=False, orientation="vertical", width=220, height=375)
 
-            le_torus_major_radius = oasysgui.lineEdit(surface_box, self, "torus_major_radius" , "R" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_torus_minor_radius = oasysgui.lineEdit(surface_box, self, "torus_minor_radius" , "r" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_torus_major_radius = oasysgui.lineEdit(surface_box, self, "torus_major_radius" , "R [m]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_torus_minor_radius = oasysgui.lineEdit(surface_box, self, "torus_minor_radius" , "r [m]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
 
             le_torus_major_radius.setReadOnly(self.read_only)
             le_torus_minor_radius.setReadOnly(self.read_only)
 
             gui.comboBox(surface_box, self, "f_torus",
-                         label="Toroid pole location",
-                         labelWidth=145,
+                         label="Select solution and \n shift center \n to pole location at:",
+                         labelWidth=220,
                          items=["lower/outer (concave/concave)",
                                 "lower/inner (concave/convex)",
                                 "upper/inner (convex/concave)",
                                 "upper/outer (convex/convex)"],
-                         sendSelectedValue=False, orientation="horizontal", tooltip="f_torus", callback=self.refresh)
+                         sendSelectedValue=False, orientation="vertical", tooltip="f_torus", callback=self.refresh)
         else:
-            surface_box = oasysgui.widgetBox(container, "Conic Coefficients", addSpace=False, orientation="vertical", width=220, height=375)
+            surface_box = oasysgui.widgetBox(container, "Conic Coefficients", addSpace=False, orientation="vertical", width=220, height=420)
 
-            label  = "c[1]" + u"\u00B7" + "X" + u"\u00B2" + " + c[2]" + u"\u00B7" + "Y" + u"\u00B2" + " + c[3]" + u"\u00B7" + "Z" + u"\u00B2" + " +\n"
-            label += "c[4]" + u"\u00B7" + "XY" + " + c[5]" + u"\u00B7" + "YZ" + " + c[6]" + u"\u00B7" + "XZ" + " +\n"
-            label += "c[7]" + u"\u00B7" + "X" + " + c[8]" + u"\u00B7" + "Y" + " + c[9]" + u"\u00B7" + "Z" + " + c[10] = 0"
+            # label  = "c[1]" + u"\u00B7" + "X" + u"\u00B2" + " + c[2]" + u"\u00B7" + "Y" + u"\u00B2" + " + c[3]" + u"\u00B7" + "Z" + u"\u00B2" + " +\n"
+            # label += "c[4]" + u"\u00B7" + "XY" + " + c[5]" + u"\u00B7" + "YZ" + " + c[6]" + u"\u00B7" + "XZ" + " +\n"
+            # label += "c[7]" + u"\u00B7" + "X" + " + c[8]" + u"\u00B7" + "Y" + " + c[9]" + u"\u00B7" + "Z" + " + c[10] = 0"
+
+            label  = "c<sub>xx</sub> X<sup>2</sup>  + c<sub>yy</sub> Y<sup>2</sup> + c<sub>zz</sub> Z<sup>2</sup> + <br/>"
+            label += "c<sub>xy</sub> X Y + c<sub>yz</sub> Y Z+ c<sub>zz</sub> Z Z + <br/>"
+            label += "c<sub>x</sub> X + c<sub>y</sub> Y + c<sub>z</sub> X + c<sub>0</sub>= 0"
 
             gui.label(surface_box, self, label)
 
             gui.separator(surface_box, 10)
 
-            le_0 = oasysgui.lineEdit(surface_box, self, "c1" , "c[1]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_1 = oasysgui.lineEdit(surface_box, self, "c2" , "c[2]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_2 = oasysgui.lineEdit(surface_box, self, "c3" , "c[3]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_3 = oasysgui.lineEdit(surface_box, self, "c4" , "c[4]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_4 = oasysgui.lineEdit(surface_box, self, "c5" , "c[5]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_5 = oasysgui.lineEdit(surface_box, self, "c6" , "c[6]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_6 = oasysgui.lineEdit(surface_box, self, "c7" , "c[7]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_7 = oasysgui.lineEdit(surface_box, self, "c8" , "c[8]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_8 = oasysgui.lineEdit(surface_box, self, "c9" , "c[9]" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-            le_9 = oasysgui.lineEdit(surface_box, self, "c10", "c[10]", labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            label = "c<sub>xx</sub> X<sup>2</sup>  + c<sub>yy</sub> Y<sup>2</sup> + c<sub>zz</sub> Z<sup>2</sup> + <br/>"
+
+            le_0 = oasysgui.lineEdit(surface_box, self, "c1" , "c<sub>xx</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_1 = oasysgui.lineEdit(surface_box, self, "c2" , "c<sub>yy</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_2 = oasysgui.lineEdit(surface_box, self, "c3" , "c<sub>zz</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_3 = oasysgui.lineEdit(surface_box, self, "c4" , "c<sub>xy</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_4 = oasysgui.lineEdit(surface_box, self, "c5" , "c<sub>yz</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_5 = oasysgui.lineEdit(surface_box, self, "c6" , "c<sub>xz</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_6 = oasysgui.lineEdit(surface_box, self, "c7" , "c<sub>x</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_7 = oasysgui.lineEdit(surface_box, self, "c8" , "c<sub>y</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_8 = oasysgui.lineEdit(surface_box, self, "c9" , "c<sub>z</sub>" , labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+            le_9 = oasysgui.lineEdit(surface_box, self, "c10", "c<sub>0</sub>", labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
 
             gui.comboBox(surface_box, self, "branch",
                          label="solution index", addSpace=False,
@@ -179,17 +192,17 @@ class ShowSurfaceShapeDialog(QDialog):
             le_8.setReadOnly(self.read_only)
             le_9.setReadOnly(self.read_only)
 
-        oasysgui.lineEdit(container, self, "x_min", "xmin", labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-        oasysgui.lineEdit(container, self, "x_max", "xmax", labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-        oasysgui.lineEdit(container, self, "y_min", "ymin", labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
-        oasysgui.lineEdit(container, self, "y_max", "ymax", labelWidth=60, valueType=float, orientation="horizontal", callback=self.refresh)
+        limits_box = oasysgui.widgetBox(container, "Limits", addSpace=False, orientation="vertical", width=220)
+        oasysgui.lineEdit(limits_box, self, "x_min", "x<sub>min</sub> [m]", labelWidth=70, valueType=float, orientation="horizontal", callback=self.refresh)
+        oasysgui.lineEdit(limits_box, self, "x_max", "x<sub>max</sub> [m]", labelWidth=70, valueType=float, orientation="horizontal", callback=self.refresh)
+        oasysgui.lineEdit(limits_box, self, "y_min", "y<sub>min</sub> [m]", labelWidth=70, valueType=float, orientation="horizontal", callback=self.refresh)
+        oasysgui.lineEdit(limits_box, self, "y_max", "y<sub>max</sub> [m]", labelWidth=70, valueType=float, orientation="horizontal", callback=self.refresh)
 
 
 
         export_box = oasysgui.widgetBox(container, "Export", addSpace=False, orientation="vertical", width=220)
 
         bin_box = oasysgui.widgetBox(export_box, "", addSpace=False, orientation="horizontal")
-
         oasysgui.lineEdit(bin_box, self, "bin_x" , "Bins X" , labelWidth=40, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(bin_box, self, "bin_y" , " x Y" , labelWidth=30, valueType=float, orientation="horizontal")
 
@@ -218,7 +231,7 @@ class ShowSurfaceShapeDialog(QDialog):
         self.axis.plot_surface(X, Y, z_values, rstride=1, cstride=1, cmap=cm.autumn, linewidth=0.5, antialiased=True)
 
         if self.is_torus:
-            self.axis.set_title("Surface from Toroid equation:\n" +
+            self.axis.set_title("Toroid equation (centered):\n" +
                            "[X" + u"\u00B2" +
                            " + Y" + u"\u00B2" +
                            " + Z" + u"\u00B2" +
