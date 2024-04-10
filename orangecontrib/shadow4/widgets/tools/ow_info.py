@@ -8,7 +8,7 @@ from oasys.widgets import gui as oasysgui, widget
 from oasys.widgets.gui import MessageDialog
 
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
-from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, ShadowPlot
+from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
 from orangecontrib.shadow4.util.python_script import PythonScript, PythonConsole
 
 
@@ -49,20 +49,21 @@ class OWInfo(widget.OWWidget):
 
         gen_box = gui.widgetBox(self.mainArea, "Beamline Info", addSpace=True, orientation="horizontal")
 
-        tabs_setting = oasysgui.tabWidget(gen_box)
-        tabs_setting.setFixedHeight(self.WIDGET_HEIGHT-60)
-        tabs_setting.setFixedWidth(self.WIDGET_WIDTH-60)
+        tabs_setting1 = oasysgui.tabWidget(gen_box)
+        tabs_setting1.setFixedHeight(self.WIDGET_HEIGHT-60)
+        tabs_setting1.setFixedWidth(self.WIDGET_WIDTH-60)
 
-        tab_sys = oasysgui.createTabPage(tabs_setting, "Sys Info")
-        tab_sys_plot_side = oasysgui.createTabPage(tabs_setting, "Sys Plot (Side View)")
-        tab_sys_plot_top = oasysgui.createTabPage(tabs_setting, "Sys Plot (Top View)")
-        tab_mir = oasysgui.createTabPage(tabs_setting, "OE Info")
-        tab_sou = oasysgui.createTabPage(tabs_setting, "Source Info")
-        tab_syned = oasysgui.createTabPage(tabs_setting, "BL (syned info)")
-        tab_syned_json = oasysgui.createTabPage(tabs_setting, "BL (json)")
-        tab_dis = oasysgui.createTabPage(tabs_setting, "Distances Summary")
-        tab_scr = oasysgui.createTabPage(tabs_setting, "Python Script")
-        tab_out = oasysgui.createTabPage(tabs_setting, "System Output")
+        tab_sys = oasysgui.createTabPage(tabs_setting1, "Sys Info")
+        tab_sys_plot_side = oasysgui.createTabPage(tabs_setting1, "Sys Plot (Side View)")
+        tab_sys_plot_top = oasysgui.createTabPage(tabs_setting1, "Sys Plot (Bottom View)")
+        tab_sys_plot_front = oasysgui.createTabPage(tabs_setting1, "Sys Plot (Front View)")
+        tab_mir = oasysgui.createTabPage(tabs_setting1, "OE Info")
+        tab_sou = oasysgui.createTabPage(tabs_setting1, "Source Info")
+        tab_dis = oasysgui.createTabPage(tabs_setting1, "Distances Summary")
+        tab_syned = oasysgui.createTabPage(tabs_setting1, "BL (syned info)")
+        tab_syned_json = oasysgui.createTabPage(tabs_setting1, "BL (json)")
+        # tab_scr = oasysgui.createTabPage(tabs_setting1, "Python Script")
+        tab_out = oasysgui.createTabPage(tabs_setting1, "System Output")
 
         # sysinfo and plots
         self.sysInfo = oasysgui.textArea()
@@ -73,6 +74,9 @@ class OWInfo(widget.OWWidget):
 
         self.sysPlotTop = oasysgui.plotWindow(tab_sys_plot_top)
         self.sysPlotTop.setMaximumHeight(self.WIDGET_HEIGHT-100)
+
+        self.sysPlotFront = oasysgui.plotWindow(tab_sys_plot_front)
+        self.sysPlotFront.setMaximumHeight(self.WIDGET_HEIGHT-100)
 
         # mirinfo
         self.mirInfo = oasysgui.textArea()
@@ -104,6 +108,9 @@ class OWInfo(widget.OWWidget):
         sys_plot_top_box = oasysgui.widgetBox(tab_sys_plot_top, "", addSpace=True, orientation="horizontal", height = self.WIDGET_HEIGHT-80, width = self.WIDGET_WIDTH-80)
         sys_plot_top_box.layout().addWidget(self.sysPlotTop)
 
+        sys_plot_front_box = oasysgui.widgetBox(tab_sys_plot_front, "", addSpace=True, orientation="horizontal", height = self.WIDGET_HEIGHT-80, width = self.WIDGET_WIDTH-80)
+        sys_plot_front_box.layout().addWidget(self.sysPlotFront)
+
         mir_box = oasysgui.widgetBox(tab_mir, "", addSpace=True, orientation="horizontal", height = self.WIDGET_HEIGHT-80, width = self.WIDGET_WIDTH-80)
         mir_box.layout().addWidget(self.mirInfo)
 
@@ -119,19 +126,19 @@ class OWInfo(widget.OWWidget):
         dist_box = oasysgui.widgetBox(tab_dis, "", addSpace=True, orientation="horizontal", height = self.WIDGET_HEIGHT-80, width = self.WIDGET_WIDTH-80)
         dist_box.layout().addWidget(self.distancesSummary)
 
-        # script
-        self.shadow4_script = PythonScript()
-        script_box = gui.widgetBox(tab_scr, "Python script", addSpace=True, orientation="horizontal")
-        script_box.layout().addWidget(self.shadow4_script)
-        # self.shadow4_script.code_area.setFixedHeight(400)
-
-
+        # # script
+        # self.shadow4_script = PythonScript()
+        # script_box = gui.widgetBox(tab_scr, "Python script", addSpace=True, orientation="horizontal")
+        # script_box.layout().addWidget(self.shadow4_script)
+        # # self.shadow4_script.code_area.setFixedHeight(400)
+        #
+        #
         # console
-        console_box = oasysgui.widgetBox(script_box, "", addSpace=True, orientation="vertical",
-                                          height=150, width=self.WIDGET_WIDTH - 80)
-        self.console = PythonConsole(self.__dict__, self)
-        console_box.layout().addWidget(self.console)
-
+        # console_box = oasysgui.widgetBox(script_box, "", addSpace=True, orientation="vertical",
+        #                                   height=150, width=self.WIDGET_WIDTH - 80)
+        # self.console = PythonConsole(self.__dict__, self)
+        # console_box.layout().addWidget(self.console)
+        #
         self.shadow_output = oasysgui.textArea()
 
         out_box = oasysgui.widgetBox(tab_out, "System Output", addSpace=True, orientation="horizontal", height=self.WIDGET_HEIGHT - 80)
@@ -142,7 +149,6 @@ class OWInfo(widget.OWWidget):
     def set_shadow_data(self, shadow_data : ShadowData):
         if ShadowCongruence.check_empty_data(shadow_data):
             if ShadowCongruence.check_empty_beam(shadow_data.beam):
-                print(">>>>>> setting shadow_data")
                 self.input_data = shadow_data
                 if self.is_automatic_run: self.refresh()
             else:
@@ -155,7 +161,7 @@ class OWInfo(widget.OWWidget):
         self.distancesSummary.setText("")
         self.synedJson.setText("")
         self.synedInfo.setText("")
-        self.shadow4_script.set_code("#")
+        # self.shadow4_script.set_code("#")
 
         if self.input_data is None: return
 
@@ -171,12 +177,40 @@ class OWInfo(widget.OWWidget):
 
         self.distancesSummary.append(self.input_data.beamline.distances_summary())
 
+        self.sysplots()
 
-        script = self.input_data.beamline.to_python_code()
-        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        script += "\nrays = beam.get_rays()"
-        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-        self.shadow4_script.set_code(script)
+        # script = self.input_data.beamline.to_python_code()
+        # script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+        # script += "\nrays = beam.get_rays()"
+        # script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+        # self.shadow4_script.set_code(script)
+
+    def sysplots(self):
+        try:
+            dic = self.input_data.beamline.syspositions()
+
+            self.sysPlotSide.addCurve(dic["optical_axis_y"], dic["optical_axis_z"], symbol='o', replace=True)
+            self.sysPlotSide.setGraphXLabel("Y [m]")
+            self.sysPlotSide.setGraphYLabel("Z [m]")
+            self.sysPlotSide.setGraphTitle("Side View of optical axis")
+            self.sysPlotSide.replot()
+
+            self.sysPlotTop.addCurve(dic["optical_axis_y"], dic["optical_axis_x"], symbol='o', replace=True)
+            self.sysPlotTop.setGraphXLabel("Y [m]")
+            self.sysPlotTop.setGraphYLabel("X [m]")
+            self.sysPlotTop.setGraphTitle("Bottom View of optical axis")
+            self.sysPlotTop.replot()
+
+            self.sysPlotFront.addCurve(dic["optical_axis_x"], dic["optical_axis_z"], symbol='o', replace=True)
+            self.sysPlotFront.setGraphXLabel("X [m]")
+            self.sysPlotFront.setGraphYLabel("Z [m]")
+            self.sysPlotFront.setGraphTitle("Front View of optical axis")
+            self.sysPlotFront.replot()
+
+        except:
+            self.shadow_output.setText(
+                "Problem in plotting SysPlot:\n" + str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]))
+
 
     def writeStdOut(self, text):
         cursor = self.shadow_output.textCursor()
