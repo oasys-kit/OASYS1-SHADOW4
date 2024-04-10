@@ -410,7 +410,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 coating=None,
                 coating_thickness=None,
                 order=self.order,
-                f_ruling=0 if (self.f_ruling==0) else 5,
+                f_ruling=self.f_ruling,
             )
 
         elif self.surface_shape_type == 1:
@@ -428,7 +428,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 coating=None,
                 coating_thickness=None,
                 order=self.order,
-                f_ruling=0 if (self.f_ruling == 0) else 5,
+                f_ruling=self.f_ruling,
                 #
                 # surface_calculation=SurfaceCalculation.EXTERNAL,
                 radius=self.spherical_radius,
@@ -448,7 +448,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 coating=None,
                 coating_thickness=None,
                 order=self.order,
-                f_ruling=0 if (self.f_ruling == 0) else 5,
+                f_ruling=self.f_ruling,
                 #
                 min_radius=self.torus_minor_radius,
                 maj_radius=self.torus_major_radius,
@@ -466,7 +466,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                 coating=None,
                 coating_thickness=None,
                 order=self.order,
-                f_ruling=0 if (self.f_ruling == 0) else 5,
+                f_ruling=self.f_ruling,
                 conic_coefficients=[
                     self.conic_coefficient_0, self.conic_coefficient_1, self.conic_coefficient_2,
                     self.conic_coefficient_3, self.conic_coefficient_4, self.conic_coefficient_5,
@@ -517,7 +517,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
                             coating=None,
                             coating_thickness=None,
                             order=self.order,
-                            f_ruling=0 if (self.f_ruling == 0) else 5,
+                            f_ruling=self.f_ruling,
                             )
                         )
         else:
