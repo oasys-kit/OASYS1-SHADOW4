@@ -637,6 +637,14 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
             elif self.surface_shape_type == 5: return S4ToroidCrystalElement()
             elif self.surface_shape_type == 6: return S4ConicCrystalElement()
 
+    def _post_trace_operations(self, output_beam, footprint, element, beamline):
+        angle_radial, angle_radial_out, _ = element.get_coordinates().get_angles()
+        
+        self.incidence_angle_deg   = numpy.round(numpy.degrees(angle_radial),5)
+        self.reflection_angle_deg  = numpy.round(numpy.degrees(angle_radial_out),5)
+        self.incidence_angle_mrad  = numpy.round(1e3 * (numpy.pi / 2 - angle_radial),5)
+        self.reflection_angle_mrad = numpy.round(1e3 * (numpy.pi / 2 - angle_radial_out),5)
+
 
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline
