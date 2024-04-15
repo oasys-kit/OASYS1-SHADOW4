@@ -37,7 +37,9 @@ class OWLens(OWAbstractLens):
                       refraction_index=self.refraction_index,
                       attenuation_coefficient=self.attenuation_coefficient,
                       radius=self.radius*um_to_si,
-                      conic_coefficients=None) # TODO: add conic coefficient shape to the GUI
+                      conic_coefficients1=None, # TODO: add conic coefficient shape to the GUI
+                      conic_coefficients2=None,  # TODO: add conic coefficient shape to the GUI
+                      )
 
     def get_beamline_element_instance(self):
         return S4LensElement()
