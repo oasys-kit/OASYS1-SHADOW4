@@ -22,6 +22,7 @@ from shadow4.sources.undulator.s4_undulator import S4Undulator
 from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLightSource
 
 from shadow4.beamline.s4_beamline import S4Beamline
+from shadow4.tools.logger import set_verbose
 
 class OWUndulator(OWElectronBeam, WidgetDecorator):
 
@@ -308,7 +309,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         return lightsource
 
     def run_shadow4(self):
-
+        set_verbose()
         self.lightsource = None # clean
 
         sys.stdout = EmittingStream(textWritten=self._write_stdout)

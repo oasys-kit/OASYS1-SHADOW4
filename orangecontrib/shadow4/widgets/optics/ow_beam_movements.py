@@ -16,6 +16,7 @@ from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 from syned.widget.widget_decorator import WidgetDecorator
 
 from shadow4.beamline.optical_elements.ideal_elements.s4_beam_movement import S4BeamMovement, S4BeamMovementElement
+from shadow4.tools.logger import set_verbose
 
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
@@ -182,6 +183,7 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
 
     def run_shadow4(self):
+        set_verbose()
         self.shadow_output.setText("")
 
         sys.stdout = EmittingStream(textWritten=self._write_stdout)

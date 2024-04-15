@@ -18,6 +18,7 @@ from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 
 from shadow4.beamline.s4_beamline import S4Beamline
 from shadow4.sources.source_geometrical.source_geometrical import SourceGeometrical
+from shadow4.tools.logger import set_verbose
 
 from syned.widget.widget_decorator import WidgetDecorator
 
@@ -695,7 +696,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         return gs
 
     def run_shadow4(self):
-
+        set_verbose()
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()

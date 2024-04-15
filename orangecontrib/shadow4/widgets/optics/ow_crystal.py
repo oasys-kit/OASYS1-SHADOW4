@@ -639,7 +639,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
 
     def _post_trace_operations(self, output_beam, footprint, element, beamline):
         angle_radial, angle_radial_out, _ = element.get_coordinates().get_angles()
-        
+
         self.incidence_angle_deg   = numpy.round(numpy.degrees(angle_radial),5)
         self.reflection_angle_deg  = numpy.round(numpy.degrees(angle_radial_out),5)
         self.incidence_angle_mrad  = numpy.round(1e3 * (numpy.pi / 2 - angle_radial),5)

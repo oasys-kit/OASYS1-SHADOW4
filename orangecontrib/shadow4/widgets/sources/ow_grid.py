@@ -17,6 +17,7 @@ from syned.widget.widget_decorator import WidgetDecorator
 from shadow4.beamline.s4_beamline import S4Beamline
 from shadow4.sources.source_geometrical.source_grid_polar import SourceGridPolar
 from shadow4.sources.source_geometrical.source_grid_cartesian import SourceGridCartesian
+from shadow4.tools.logger import set_verbose
 
 
 class OWGrid(GenericElement, WidgetDecorator):
@@ -278,7 +279,7 @@ class OWGrid(GenericElement, WidgetDecorator):
         return gs
 
     def run_shadow4(self):
-
+        set_verbose()
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()

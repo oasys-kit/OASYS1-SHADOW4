@@ -20,6 +20,7 @@ from orangewidget.settings import Setting
 from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
 from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
 from shadow4.beamline.s4_beamline import S4Beamline
+from shadow4.tools.logger import set_verbose
 
 class OWWiggler(OWElectronBeam, WidgetDecorator):
 
@@ -302,6 +303,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
 
     def run_shadow4(self):
+        set_verbose()
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()

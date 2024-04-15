@@ -13,6 +13,8 @@ from oasys.util.oasys_util import EmittingStream
 from syned.widget.widget_decorator import WidgetDecorator
 from syned.beamline.element_coordinates import ElementCoordinates
 
+from shadow4.tools.logger import set_verbose
+
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
@@ -252,6 +254,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             if self.is_automatic_run: self.run_shadow4()
 
     def run_shadow4(self):
+        set_verbose()
         self.shadow_output.setText("")
 
         sys.stdout = EmittingStream(textWritten=self._write_stdout)

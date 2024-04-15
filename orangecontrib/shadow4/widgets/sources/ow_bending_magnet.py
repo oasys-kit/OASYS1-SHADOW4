@@ -23,6 +23,7 @@ from syned.widget.widget_decorator import WidgetDecorator
 
 from shadow4.sources.bending_magnet.s4_bending_magnet import S4BendingMagnet
 from shadow4.sources.bending_magnet.s4_bending_magnet_light_source import S4BendingMagnetLightSource
+from shadow4.tools.logger import set_verbose
 
 class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
 
@@ -192,7 +193,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         return lightsource
 
     def run_shadow4(self):
-
+        set_verbose()
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()
