@@ -43,7 +43,8 @@ class OWCRL(OWAbstractLens):
                      n_lens=self.n_lens,
                      piling_thickness=self.piling_thickness*mm_to_si,
                      boundary_shape=boundary_shape,
-                     material="", # not used
+                     material=self.material,
+                     density=self.density,
                      thickness=self.interthickness * um_to_si,
                      surface_shape=self.surface_shape,
                      convex_to_the_beam=self.convex_to_the_beam,

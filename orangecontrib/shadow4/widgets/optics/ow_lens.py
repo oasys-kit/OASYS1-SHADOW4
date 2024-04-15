@@ -27,7 +27,8 @@ class OWLens(OWAbstractLens):
 
         return S4Lens(name=name,
                       boundary_shape=boundary_shape,
-                      material="", # not used
+                      material=self.material,
+                      density=self.density,
                       thickness=self.interthickness*um_to_si,
                       surface_shape=self.surface_shape,
                       convex_to_the_beam=self.convex_to_the_beam,
@@ -43,3 +44,44 @@ class OWLens(OWAbstractLens):
 
     def get_beamline_element_instance(self):
         return S4LensElement()
+
+if __name__ == "__main__":
+    from shadow4.beamline.s4_beamline import S4Beamline
+    import sys
+    from orangecontrib.shadow4.util.shadow4_objects import ShadowData, PreReflPreProcessorData, VlsPgmPreProcessorData
+
+    def get_test_beam():
+        # electron beam
+        from syned.storage_ring.light_source import ElectronBeam
+        electron_beam = ElectronBeam(energy_in_GeV=6, energy_spread=0.001, current=0.2)
+        electron_beam.set_sigmas_all(sigma_x=3.01836e-05, sigma_y=3.63641e-06, sigma_xp=4.36821e-06,
+                                     sigma_yp=1.37498e-06)
+
+        # Gaussian undulator
+        from shadow4.sources.undulator.s4_undulator_gaussian import S4UndulatorGaussian
+        sourceundulator = S4UndulatorGaussian(
+            period_length=0.0159999,
+            number_of_periods=100,
+            photon_energy=2700.136,
+            delta_e=0.0,
+            flag_emittance=1,  # Use emittance (0=No, 1=Yes)
+        )
+        sourceundulator.set_energy_monochromatic(2700.14)
+
+        from shadow4.sources.undulator.s4_undulator_gaussian_light_source import S4UndulatorGaussianLightSource
+        light_source = S4UndulatorGaussianLightSource(name='GaussianUndulator', electron_beam=electron_beam,
+                                              magnetic_structure=sourceundulator, nrays=5000, seed=5676561)
+
+        beam = light_source.get_beam()
+
+        return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
+
+    from PyQt5.QtWidgets import QApplication
+    a = QApplication(sys.argv)
+    ow = OWLens()
+    ow.set_shadow_data(get_test_beam())
+
+    ow.show()
+    a.exec_()
+    ow.saveSettings()
+
