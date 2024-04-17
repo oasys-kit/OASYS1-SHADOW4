@@ -20,7 +20,9 @@ from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElemen
 from oasys.util.oasys_util import EmittingStream
 from shadow4.tools.logger import set_verbose
 from shadow4.beamline.optical_elements.refractors.s4_transfocator import S4Transfocator, S4TransfocatorElement
-
+from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+from syned.beamline.shape import Circle
+from syned.beamline.element_coordinates import ElementCoordinates
 
 # class OWTransfocator(ow_compound_optical_element.CompoundOpticalElement):
 class OWTransfocator(OWOpticalElement):
@@ -69,10 +71,10 @@ class OWTransfocator(OWOpticalElement):
                                                   orientation="vertical")
 
         oasysgui.lineEdit(self.orientation_box, self, "source_plane_distance",
-                          "Source Plane Distance to First Interface (P)", labelWidth=260,
+                          "Source Plane Distance to First Interface (P) [m]", labelWidth=260,
                           valueType=float, orientation="horizontal", tooltip="source_plane_distance")
         oasysgui.lineEdit(self.orientation_box, self, "image_plane_distance",
-                          "Last Interface Distance to Image plane (Q)", labelWidth=260,
+                          "Last Interface Distance to Image plane (Q) [m]", labelWidth=260,
                           valueType=float, orientation="horizontal", tooltip="image_plane_distance")
 
     def create_basic_settings_subtabs(self, tabs_basic_settings):
@@ -118,34 +120,108 @@ class OWTransfocator(OWOpticalElement):
             self.crl_box_array.append(crl_box)
 
     def get_optical_element_instance(self):
+    #     """
+    #         nlenses = Setting([4, 2])
+    # slots_empty = Setting([0, 0])
+    # thickness = Setting([2.5, 2.5])
+    #
+    # # p = Setting([0.0, 0.0])
+    # empty_space_after_last_interface = Setting([0.0, 0.0])
+    # surface_shape = Setting([1, 1])
+    # convex_to_the_beam = Setting([0, 0])
+    #
+    # has_finite_diameter = Setting([0, 0])
+    # diameter = Setting([0.632, 0.894])
+    #
+    # is_cylinder = Setting([0, 0])
+    # cylinder_angle = Setting([0.0, 0.0])
+    #
+    # ri_calculation_mode = Setting([0, 0])
+    # prerefl_file = Setting([NONE_SPECIFIED, NONE_SPECIFIED])
+    # refraction_index = Setting([1.0, 1.0])
+    # attenuation_coefficient = Setting([0.0, 0.0])
+    #
+    # radius = Setting([0.1, 0.2])
+    # interthickness = Setting([0.03, 0.03])
+    #     """
+        try:
+            name = self.getNode().title
+        except:
+            name = "Transfocator"
+
+        um_to_si = 1e-6
+        mm_to_si = 1e-3
+
+        if self.has_finite_diameter[0] == 0: # todo make it scalar...
+            boundary_shape = Circle(radius=um_to_si * self.diameter[0] * 0.5)
+        else:
+            boundary_shape = None
+
+        n = len(self.cylinder_angle)
+        cylinder_angle = [0] * n
+        thickness = [0] * n
+        piling_thickness = [0] * n
+        radius = [0] * n
+        for i in range(n):
+            if self.is_cylinder[i] == 1: cylinder_angle[i] = self.cylinder_angle[i] + 1
+            thickness[i] = self.interthickness[i] * um_to_si
+            piling_thickness[i] = self.thickness[i] * mm_to_si
+            radius[i] = self.radius[i] * um_to_si
+
         optical_element = S4Transfocator(name='TF',
-                                n_lens=[30],
-                                piling_thickness=[0.000625],  # syned stuff
-                                boundary_shape=None,
-                                # syned stuff, replaces "diameter" in the shadow3 append_lens
-                                material=['Al'],  # the material for ri_calculation_mode > 1
-                                density=[2.6989],  # the density for ri_calculation_mode > 1
-                                thickness=[2.4999999999999998e-05],
-                                # syned stuff, lens thickness [m] (distance between the two interfaces at the center of the lenses)
-                                surface_shape=[1],  # now: 0=plane, 1=sphere, 2=parabola, 3=conic coefficients
-                                # (in shadow3: 1=sphere 4=paraboloid, 5=plane)
-                                convex_to_the_beam=[0],
-                                # for surface_shape: convexity of the first interface exposed to the beam 0=No, 1=Yes
-                                cylinder_angle=[1],  # for surface_shape: 0=not cylindricaL, 1=meridional 2=sagittal
-                                ri_calculation_mode=[2],  # source of refraction indices and absorption coefficients
-                                # 0=User, 1=prerefl file, 2=xraylib, 3=dabax
-                                prerefl_file=['Al5_55.dat'],
-                                # for ri_calculation_mode=0: file name (from prerefl) to get the refraction index.
-                                refraction_index=[1],  # for ri_calculation_mode=1: n (real)
-                                attenuation_coefficient=[0],  # for ri_calculation_mode=1: mu in cm^-1 (real)
-                                dabax=None,  # the pointer to dabax library
-                                radius=[0.0003],
-                                # for surface_shape=(1,2): lens radius [m] (for spherical, or radius at the tip for paraboloid)
-                                conic_coefficients1=[None],
-                                # for surface_shape = 3: the conic coefficients of the single lens interface 1
-                                conic_coefficients2=[None],
-                                # for surface_shape = 3: the conic coefficients of the single lens interface 2
+                                n_lens=self.nlenses,
+                                piling_thickness=piling_thickness,  # syned stuff
+                                boundary_shape=boundary_shape,
+                                material=['Al'] * n,
+                                density=[0.0] * n,
+                                thickness=thickness,
+                                surface_shape=self.surface_shape,
+                                convex_to_the_beam=self.convex_to_the_beam,
+                                cylinder_angle=cylinder_angle,
+                                ri_calculation_mode=self.ri_calculation_mode,
+                                prerefl_file=self.prerefl_file,
+                                refraction_index=self.refraction_index,
+                                attenuation_coefficient=self.attenuation_coefficient,
+                                dabax=None,
+                                radius=radius,
+                                conic_coefficients1=[[0] * 10] * n,
+                                conic_coefficients2=[[0] * 10] * n,
+                                empty_space_after_last_interface=[0.0] * n,
                                 )
+
+        # optical_element = S4Transfocator(name=name, #'TF',
+        #                                  n_lens=[30,30],
+        #                                  piling_thickness=[0.000625,0.000625],  # syned stuff
+        #                                  boundary_shape=boundary_shape,
+        #                                  # syned stuff, replaces "diameter" in the shadow3 append_lens
+        #                                  material=['Al','Al'],  # the material for ri_calculation_mode > 1
+        #                                  density=[2.6989,2.6989],  # the density for ri_calculation_mode > 1
+        #                                  thickness=[2.4999999999999998e-05,2.4999999999999998e-05],
+        #                                  # syned stuff, lens thickness [m] (distance between the two interfaces at the center of the lenses)
+        #                                  surface_shape=[1,1],  # now: 0=plane, 1=sphere, 2=parabola, 3=conic coefficients
+        #                                  # (in shadow3: 1=sphere 4=paraboloid, 5=plane)
+        #                                  convex_to_the_beam=[0,0],
+        #                                  # for surface_shape: convexity of the first interface exposed to the beam 0=No, 1=Yes
+        #                                  cylinder_angle=[1,1],
+        #                                  # for surface_shape: 0=not cylindricaL, 1=meridional 2=sagittal
+        #                                  ri_calculation_mode=[2,2],
+        #                                  # source of refraction indices and absorption coefficients
+        #                                  # 0=User, 1=prerefl file, 2=xraylib, 3=dabax
+        #                                  prerefl_file=['Al5_55.dat','Al5_55.dat'],
+        #                                  # for ri_calculation_mode=0: file name (from prerefl) to get the refraction index.
+        #                                  refraction_index=[1,1],  # for ri_calculation_mode=1: n (real)
+        #                                  attenuation_coefficient=[0,0],  # for ri_calculation_mode=1: mu in cm^-1 (real)
+        #                                  dabax=None,  # the pointer to dabax library
+        #                                  radius=[0.0003,0.0003],
+        #                                  # for surface_shape=(1,2): lens radius [m] (for spherical, or radius at the tip for paraboloid)
+        #                                  conic_coefficients1=[None, None],
+        #                                  # for surface_shape = 3: the conic coefficients of the single lens interface 1
+        #                                  conic_coefficients2=[None, None],
+        #                                  # for surface_shape = 3: the conic coefficients of the single lens interface 2
+        #                                  empty_space_after_last_interface=[0.0, 0.0],
+        #                                  )
+
+        print(">>>>", optical_element.info())
         return optical_element
 
     def get_beamline_element_instance(self):
@@ -158,6 +234,14 @@ class OWTransfocator(OWOpticalElement):
 
     def get_movements_instance(self): return None
 
+    def get_coordinates_instance(self):
+        return ElementCoordinates(
+                p=self.source_plane_distance,
+                q=self.image_plane_distance,
+                angle_radial=0.0,
+                angle_azimuthal=0.0,
+                angle_radial_out=numpy.pi,
+                )
 
     def run_shadow4(self):
         set_verbose()
@@ -192,6 +276,7 @@ class OWTransfocator(OWOpticalElement):
             #
             # run
             #
+            print(">>>> element: ", element.info())
             self.progressBarInit()
             output_beam, footprint = element.trace_beam()
 
@@ -776,8 +861,10 @@ class CRLBox(QWidget):
         oasysgui.lineEdit(crl_box, self, "nlenses", "Number of lenses", labelWidth=260, valueType=int,
                           orientation="horizontal", callback=self.transfocator.dump_nlenses)
 
-        self.le_empty_space_after_last_interface = oasysgui.lineEdit(crl_box, self, "empty_space_after_last_interface", "Empty space after last CRL interface"  , labelWidth=290, valueType=float, orientation="horizontal",
-                                      callback=self.transfocator.dump_empty_space_after_last_interface)
+        self.le_empty_space_after_last_interface = oasysgui.lineEdit(crl_box, self, "empty_space_after_last_interface",
+                                    "Empty space after last CRL interface [m]",
+                                    labelWidth=290, valueType=float, orientation="horizontal",
+                                    callback=self.transfocator.dump_empty_space_after_last_interface)
 
         # optical constants
         ###############
@@ -814,7 +901,7 @@ class CRLBox(QWidget):
             self.diameter_box = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical")
             self.diameter_box_empty = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical", height=20)
 
-            self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value", labelWidth=80, #labelWidth=260,
+            self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value [\u03bcm]", labelWidth=80, #labelWidth=260,
                                                  valueType=float, orientation="horizontal", callback=self.transfocator.dump_diameter)
 
             self.set_diameter()
@@ -822,19 +909,23 @@ class CRLBox(QWidget):
             surface_shape_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
 
             gui.comboBox(surface_shape_box_outer, self, "surface_shape", label="Surface Shape", #labelWidth=260,
-                         items=["Sphere", "Paraboloid", "Plane"], sendSelectedValue=False, orientation="horizontal", callback=self.set_surface_shape)
+                         items=[ "Plane", "Sphere", "Paraboloid"], sendSelectedValue=False, orientation="horizontal", callback=self.set_surface_shape)
 
             self.surface_shape_box = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
             self.surface_shape_box_empty = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
 
-            self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius", labelWidth=80, #labelWidth=260,
+            self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius [\u03bcm]", labelWidth=80, #labelWidth=260,
                                                valueType=float, orientation="horizontal", callback=self.transfocator.dump_radius)
 
             self.set_surface_shape()
 
-            self.le_interthickness = oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness", labelWidth=260,
-                                                       valueType=float, orientation="horizontal", callback=self.transfocator.dump_interthickness)
-            self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Piling thickness", labelWidth=260, valueType=float, orientation="horizontal", callback=self.transfocator.dump_thickness)
+            self.le_interthickness = oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", labelWidth=260,
+                                                       valueType=float, orientation="horizontal", tooltip="interthickness",
+                                                       callback=self.transfocator.dump_interthickness)
+
+            self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Piling thickness [mm]", labelWidth=260,
+                                                  valueType=float, orientation="horizontal", tooltip="thickness",
+                                                  callback=self.transfocator.dump_thickness)
 
             # gui.comboBox(lens_box, self, "use_ccc", label="Use C.C.C.", labelWidth=310,
             #              items=["No", "Yes"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_use_ccc)
@@ -842,7 +933,7 @@ class CRLBox(QWidget):
             gui.comboBox(oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=40),
                          self, "convex_to_the_beam", label="1st interface exposed to the beam",
                                 labelWidth=310,
-                         items=["Convex", "Concave"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_convex_to_the_beam)
+                         items=["Concave", "Convex"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_convex_to_the_beam)
 
 
             gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", labelWidth=310,
@@ -1007,8 +1098,6 @@ if __name__ == "__main__":
     a = QApplication(sys.argv)
     ow = OWTransfocator()
     ow.view_type = 2
-    # tmp = get_test_beam()
-    # print(tmp)
     ow.set_shadow_data(get_test_beam())
 
     ow.show()

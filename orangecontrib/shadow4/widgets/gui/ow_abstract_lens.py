@@ -83,7 +83,7 @@ class OWAbstractLens(OWOpticalElement):
 
         gui.comboBox(lens_box, self, "convex_to_the_beam", label="1st interface exposed to the beam",
                      tooltip="convex_to_the_beam", labelWidth=310,
-                     items=["Convex", "Concave"], sendSelectedValue=False, orientation="horizontal")
+                     items=["Concave", "Convex"], sendSelectedValue=False, orientation="horizontal")
 
         gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", tooltip="is_cylinder", labelWidth=310,
                      items=["No", "Yes"], callback=self.set_cylindrical, sendSelectedValue=False, orientation="horizontal")
