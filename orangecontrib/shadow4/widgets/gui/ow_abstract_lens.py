@@ -54,14 +54,14 @@ class OWAbstractLens(OWOpticalElement):
         lens_box = oasysgui.widgetBox(basic_setting_subtabs, "Lens Parameters", addSpace=False, orientation="vertical",
                                       height=370)
 
-        gui.comboBox(lens_box, self, "has_finite_diameter", label="Lens Diameter", tooltip="has_finite_diameter",
-                     labelWidth=260, items=["Finite", "Infinite"], callback=self.set_diameter, sendSelectedValue=False,
+        gui.comboBox(lens_box, self, "has_finite_diameter", label="Lens aperture", tooltip="has_finite_diameter",
+                     labelWidth=260, items=["Infinite", "Circle", "Square"], callback=self.set_diameter, sendSelectedValue=False,
                      orientation="horizontal")
 
         self.diameter_box = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
         self.diameter_box_empty = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=24)
 
-        oasysgui.lineEdit(self.diameter_box, self, "diameter", "Lens Diameter Value [\u03bcm]", tooltip= "diameter",
+        oasysgui.lineEdit(self.diameter_box, self, "diameter", "Lens Aperture Value [\u03bcm]", tooltip= "diameter",
                           labelWidth=260, valueType=float, orientation="horizontal")
 
         self.set_diameter()
@@ -128,8 +128,8 @@ class OWAbstractLens(OWOpticalElement):
         self.surface_shape_box_empty.setVisible(self.surface_shape == 0)
 
     def set_diameter(self):
-        self.diameter_box.setVisible(self.has_finite_diameter == 0)
-        self.diameter_box_empty.setVisible(self.has_finite_diameter == 1)
+        self.diameter_box.setVisible(self.has_finite_diameter > 0)
+        self.diameter_box_empty.setVisible(self.has_finite_diameter == 0)
 
     def set_cylindrical(self):
         self.box_cyl.setVisible(self.is_cylinder == 1)

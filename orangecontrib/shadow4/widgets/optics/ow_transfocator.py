@@ -10,7 +10,7 @@ from oasys.widgets import congruence
 from oasys.widgets.gui import ConfirmDialog
 from orangecontrib.shadow4.util.shadow4_util import ShadowPhysics
 
-from syned.beamline.shape import Circle
+from syned.beamline.shape import Circle, Rectangle
 from syned.beamline.element_coordinates import ElementCoordinates
 
 from shadow4.beamline.optical_elements.refractors.s4_transfocator import S4Transfocator, S4TransfocatorElement
@@ -120,10 +120,14 @@ class OWTransfocator(OWOpticalElement):
         um_to_si = 1e-6
         mm_to_si = 1e-3
 
-        if self.has_finite_diameter[0] == 0: # todo make it scalar...
-            boundary_shape = Circle(radius=um_to_si * self.diameter[0] * 0.5)
-        else:
+        if self.has_finite_diameter[0] == 0:
             boundary_shape = None
+        elif self.has_finite_diameter[0] == 1:
+            boundary_shape = Circle(radius=um_to_si * self.diameter[0] * 0.5)
+        elif self.has_finite_diameter[0] == 2:
+            rr = um_to_si * self.diameter[0] * 0.5
+            boundary_shape = Rectangle() (x_left=-rr, x_right=rr, y_bottom=-rr, y_top=rr)
+
 
         n = len(self.cylinder_angle)
         cylinder_angle = [0] * n
@@ -698,9 +702,9 @@ class CRLBox(QWidget):
 
         diameter_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
 
-        gui.comboBox(diameter_box_outer, self, "has_finite_diameter", label="Lens Diameter", tooltip="has_finite_diameter[i]",
+        gui.comboBox(diameter_box_outer, self, "has_finite_diameter", label="Lens aperture", tooltip="has_finite_diameter[i]",
                      labelWidth=110, #labelWidth=260,
-                     items=["Finite", "Infinite"], sendSelectedValue=False, orientation="horizontal", callback=self.set_diameter)
+                     items=["Infinite", "Circular", "Square"], sendSelectedValue=False, orientation="horizontal", callback=self.set_diameter)
 
         self.diameter_box = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical")
         self.diameter_box_empty = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical", height=20)
@@ -780,7 +784,7 @@ class CRLBox(QWidget):
             return None
 
     def get_diameter(self):
-        if self.has_finite_diameter == 0:
+        if self.has_finite_diameter > 0:
             return self.diameter
         else:
             return None
@@ -798,8 +802,8 @@ class CRLBox(QWidget):
         if not self.is_on_init: self.transfocator.dump_surface_shape()
 
     def set_diameter(self):
-        self.diameter_box.setVisible(self.has_finite_diameter == 0)
-        self.diameter_box_empty.setVisible(self.has_finite_diameter == 1)
+        self.diameter_box.setVisible(self.has_finite_diameter > 0)
+        self.diameter_box_empty.setVisible(self.has_finite_diameter == 0)
 
         if not self.is_on_init: self.transfocator.dump_has_finite_diameter()
 
