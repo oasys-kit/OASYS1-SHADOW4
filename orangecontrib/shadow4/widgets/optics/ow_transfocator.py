@@ -28,9 +28,9 @@ class OWTransfocator(OWOpticalElement):
 
     NONE_SPECIFIED = "NONE SPECIFIED"
 
-    nlenses = Setting([4, 2])
+    n_lenses = Setting([4, 2])
     slots_empty = Setting([0, 0])
-    thickness = Setting([2.5, 2.5])
+    piling_thickness = Setting([2.5, 2.5])
 
     empty_space_after_last_interface = Setting([0.0, 0.0])
     surface_shape = Setting([1, 1])
@@ -50,7 +50,7 @@ class OWTransfocator(OWOpticalElement):
     density = [1.848, 2.7]
 
     radius = Setting([0.1, 0.2])
-    interthickness = Setting([0.03, 0.03])
+    thickness = Setting([0.03, 0.03])
 
 
     input_data = None
@@ -89,9 +89,9 @@ class OWTransfocator(OWOpticalElement):
 
             crl_box = CRLBox(transfocator=self,
                              parent=tab_crl,
-                             nlenses=self.nlenses[index],
+                             n_lenses=self.n_lenses[index],
                              slots_empty=self.slots_empty[index],
-                             thickness=self.thickness[index],
+                             piling_thickness=self.piling_thickness[index],
                              empty_space_after_last_interface=self.empty_space_after_last_interface[index],
                              surface_shape=self.surface_shape[index],
                              convex_to_the_beam=self.convex_to_the_beam[index],
@@ -106,7 +106,7 @@ class OWTransfocator(OWOpticalElement):
                              material=self.material[index],
                              density=self.density[index],
                              radius=self.radius[index],
-                             interthickness=self.interthickness[index],
+                             thickness=self.thickness[index],
                              )
 
             self.crl_box_array.append(crl_box)
@@ -127,22 +127,22 @@ class OWTransfocator(OWOpticalElement):
 
         n = len(self.cylinder_angle)
         cylinder_angle = [0] * n
-        thickness = [0] * n
         piling_thickness = [0] * n
+        thickness = [0] * n
         radius = [0] * n
         for i in range(n):
             if self.is_cylinder[i] == 1: cylinder_angle[i] = self.cylinder_angle[i] + 1
-            thickness[i] = self.interthickness[i] * um_to_si
-            piling_thickness[i] = self.thickness[i] * mm_to_si
+            thickness[i] = self.thickness[i] * um_to_si
+            piling_thickness[i] = self.piling_thickness[i] * mm_to_si
             radius[i] = self.radius[i] * um_to_si
 
         optical_element = S4Transfocator(name='TF',
-                                        n_lens=self.nlenses,
-                                        piling_thickness=piling_thickness,  # syned stuff
+                                        n_lens=self.n_lenses,
+                                        thickness=thickness,  # syned stuff
                                         boundary_shape=boundary_shape,
                                         material=self.material,
                                         density=self.density,
-                                        thickness=thickness,
+                                        piling_thickness=piling_thickness,
                                         surface_shape=self.surface_shape,
                                         convex_to_the_beam=self.convex_to_the_beam,
                                         cylinder_angle=cylinder_angle,
@@ -233,9 +233,9 @@ class OWTransfocator(OWOpticalElement):
                 self.tab_crls.setCurrentIndex(current_index)
 
     def dumpSettings(self):
-        bkp_nlenses = copy.deepcopy(self.nlenses)
+        bkp_n_lenses = copy.deepcopy(self.n_lenses)
         bkp_slots_empty = copy.deepcopy(self.slots_empty)
-        bkp_thickness = copy.deepcopy(self.thickness)
+        bkp_piling_thickness = copy.deepcopy(self.piling_thickness)
         bkp_empty_space_after_last_interface = copy.deepcopy(self.empty_space_after_last_interface)
         bkp_surface_shape = copy.deepcopy(self.surface_shape)
         bkp_convex_to_the_beam = copy.deepcopy(self.convex_to_the_beam)
@@ -250,12 +250,12 @@ class OWTransfocator(OWOpticalElement):
         bkp_material = copy.deepcopy(self.material)
         bkp_density = copy.deepcopy(self.density)
         bkp_radius = copy.deepcopy(self.radius)
-        bkp_interthickness = copy.deepcopy(self.interthickness)
+        bkp_thickness = copy.deepcopy(self.thickness)
 
         try:
-            self.nlenses = []
+            self.n_lenses = []
             self.slots_empty = []
-            self.thickness = []
+            self.piling_thickness = []
             self.empty_space_after_last_interface = []
             self.surface_shape = []
             self.convex_to_the_beam = []
@@ -270,12 +270,12 @@ class OWTransfocator(OWOpticalElement):
             self.material = []
             self.density = []
             self.radius = []
-            self.interthickness = []
+            self.thickness = []
 
             for index in range(len(self.crl_box_array)):
-                self.nlenses.append(self.crl_box_array[index].nlenses)
+                self.n_lenses.append(self.crl_box_array[index].n_lenses)
                 self.slots_empty.append(self.crl_box_array[index].slots_empty)
-                self.thickness.append(self.crl_box_array[index].thickness)
+                self.piling_thickness.append(self.crl_box_array[index].piling_thickness)
                 self.empty_space_after_last_interface.append(self.crl_box_array[index].empty_space_after_last_interface)
                 self.surface_shape.append(self.crl_box_array[index].surface_shape)
                 self.convex_to_the_beam.append(self.crl_box_array[index].convex_to_the_beam)
@@ -290,11 +290,11 @@ class OWTransfocator(OWOpticalElement):
                 self.material.append(self.crl_box_array[index].material)
                 self.density.append(self.crl_box_array[index].density)
                 self.radius.append(self.crl_box_array[index].radius)
-                self.interthickness.append(self.crl_box_array[index].interthickness)
+                self.thickness.append(self.crl_box_array[index].thickness)
         except:
-            self.nlenses = copy.deepcopy(bkp_nlenses)
+            self.n_lenses = copy.deepcopy(bkp_n_lenses)
             self.slots_empty = copy.deepcopy(bkp_slots_empty)
-            self.thickness = copy.deepcopy(bkp_thickness)
+            self.piling_thickness = copy.deepcopy(bkp_piling_thickness)
             self.empty_space_after_last_interface = copy.deepcopy(bkp_empty_space_after_last_interface)
             self.surface_shape = copy.deepcopy(bkp_surface_shape)
             self.convex_to_the_beam = copy.deepcopy(bkp_convex_to_the_beam)
@@ -309,22 +309,22 @@ class OWTransfocator(OWOpticalElement):
             self.material = copy.deepcopy(bkp_material)
             self.density = copy.deepcopy(bkp_density)
             self.radius = copy.deepcopy(bkp_radius)
-            self.interthickness = copy.deepcopy(bkp_interthickness)
+            self.thickness = copy.deepcopy(bkp_thickness)
 
     ##############################
     # SINGLE FIELDS SIGNALS
     ##############################
 
-    def dump_nlenses(self):
-        bkp_nlenses = copy.deepcopy(self.nlenses)
+    def dump_n_lenses(self):
+        bkp_n_lenses = copy.deepcopy(self.n_lenses)
 
         try:
-            self.nlenses = []
+            self.n_lenses = []
 
             for index in range(len(self.crl_box_array)):
-                self.nlenses.append(self.crl_box_array[index].nlenses)
+                self.n_lenses.append(self.crl_box_array[index].n_lenses)
         except:
-            self.nlenses = copy.deepcopy(bkp_nlenses)
+            self.n_lenses = copy.deepcopy(bkp_n_lenses)
 
     def dump_slots_empty(self):
         bkp_slots_empty = copy.deepcopy(self.slots_empty)
@@ -337,16 +337,16 @@ class OWTransfocator(OWOpticalElement):
         except:
             self.slots_empty = copy.deepcopy(bkp_slots_empty)
 
-    def dump_thickness(self):
-        bkp_thickness = copy.deepcopy(self.thickness)
+    def dump_piling_thickness(self):
+        bkp_piling_thickness = copy.deepcopy(self.piling_thickness)
 
         try:
-            self.thickness = []
+            self.piling_thickness = []
 
             for index in range(len(self.crl_box_array)):
-                self.thickness.append(self.crl_box_array[index].thickness)
+                self.piling_thickness.append(self.crl_box_array[index].piling_thickness)
         except:
-            self.thickness = copy.deepcopy(bkp_thickness)
+            self.piling_thickness = copy.deepcopy(bkp_piling_thickness)
 
     def dump_empty_space_after_last_interface(self):
         bkp_empty_space_after_last_interface = copy.deepcopy(self.empty_space_after_last_interface)
@@ -517,16 +517,16 @@ class OWTransfocator(OWOpticalElement):
         except:
             self.radius = copy.deepcopy(bkp_radius)
 
-    def dump_interthickness(self):
-        bkp_interthickness = copy.deepcopy(self.interthickness)
+    def dump_thickness(self):
+        bkp_thickness = copy.deepcopy(self.thickness)
 
         try:
-            self.interthickness = []
+            self.thickness = []
 
             for index in range(len(self.crl_box_array)):
-                self.interthickness.append(self.crl_box_array[index].interthickness)
+                self.thickness.append(self.crl_box_array[index].thickness)
         except:
-            self.interthickness = copy.deepcopy(bkp_interthickness)
+            self.thickness = copy.deepcopy(bkp_thickness)
 
 
     ############################################################
@@ -560,9 +560,9 @@ class OWTransfocator(OWOpticalElement):
 
 
 class CRLBox(QWidget):
-    nlenses = 30
+    n_lenses = 30
     slots_empty = 0
-    thickness = 625e-4
+    piling_thickness = 625e-4
 
     empty_space_after_last_interface = 0.0
     surface_shape = 1
@@ -582,7 +582,7 @@ class CRLBox(QWidget):
     density = 1.848
 
     radius = 500e-2
-    interthickness = 0.001
+    thickness = 0.001
 
     transfocator = None
 
@@ -591,9 +591,9 @@ class CRLBox(QWidget):
     def __init__(self,
                  transfocator=None,
                  parent=None,
-                 nlenses=30,
+                 n_lenses=30,
                  slots_empty=0,
-                 thickness=625e-4,
+                 piling_thickness=625e-4,
                  # p=0.0,
                  # q=0.0,
                  empty_space_after_last_interface=0.0,
@@ -610,7 +610,7 @@ class CRLBox(QWidget):
                  material="Be",
                  density=1.848,
                  radius=500e-2,
-                 interthickness=0.001,
+                 thickness=0.001,
                  ):
         super().__init__(parent)
 
@@ -621,9 +621,9 @@ class CRLBox(QWidget):
 
         self.transfocator = transfocator
 
-        self.nlenses = nlenses
+        self.n_lenses = n_lenses
         self.slots_empty = slots_empty
-        self.thickness = thickness
+        self.piling_thickness = piling_thickness
         self.empty_space_after_last_interface = empty_space_after_last_interface
 
         self.surface_shape = surface_shape
@@ -641,7 +641,7 @@ class CRLBox(QWidget):
         self.density = density
 
         self.radius = radius
-        self.interthickness = interthickness
+        self.thickness = thickness
 
         tabs0 = oasysgui.tabWidget(self, height=420, width=self.transfocator.CONTROL_AREA_WIDTH-35)
 
@@ -650,8 +650,8 @@ class CRLBox(QWidget):
 
         crl_box = tabs
 
-        oasysgui.lineEdit(crl_box, self, "nlenses", "Number of lenses", tooltip="nlenses[i]", labelWidth=260, valueType=int,
-                          orientation="horizontal", callback=self.transfocator.dump_nlenses)
+        oasysgui.lineEdit(crl_box, self, "n_lenses", "Number of lenses", tooltip="n_lenses[i]", labelWidth=260, valueType=int,
+                          orientation="horizontal", callback=self.transfocator.dump_n_lenses)
 
         self.le_empty_space_after_last_interface = oasysgui.lineEdit(crl_box, self, "empty_space_after_last_interface",
                                     "Empty space after last CRL interface [m]", tooltip="empty_space_after_last_interface[i]",
@@ -727,13 +727,13 @@ class CRLBox(QWidget):
 
         self.set_surface_shape()
 
-        self.le_interthickness = oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", labelWidth=260,
-                                                   valueType=float, orientation="horizontal", tooltip="interthickness[i]",
-                                                   callback=self.transfocator.dump_interthickness)
+        self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Lens Thickness [\u03bcm]", labelWidth=260,
+                                                   valueType=float, orientation="horizontal", tooltip="thickness[i]",
+                                                   callback=self.transfocator.dump_thickness)
 
-        self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Piling thickness [mm]", labelWidth=260,
-                                              valueType=float, orientation="horizontal", tooltip="thickness[i]",
-                                              callback=self.transfocator.dump_thickness)
+        self.le_piling_thickness = oasysgui.lineEdit(lens_box, self, "piling_thickness", "Piling thickness [mm]", labelWidth=260,
+                                              valueType=float, orientation="horizontal", tooltip="piling_thickness[i]",
+                                              callback=self.transfocator.dump_piling_thickness)
 
         gui.comboBox(oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=40),
                      self, "convex_to_the_beam", label="1st interface exposed to the beam",
@@ -816,9 +816,9 @@ class CRLBox(QWidget):
         if not self.is_on_init: self.transfocator.dump_ri_calculation_mode()
 
     def checkFields(self):
-        congruence.checkPositiveNumber(self.nlenses, "Number of lenses")
+        congruence.checkPositiveNumber(self.n_lenses, "Number of lenses")
         congruence.checkPositiveNumber(self.slots_empty, "Number of empty slots")
-        congruence.checkPositiveNumber(self.thickness, "Piling thickness")
+        congruence.checkPositiveNumber(self.piling_thickness, "Piling thickness")
 
         congruence.checkNumber(self.p, "P")
         congruence.checkNumber(self.q, "Q")
@@ -835,7 +835,7 @@ class CRLBox(QWidget):
             congruence.checkPositiveNumber(self.density, "Density [g/cm3]")
 
         congruence.checkStrictlyPositiveNumber(self.radius, "Radius")
-        congruence.checkPositiveNumber(self.interthickness, "Lens Thickness")
+        congruence.checkPositiveNumber(self.thickness, "Lens Thickness")
 
     def setupUI(self):
         self.set_surface_shape()
