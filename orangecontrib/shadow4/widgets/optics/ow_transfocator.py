@@ -1,14 +1,14 @@
-import numpy, os, copy, sys
+import numpy, copy
 
-from PyQt5.QtWidgets import QWidget, QLabel, QMessageBox, QSizePolicy, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QMessageBox, QVBoxLayout
 from PyQt5.QtCore import Qt
 
-import orangecanvas.resources as resources
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
 from oasys.widgets.gui import ConfirmDialog
+from orangecontrib.shadow4.util.shadow4_util import ShadowPhysics
 
 from syned.beamline.shape import Circle
 from syned.beamline.element_coordinates import ElementCoordinates
@@ -46,6 +46,8 @@ class OWTransfocator(OWOpticalElement):
     prerefl_file = Setting([NONE_SPECIFIED, NONE_SPECIFIED])
     refraction_index = Setting([1.0, 1.0])
     attenuation_coefficient = Setting([0.0, 0.0])
+    material = ["Be", "Al"]
+    density = [1.848, 2.7]
 
     radius = Setting([0.1, 0.2])
     interthickness = Setting([0.03, 0.03])
@@ -90,8 +92,6 @@ class OWTransfocator(OWOpticalElement):
                              nlenses=self.nlenses[index],
                              slots_empty=self.slots_empty[index],
                              thickness=self.thickness[index],
-                             # p=self.p[index],
-                             # q=self.q[index],
                              empty_space_after_last_interface=self.empty_space_after_last_interface[index],
                              surface_shape=self.surface_shape[index],
                              convex_to_the_beam=self.convex_to_the_beam[index],
@@ -103,6 +103,8 @@ class OWTransfocator(OWOpticalElement):
                              prerefl_file=self.prerefl_file[index],
                              refraction_index=self.refraction_index[index],
                              attenuation_coefficient=self.attenuation_coefficient[index],
+                             material=self.material[index],
+                             density=self.density[index],
                              radius=self.radius[index],
                              interthickness=self.interthickness[index],
                              )
@@ -135,25 +137,25 @@ class OWTransfocator(OWOpticalElement):
             radius[i] = self.radius[i] * um_to_si
 
         optical_element = S4Transfocator(name='TF',
-                                n_lens=self.nlenses,
-                                piling_thickness=piling_thickness,  # syned stuff
-                                boundary_shape=boundary_shape,
-                                material=['Al'] * n,
-                                density=[0.0] * n,
-                                thickness=thickness,
-                                surface_shape=self.surface_shape,
-                                convex_to_the_beam=self.convex_to_the_beam,
-                                cylinder_angle=cylinder_angle,
-                                ri_calculation_mode=self.ri_calculation_mode,
-                                prerefl_file=self.prerefl_file,
-                                refraction_index=self.refraction_index,
-                                attenuation_coefficient=self.attenuation_coefficient,
-                                dabax=None,
-                                radius=radius,
-                                conic_coefficients1=[[0] * 10] * n,
-                                conic_coefficients2=[[0] * 10] * n,
-                                empty_space_after_last_interface=[0.0] * n,
-                                )
+                                        n_lens=self.nlenses,
+                                        piling_thickness=piling_thickness,  # syned stuff
+                                        boundary_shape=boundary_shape,
+                                        material=self.material,
+                                        density=self.density,
+                                        thickness=thickness,
+                                        surface_shape=self.surface_shape,
+                                        convex_to_the_beam=self.convex_to_the_beam,
+                                        cylinder_angle=cylinder_angle,
+                                        ri_calculation_mode=self.ri_calculation_mode,
+                                        prerefl_file=self.prerefl_file,
+                                        refraction_index=self.refraction_index,
+                                        attenuation_coefficient=self.attenuation_coefficient,
+                                        dabax=None,
+                                        radius=radius,
+                                        conic_coefficients1=[[0] * 10] * n,
+                                        conic_coefficients2=[[0] * 10] * n,
+                                        empty_space_after_last_interface=[0.0] * n,
+                                        )
         return optical_element
 
     def get_beamline_element_instance(self):
@@ -174,99 +176,6 @@ class OWTransfocator(OWOpticalElement):
                 angle_azimuthal=0.0,
                 angle_radial_out=numpy.pi,
                 )
-
-    # def run_shadow4(self):
-    #     set_verbose()
-    #     self.shadow_output.setText("")
-    #
-    #     sys.stdout = EmittingStream(textWritten=self._write_stdout)
-    #
-    #     if 1:
-    #
-    #         beamline = self.input_data.beamline.duplicate()
-    #         element = self.get_beamline_element_instance()
-    #         element.set_optical_element(self.get_optical_element_instance())
-    #         element.set_coordinates(self.get_coordinates_instance())
-    #         element.set_movements(self.get_movements_instance())
-    #         element.set_input_beam(self.input_data.beam)
-    #
-    #         print(element.info())
-    #
-    #         beamline.append_beamline_element(element)
-    #
-    #         #
-    #         # script
-    #         #
-    #         script = beamline.to_python_code()
-    #         script += "\n\n\n# test plot"
-    #         script += "\nif True:"
-    #         script += "\n   from srxraylib.plot.gol import plot_scatter"
-    #         script += "\n   plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
-    #         script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
-    #         self.shadow4_script.set_code(script)
-    #
-    #         #
-    #         # run
-    #         #
-    #         print(">>>> element: ", element.info())
-    #         self.progressBarInit()
-    #         output_beam, footprint = element.trace_beam()
-    #
-    #         self._post_trace_operations(output_beam, footprint, element, beamline)
-    #
-    #         self._set_plot_quality()
-    #         self._plot_results(output_beam, footprint, progressBarValue=80)
-    #
-    #         self._plot_additional_results(output_beam, footprint, element, beamline)
-    #
-    #         self.progressBarFinished()
-    #
-    #         #
-    #         # send beam
-    #         #
-    #         self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline))
-    #     else: #except Exception as exception:
-    #         self.prompt_exception(exception)
-    #         self._initialize_tabs()
-
-    # def callResetSettings(self):
-    #     if ConfirmDialog.confirmed(parent=self, message="Confirm Reset of the Fields?\n\nWarning: CRL stack will be regenerated"):
-    #         self.resetSettings()
-    #
-    #         while self.tab_crls.count() > 0:
-    #             self.tab_crls.removeTab(0)
-    #
-    #         self.crl_box_array = []
-    #
-    #         for index in range(len(self.p)):
-    #             tab_crl = oasysgui.widgetBox(self.tab_crls, addToLayout=0, margin=4)
-    #             crl_box = CRLBox(transfocator=self,
-    #                              parent=tab_crl,
-    #                              nlenses=self.nlenses[index],
-    #                              slots_empty=self.slots_empty[index],
-    #                              thickness=self.thickness[index],
-    #                              # p=self.p[index],
-    #                              # q=self.q[index],
-    #                              empty_space_after_last_interface=self.empty_space_after_last_interface[index],
-    #                              surface_shape=self.surface_shape[index],
-    #                              convex_to_the_beam=self.convex_to_the_beam[index],
-    #                              has_finite_diameter=self.has_finite_diameter[index],
-    #                              diameter=self.diameter[index],
-    #                              is_cylinder=self.is_cylinder[index],
-    #                              cylinder_angle=self.cylinder_angle[index],
-    #                              ri_calculation_mode=self.ri_calculation_mode[index],
-    #                              prerefl_file=self.prerefl_file[index],
-    #                              refraction_index=self.refraction_index[index],
-    #                              attenuation_coefficient=self.attenuation_coefficient[index],
-    #                              radius=self.radius[index],
-    #                              interthickness=self.interthickness[index],
-    #                              )
-    #
-    #             self.tab_crls.addTab(tab_crl, "CRL " + str(index + 1))
-    #             self.crl_box_array.append(crl_box)
-    #
-    #         self.setupUI()
-
 
     def crl_insert_before(self):
         current_index = self.tab_crls.currentIndex()
@@ -338,6 +247,8 @@ class OWTransfocator(OWOpticalElement):
         bkp_prerefl_file = copy.deepcopy(self.prerefl_file)
         bkp_refraction_index = copy.deepcopy(self.refraction_index)
         bkp_attenuation_coefficient = copy.deepcopy(self.attenuation_coefficient)
+        bkp_material = copy.deepcopy(self.material)
+        bkp_density = copy.deepcopy(self.density)
         bkp_radius = copy.deepcopy(self.radius)
         bkp_interthickness = copy.deepcopy(self.interthickness)
 
@@ -356,6 +267,8 @@ class OWTransfocator(OWOpticalElement):
             self.prerefl_file = []
             self.refraction_index = []
             self.attenuation_coefficient = []
+            self.material = []
+            self.density = []
             self.radius = []
             self.interthickness = []
 
@@ -374,6 +287,8 @@ class OWTransfocator(OWOpticalElement):
                 self.prerefl_file.append(self.crl_box_array[index].prerefl_file)
                 self.refraction_index.append(self.crl_box_array[index].refraction_index)
                 self.attenuation_coefficient.append(self.crl_box_array[index].attenuation_coefficient)
+                self.material.append(self.crl_box_array[index].material)
+                self.density.append(self.crl_box_array[index].density)
                 self.radius.append(self.crl_box_array[index].radius)
                 self.interthickness.append(self.crl_box_array[index].interthickness)
         except:
@@ -391,10 +306,10 @@ class OWTransfocator(OWOpticalElement):
             self.prerefl_file = copy.deepcopy(bkp_prerefl_file)
             self.refraction_index = copy.deepcopy(bkp_refraction_index)
             self.attenuation_coefficient = copy.deepcopy(bkp_attenuation_coefficient)
+            self.material = copy.deepcopy(bkp_material)
+            self.density = copy.deepcopy(bkp_density)
             self.radius = copy.deepcopy(bkp_radius)
             self.interthickness = copy.deepcopy(bkp_interthickness)
-
-
 
     ##############################
     # SINGLE FIELDS SIGNALS
@@ -554,6 +469,43 @@ class OWTransfocator(OWOpticalElement):
         except:
             self.attenuation_coefficient = copy.deepcopy(bkp_attenuation_coefficient)
 
+    def dump_material(self):
+        bkp_material = copy.deepcopy(self.material)
+
+        try:
+            self.material = []
+
+            for index in range(len(self.crl_box_array)):
+                self.material.append(self.crl_box_array[index].material)
+        except:
+            self.material = copy.deepcopy(bkp_material)
+
+        self.set_Density()
+
+    def set_Density(self):
+        index = self.tab_crls.currentIndex()
+        mm = self.material[index]
+        if not mm is None:
+            if not mm.strip() == "":
+                mm = mm.strip()
+                new_density = ShadowPhysics.getMaterialDensity(mm)
+                self.crl_box_array[index].density = new_density
+                self.dump_density()
+                # Next line is added to display the value in the widget: I do not know why this is not automatic!
+                self.crl_box_array[index].le_density.setText(str(new_density))
+
+    def dump_density(self):
+        bkp_density = copy.deepcopy(self.density)
+
+        try:
+            self.density = []
+
+            for index in range(len(self.crl_box_array)):
+                self.density.append(self.crl_box_array[index].density)
+        except:
+            self.density = copy.deepcopy(bkp_density)
+
+
     def dump_radius(self):
         bkp_radius = copy.deepcopy(self.radius)
 
@@ -582,22 +534,6 @@ class OWTransfocator(OWOpticalElement):
     # USER INPUT MANAGEMENT
     #
     ############################################################
-
-
-    # def populateFields(self, shadow_oe):
-    #     self.dumpSettings()
-    #
-    #     surface_shape_out = []
-    #     diameter_out = []
-    #     cylinder_angle_out = []
-    #     prerefl_file_out = []
-    #
-    #     for box in self.crl_box_array:
-    #         surface_shape_out.append(self.surface_shape) # box.get_surface_shape())
-    #         diameter_out.append(box.get_diameter())
-    #         cylinder_angle_out.append(box.get_cylinder_angle())
-    #         prerefl_file_out.append(box.get_prerefl_file())
-
 
     def checkFields(self):
         for box in self.crl_box_array:
@@ -642,6 +578,8 @@ class CRLBox(QWidget):
     prerefl_file = OWTransfocator.NONE_SPECIFIED
     refraction_index = 1.0
     attenuation_coefficient = 0.0
+    material = "Be"
+    density = 1.848
 
     radius = 500e-2
     interthickness = 0.001
@@ -669,6 +607,8 @@ class CRLBox(QWidget):
                  prerefl_file=OWTransfocator.NONE_SPECIFIED,
                  refraction_index=1.0,
                  attenuation_coefficient=0.0,
+                 material="Be",
+                 density=1.848,
                  radius=500e-2,
                  interthickness=0.001,
                  ):
@@ -684,8 +624,6 @@ class CRLBox(QWidget):
         self.nlenses = nlenses
         self.slots_empty = slots_empty
         self.thickness = thickness
-        # self.p = p
-        # self.q = q
         self.empty_space_after_last_interface = empty_space_after_last_interface
 
         self.surface_shape = surface_shape
@@ -699,6 +637,8 @@ class CRLBox(QWidget):
         self.prerefl_file = prerefl_file
         self.refraction_index = refraction_index
         self.attenuation_coefficient = attenuation_coefficient
+        self.material = material
+        self.density = density
 
         self.radius = radius
         self.interthickness = interthickness
@@ -707,21 +647,8 @@ class CRLBox(QWidget):
 
         tabs = oasysgui.widgetBox(tabs0, "", addSpace=False, orientation="vertical",
                                      width=self.transfocator.CONTROL_AREA_WIDTH - 45)
-        # tab_1 = oasysgui.createTabPage(tabs, "CRL Input Parameters")
-        # tab_2 = oasysgui.createTabPage(tabs, "Single Lens Input Parameters")
 
-        # crl_box = oasysgui.widgetBox(tabs, "CRL Parameters", addSpace=False, orientation="vertical",
-        #                              width=self.transfocator.CONTROL_AREA_WIDTH-45)
         crl_box = tabs
-        # tab_1 = crl_box
-        # tab_2 = crl_box
-
-        # pq_box = oasysgui.widgetBox(tab_1, "CRL separation", addSpace=False, orientation="vertical", height=100, width=self.transfocator.CONTROL_AREA_WIDTH-45)
-
-        # self.le_p = oasysgui.lineEdit(pq_box, self, "p", "Source Plane Distance to First Interface (P)", labelWidth=290, valueType=float, orientation="horizontal",
-        #                               callback=self.transfocator.dump_p)
-        # self.le_q = oasysgui.lineEdit(pq_box, self, "q", "Last Interface distance to Image plane (Q)"  , labelWidth=290, valueType=float, orientation="horizontal",
-        #                               callback=self.transfocator.dump_q)
 
         oasysgui.lineEdit(crl_box, self, "nlenses", "Number of lenses", labelWidth=260, valueType=int,
                           orientation="horizontal", callback=self.transfocator.dump_nlenses)
@@ -739,95 +666,85 @@ class CRLBox(QWidget):
                                                              "Internal (using xraylib)", "Internal (using dabax)"],
                                                       sendSelectedValue=False, orientation="horizontal",
                                                       callback=self.set_ri_calculation_mode)
+
         self.calculation_mode_1 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(self.calculation_mode_1, self, "refraction_index", "Refraction index", labelWidth=260, valueType=float, orientation="horizontal",
                            callback=self.transfocator.dump_refraction_index)
         oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [cm-1]", labelWidth=260, valueType=float,
                            orientation="horizontal", callback=self.transfocator.dump_attenuation_coefficient)
+
         self.calculation_mode_2 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")
         file_box = oasysgui.widgetBox(self.calculation_mode_2, "", addSpace=False, orientation="horizontal", height=20)
         self.le_prerefl_file = oasysgui.lineEdit(file_box, self, "prerefl_file", "File Prerefl", labelWidth=100, valueType=str, orientation="horizontal",
                                                   callback=self.transfocator.dump_prerefl_file)
+
+        self.calculation_mode_3 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")
+        mat_box = oasysgui.widgetBox(self.calculation_mode_3, "", addSpace=True, orientation="horizontal")
+        oasysgui.lineEdit(mat_box, self, "material", "Lens material", tooltip="material",
+                          labelWidth=90, valueType=str, orientation="horizontal",
+                          callback=self.transfocator.dump_material)
+        self.le_density = oasysgui.lineEdit(mat_box, self, "density", "density [g/cm3]", tooltip="density",
+                        labelWidth=110, valueType=float, orientation="horizontal",
+                        callback=self.transfocator.dump_density)
+
         gui.button(file_box, self, "...", callback=self.selectFilePrerefl)
         self.set_ri_calculation_mode()
 
         ###############
 
-        if 1:
-            # lens_box = oasysgui.widgetBox(tabs, "Single Lens Input Parameters", addSpace=False, orientation="vertical",
-            #                               width=self.transfocator.CONTROL_AREA_WIDTH-45)
-            lens_box = tabs
+        lens_box = tabs
 
-            diameter_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
+        diameter_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
 
-            gui.comboBox(diameter_box_outer, self, "has_finite_diameter", label="Lens Diameter", labelWidth=110, #labelWidth=260,
-                         items=["Finite", "Infinite"], sendSelectedValue=False, orientation="horizontal", callback=self.set_diameter)
+        gui.comboBox(diameter_box_outer, self, "has_finite_diameter", label="Lens Diameter", labelWidth=110, #labelWidth=260,
+                     items=["Finite", "Infinite"], sendSelectedValue=False, orientation="horizontal", callback=self.set_diameter)
 
-            self.diameter_box = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical")
-            self.diameter_box_empty = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical", height=20)
+        self.diameter_box = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical")
+        self.diameter_box_empty = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical", height=20)
 
-            self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value [\u03bcm]", labelWidth=80, #labelWidth=260,
-                                                 valueType=float, orientation="horizontal", callback=self.transfocator.dump_diameter)
+        self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value [\u03bcm]", labelWidth=80, #labelWidth=260,
+                                             valueType=float, orientation="horizontal", callback=self.transfocator.dump_diameter)
 
-            self.set_diameter()
+        self.set_diameter()
 
-            surface_shape_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
+        surface_shape_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
 
-            gui.comboBox(surface_shape_box_outer, self, "surface_shape", label="Surface Shape", #labelWidth=260,
-                         items=[ "Plane", "Sphere", "Paraboloid"], sendSelectedValue=False, orientation="horizontal",
-                         callback=self.set_surface_shape)
+        gui.comboBox(surface_shape_box_outer, self, "surface_shape", label="Surface Shape", #labelWidth=260,
+                     items=[ "Plane", "Sphere", "Paraboloid"], sendSelectedValue=False, orientation="horizontal",
+                     callback=self.set_surface_shape)
 
-            self.surface_shape_box = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
-            self.surface_shape_box_empty = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
+        self.surface_shape_box = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
+        self.surface_shape_box_empty = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
 
-            self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius [\u03bcm]", labelWidth=80, #labelWidth=260,
-                                               valueType=float, orientation="horizontal", callback=self.transfocator.dump_radius)
+        self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius [\u03bcm]", labelWidth=80, #labelWidth=260,
+                                           valueType=float, orientation="horizontal", callback=self.transfocator.dump_radius)
 
-            self.set_surface_shape()
+        self.set_surface_shape()
 
-            self.le_interthickness = oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", labelWidth=260,
-                                                       valueType=float, orientation="horizontal", tooltip="interthickness",
-                                                       callback=self.transfocator.dump_interthickness)
+        self.le_interthickness = oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", labelWidth=260,
+                                                   valueType=float, orientation="horizontal", tooltip="interthickness",
+                                                   callback=self.transfocator.dump_interthickness)
 
-            self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Piling thickness [mm]", labelWidth=260,
-                                                  valueType=float, orientation="horizontal", tooltip="thickness",
-                                                  callback=self.transfocator.dump_thickness)
+        self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Piling thickness [mm]", labelWidth=260,
+                                              valueType=float, orientation="horizontal", tooltip="thickness",
+                                              callback=self.transfocator.dump_thickness)
 
-            gui.comboBox(oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=40),
-                         self, "convex_to_the_beam", label="1st interface exposed to the beam",
-                                labelWidth=310,
-                         items=["Concave", "Convex"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_convex_to_the_beam)
+        gui.comboBox(oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=40),
+                     self, "convex_to_the_beam", label="1st interface exposed to the beam",
+                            labelWidth=310,
+                     items=["Concave", "Convex"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_convex_to_the_beam)
 
 
-            gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", labelWidth=310,
-                         items=["No", "Yes"], sendSelectedValue=False, orientation="horizontal", callback=self.set_cylindrical)
+        gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", labelWidth=310,
+                     items=["No", "Yes"], sendSelectedValue=False, orientation="horizontal", callback=self.set_cylindrical)
 
-            self.box_cyl = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
-            self.box_cyl_empty = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=20)
+        self.box_cyl = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
+        self.box_cyl_empty = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=20)
 
-            gui.comboBox(self.box_cyl, self, "cylinder_angle", label="Cylinder Angle (deg)", labelWidth=260,
-                         items=["0 (Meridional)", "90 (Sagittal)"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_cylinder_angle)
+        gui.comboBox(self.box_cyl, self, "cylinder_angle", label="Cylinder Angle (deg)", labelWidth=260,
+                     items=["0 (Meridional)", "90 (Sagittal)"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_cylinder_angle)
 
-            self.set_cylindrical()
-
-        # self.ri_calculation_mode_combo = gui.comboBox(lens_box, self, "ri_calculation_mode",
-        #                                               label="Refraction Index calculation mode", labelWidth=260,
-        #                                               items=["User Parameters", "Prerefl File", \
-        #                                                      "Internal (using xraylib)", "Internal (using dabax)"],
-        #                                               sendSelectedValue=False, orientation="horizontal",
-        #                                               callback=self.set_ri_calculation_mode)
-        # self.calculation_mode_1 = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
-        # oasysgui.lineEdit(self.calculation_mode_1, self, "refraction_index", "Refraction index", labelWidth=260, valueType=float, orientation="horizontal",
-        #                    callback=self.transfocator.dump_refraction_index)
-        # oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [cm-1]", labelWidth=260, valueType=float,
-        #                    orientation="horizontal", callback=self.transfocator.dump_attenuation_coefficient)
-        # self.calculation_mode_2 = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
-        # file_box = oasysgui.widgetBox(self.calculation_mode_2, "", addSpace=False, orientation="horizontal", height=20)
-        # self.le_prerefl_file = oasysgui.lineEdit(file_box, self, "prerefl_file", "File Prerefl", labelWidth=100, valueType=str, orientation="horizontal",
-        #                                           callback=self.transfocator.dump_prerefl_file)
-        # gui.button(file_box, self, "...", callback=self.selectFilePrerefl)
-        # self.set_ri_calculation_mode()
-        # ###############
+        self.set_cylindrical()
 
         self.is_on_init = False
 
@@ -887,6 +804,7 @@ class CRLBox(QWidget):
     def set_ri_calculation_mode(self):
         self.calculation_mode_1.setVisible(self.ri_calculation_mode == 0)
         self.calculation_mode_2.setVisible(self.ri_calculation_mode == 1)
+        self.calculation_mode_3.setVisible(self.ri_calculation_mode > 1)
 
         if not self.is_on_init: self.transfocator.dump_ri_calculation_mode()
 
@@ -901,11 +819,13 @@ class CRLBox(QWidget):
         if self.has_finite_diameter == 0:
             congruence.checkStrictlyPositiveNumber(self.diameter, "Diameter")
 
-        if self.ri_calculation_mode == 1:
-            congruence.checkFile(self.prerefl_file)
-        else:
+        if self.ri_calculation_mode == 0:
             congruence.checkPositiveNumber(self.refraction_index, "Refraction Index")
             congruence.checkPositiveNumber(self.attenuation_coefficient, "Attenuation Coefficient")
+        elif self.ri_calculation_mode == 1:
+            congruence.checkFile(self.prerefl_file)
+        else: # todo: check material
+            congruence.checkPositiveNumber(self.density, "Density [g/cm3]")
 
         congruence.checkStrictlyPositiveNumber(self.radius, "Radius")
         congruence.checkPositiveNumber(self.interthickness, "Lens Thickness")
