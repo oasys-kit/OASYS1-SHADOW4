@@ -650,17 +650,17 @@ class CRLBox(QWidget):
 
         crl_box = tabs
 
-        oasysgui.lineEdit(crl_box, self, "nlenses", "Number of lenses", labelWidth=260, valueType=int,
+        oasysgui.lineEdit(crl_box, self, "nlenses", "Number of lenses", tooltip="nlenses[i]", labelWidth=260, valueType=int,
                           orientation="horizontal", callback=self.transfocator.dump_nlenses)
 
         self.le_empty_space_after_last_interface = oasysgui.lineEdit(crl_box, self, "empty_space_after_last_interface",
-                                    "Empty space after last CRL interface [m]",
+                                    "Empty space after last CRL interface [m]", tooltip="empty_space_after_last_interface[i]",
                                     labelWidth=290, valueType=float, orientation="horizontal",
                                     callback=self.transfocator.dump_empty_space_after_last_interface)
 
         # optical constants
         ###############
-        self.ri_calculation_mode_combo = gui.comboBox(crl_box, self, "ri_calculation_mode",
+        self.ri_calculation_mode_combo = gui.comboBox(crl_box, self, "ri_calculation_mode", tooltip="ri_calculation_mode[i]",
                                                       label="Refraction Index calculation mode", labelWidth=260,
                                                       items=["User Parameters", "Prerefl File", \
                                                              "Internal (using xraylib)", "Internal (using dabax)"],
@@ -668,22 +668,24 @@ class CRLBox(QWidget):
                                                       callback=self.set_ri_calculation_mode)
 
         self.calculation_mode_1 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")
-        oasysgui.lineEdit(self.calculation_mode_1, self, "refraction_index", "Refraction index", labelWidth=260, valueType=float, orientation="horizontal",
-                           callback=self.transfocator.dump_refraction_index)
+        oasysgui.lineEdit(self.calculation_mode_1, self, "refraction_index", "Refraction index", tooltip="refraction_index[i]",
+                          labelWidth=260, valueType=float, orientation="horizontal",
+                          callback=self.transfocator.dump_refraction_index)
         oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [cm-1]", labelWidth=260, valueType=float,
                            orientation="horizontal", callback=self.transfocator.dump_attenuation_coefficient)
 
         self.calculation_mode_2 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")
         file_box = oasysgui.widgetBox(self.calculation_mode_2, "", addSpace=False, orientation="horizontal", height=20)
-        self.le_prerefl_file = oasysgui.lineEdit(file_box, self, "prerefl_file", "File Prerefl", labelWidth=100, valueType=str, orientation="horizontal",
-                                                  callback=self.transfocator.dump_prerefl_file)
+        self.le_prerefl_file = oasysgui.lineEdit(file_box, self, "prerefl_file", "File Prerefl", tooltip="prerefl_file[i]",
+                                                 labelWidth=100, valueType=str, orientation="horizontal",
+                                                 callback=self.transfocator.dump_prerefl_file)
 
         self.calculation_mode_3 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")
         mat_box = oasysgui.widgetBox(self.calculation_mode_3, "", addSpace=True, orientation="horizontal")
-        oasysgui.lineEdit(mat_box, self, "material", "Lens material", tooltip="material",
+        oasysgui.lineEdit(mat_box, self, "material", "Lens material", tooltip="material[i]",
                           labelWidth=90, valueType=str, orientation="horizontal",
                           callback=self.transfocator.dump_material)
-        self.le_density = oasysgui.lineEdit(mat_box, self, "density", "density [g/cm3]", tooltip="density",
+        self.le_density = oasysgui.lineEdit(mat_box, self, "density", "density [g/cm3]", tooltip="density[i]",
                         labelWidth=110, valueType=float, orientation="horizontal",
                         callback=self.transfocator.dump_density)
 
@@ -696,13 +698,15 @@ class CRLBox(QWidget):
 
         diameter_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
 
-        gui.comboBox(diameter_box_outer, self, "has_finite_diameter", label="Lens Diameter", labelWidth=110, #labelWidth=260,
+        gui.comboBox(diameter_box_outer, self, "has_finite_diameter", label="Lens Diameter", tooltip="has_finite_diameter[i]",
+                     labelWidth=110, #labelWidth=260,
                      items=["Finite", "Infinite"], sendSelectedValue=False, orientation="horizontal", callback=self.set_diameter)
 
         self.diameter_box = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical")
         self.diameter_box_empty = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical", height=20)
 
-        self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value [\u03bcm]", labelWidth=80, #labelWidth=260,
+        self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value [\u03bcm]", tooltip="diameter[i]",
+                                             labelWidth=80, #labelWidth=260,
                                              valueType=float, orientation="horizontal", callback=self.transfocator.dump_diameter)
 
         self.set_diameter()
@@ -710,39 +714,42 @@ class CRLBox(QWidget):
         surface_shape_box_outer = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="horizontal")
 
         gui.comboBox(surface_shape_box_outer, self, "surface_shape", label="Surface Shape", #labelWidth=260,
+                     tooltip="surface_shape[i]",
                      items=[ "Plane", "Sphere", "Paraboloid"], sendSelectedValue=False, orientation="horizontal",
                      callback=self.set_surface_shape)
 
         self.surface_shape_box = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
         self.surface_shape_box_empty = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
 
-        self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius [\u03bcm]", labelWidth=80, #labelWidth=260,
+        self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius [\u03bcm]", tooltip="radius[i]",
+                                           labelWidth=80, #labelWidth=260,
                                            valueType=float, orientation="horizontal", callback=self.transfocator.dump_radius)
 
         self.set_surface_shape()
 
         self.le_interthickness = oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", labelWidth=260,
-                                                   valueType=float, orientation="horizontal", tooltip="interthickness",
+                                                   valueType=float, orientation="horizontal", tooltip="interthickness[i]",
                                                    callback=self.transfocator.dump_interthickness)
 
         self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Piling thickness [mm]", labelWidth=260,
-                                              valueType=float, orientation="horizontal", tooltip="thickness",
+                                              valueType=float, orientation="horizontal", tooltip="thickness[i]",
                                               callback=self.transfocator.dump_thickness)
 
         gui.comboBox(oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=40),
                      self, "convex_to_the_beam", label="1st interface exposed to the beam",
-                            labelWidth=310,
+                            tooltip="convex_to_the_beam[i]", labelWidth=310,
                      items=["Concave", "Convex"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_convex_to_the_beam)
 
 
-        gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", labelWidth=310,
+        gui.comboBox(lens_box, self, "is_cylinder", label="Cylindrical", tooltip="is_cylinder[i]", labelWidth=310,
                      items=["No", "Yes"], sendSelectedValue=False, orientation="horizontal", callback=self.set_cylindrical)
 
         self.box_cyl = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
         self.box_cyl_empty = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=20)
 
-        gui.comboBox(self.box_cyl, self, "cylinder_angle", label="Cylinder Angle (deg)", labelWidth=260,
-                     items=["0 (Meridional)", "90 (Sagittal)"], sendSelectedValue=False, orientation="horizontal", callback=self.transfocator.dump_cylinder_angle)
+        gui.comboBox(self.box_cyl, self, "cylinder_angle", tooltip="cylinder_angle[i]", label="Cylinder Angle (deg)",
+                     labelWidth=260, items=["0 (Meridional)", "90 (Sagittal)"], sendSelectedValue=False,
+                     orientation="horizontal", callback=self.transfocator.dump_cylinder_angle)
 
         self.set_cylindrical()
 
