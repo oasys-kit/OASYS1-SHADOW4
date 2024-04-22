@@ -11,6 +11,7 @@ from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
 from orangecontrib.shadow4.util.python_script import PythonScript, PythonConsole
 
+from shadow4.tools.beamline_tools import flux_summary
 
 class OWInfo(widget.OWWidget):
 
@@ -53,6 +54,7 @@ class OWInfo(widget.OWWidget):
         tabs_setting1.setFixedHeight(self.WIDGET_HEIGHT-60)
         tabs_setting1.setFixedWidth(self.WIDGET_WIDTH-60)
 
+        tab_flux = oasysgui.createTabPage(tabs_setting1, "Flux-Power")
         tab_sys = oasysgui.createTabPage(tabs_setting1, "Sys Info")
         tab_sys_plot_side = oasysgui.createTabPage(tabs_setting1, "Sys Plot (Side View)")
         tab_sys_plot_top = oasysgui.createTabPage(tabs_setting1, "Sys Plot (Bottom View)")
@@ -64,6 +66,10 @@ class OWInfo(widget.OWWidget):
         tab_syned_json = oasysgui.createTabPage(tabs_setting1, "BL (json)")
         # tab_scr = oasysgui.createTabPage(tabs_setting1, "Python Script")
         tab_out = oasysgui.createTabPage(tabs_setting1, "System Output")
+
+        # flux
+        self.fluxPower = oasysgui.textArea()
+        self.fluxPower.setMaximumHeight(self.WIDGET_HEIGHT-100)
 
         # sysinfo and plots
         self.sysInfo = oasysgui.textArea()
@@ -99,6 +105,9 @@ class OWInfo(widget.OWWidget):
         self.distancesSummary.setMaximumHeight(self.WIDGET_HEIGHT-100)
 
         # sysinfo plots
+        flux_power_box = oasysgui.widgetBox(tab_flux, "", addSpace=True, orientation="horizontal", height = self.WIDGET_HEIGHT-80, width = self.WIDGET_WIDTH-80)
+        flux_power_box.layout().addWidget(self.fluxPower)
+
         sys_box = oasysgui.widgetBox(tab_sys, "", addSpace=True, orientation="horizontal", height = self.WIDGET_HEIGHT-80, width = self.WIDGET_WIDTH-80)
         sys_box.layout().addWidget(self.sysInfo)
 
@@ -155,6 +164,7 @@ class OWInfo(widget.OWWidget):
                 MessageDialog.message(self, "Data not displayable: bad content", "Error", "critical")
 
     def refresh(self):
+        self.fluxPower.setText("")
         self.sysInfo.setText("")
         self.mirInfo.setText("")
         self.sourceInfo.setText("")
@@ -165,7 +175,7 @@ class OWInfo(widget.OWWidget):
 
         if self.input_data is None: return
 
-
+        self.fluxPower.append(flux_summary(self.input_data.beamline))
         self.sysInfo.append(self.input_data.beamline.sysinfo())
         self.mirInfo.append(self.input_data.beamline.oeinfo())
         self.sourceInfo.append( self.input_data.beamline.sourcinfo())
