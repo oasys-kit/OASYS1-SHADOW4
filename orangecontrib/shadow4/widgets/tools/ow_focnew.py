@@ -59,7 +59,7 @@ class FocNew(AutomaticElement):
         gui.comboBox(general_box, self, "mode", label="Mode", labelWidth=250,
                                      items=["Center at Origin",
                                             "Center at Barycenter",
-                                            "Define Center..."],
+                                            "External"],
                                      callback=self.set_Center, sendSelectedValue=False, orientation="horizontal")
 
         self.center_box = oasysgui.widgetBox(general_box, "", addSpace=False, orientation="vertical", height=50)
@@ -139,9 +139,13 @@ class FocNew(AutomaticElement):
             return
 
         try:
-            ticket = focnew(beam=self.input_data.beam)
+            ticket = focnew(beam=self.input_data.beam, nolost=1, mode=self.mode, center=[self.center_x, self.center_z])
             self.focnewInfo.setText(ticket['text'])
             self.do_plots(ticket)
+            print("list of 6 coeffs: <d**2>, <x d>, <x**2>, <x>**2, <x><d>, <d>**2: ")
+            print("AX coeffs: ", ticket["AX"])
+            print("AZ coeffs: ", ticket["AZ"])
+            print("AT coeffs: ", ticket["AT"])
 
         except Exception as exception:
             QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
