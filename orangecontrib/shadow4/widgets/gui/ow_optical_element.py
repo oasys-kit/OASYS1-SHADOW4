@@ -301,7 +301,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             #
             # send beam
             #
-            self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline))
+            self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline, footprint=footprint))
         except Exception as exception:
             self.prompt_exception(exception)
             self._initialize_tabs()
