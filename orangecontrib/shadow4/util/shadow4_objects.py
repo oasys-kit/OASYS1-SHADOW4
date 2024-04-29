@@ -200,6 +200,14 @@ class ShadowData:
 #         self.error_profile_x_slope = error_profile_x_slope
 #         self.error_profile_y_slope = error_profile_y_slope
 
+class MLayerPreProcessorData:
+    NONE = "None"
+    def __init__(self,
+                 mlayer_data_file=NONE,
+                 ):
+        super().__init__()
+        self.mlayer_data_file = mlayer_data_file
+
 class PreReflPreProcessorData:
     NONE = "None"
     def __init__(self,
