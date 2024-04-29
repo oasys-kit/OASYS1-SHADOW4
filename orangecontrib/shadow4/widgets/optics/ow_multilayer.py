@@ -21,7 +21,8 @@ from shadow4.beamline.optical_elements.multilayers.s4_additional_numerical_mesh_
 from shadow4.beamline.optical_elements.multilayers.s4_additional_numerical_mesh_multilayer import S4AdditionalNumericalMeshMultilayerElement
 
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape, SUBTAB_INNER_BOX_WIDTH
-from orangecontrib.shadow4.util.shadow4_objects import ShadowData, PreReflPreProcessorData, VlsPgmPreProcessorData
+# from orangecontrib.shadow4.util.shadow4_objects import ShadowData, PreReflPreProcessorData, VlsPgmPreProcessorData
+from orangecontrib.shadow4.util.shadow4_objects import MLayerPreProcessorData
 
 class _OWMultilayer(OWOpticalElementWithSurfaceShape):
     #########################################################
@@ -57,17 +58,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
         self.populate_tab_reflectivity(subtab_reflectivity)
 
     def populate_tab_reflectivity(self, subtab_reflectivity):
-        # # f_reflec = 0    # reflectivity of surface: 0=no reflectivity, 1=full polarization
-        # # f_refl   = 0    # 0=prerefl file
-        # #                 # 1=electric susceptibility
-        # #                 # 2=user defined file (1D reflectivity vs angle)
-        # #                 # 3=user defined file (1D reflectivity vs energy)
-        # #                 # 4=user defined file (2D reflectivity vs energy and angle)
-        # # file_refl = "",  # preprocessor file fir f_refl=0,2,3,4
-        # # refraction_index = 1.0,  # refraction index (complex) for f_refl=1
-
         box_1 = oasysgui.widgetBox(subtab_reflectivity, "Multilayer Reflectivity", addSpace=True, orientation="vertical", width=SUBTAB_INNER_BOX_WIDTH)
-
 
         reflectivity_flag_box = oasysgui.widgetBox(box_1, "", addSpace=False, orientation="vertical")
         gui.comboBox(reflectivity_flag_box, self, "reflectivity_source", label="Reflectivity source", labelWidth=150,
@@ -128,10 +119,10 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
     # preprocessor
     #########################################################
 
-    def set_PreReflPreProcessorData(self, data):
+    def set_MLayerPreProcessorData(self, data):
         if data is not None:
-            if data.prerefl_data_file != PreReflPreProcessorData.NONE:
-                self.file_refl = data.prerefl_data_file
+            if data.mlayer_data_file != MLayerPreProcessorData.NONE:
+                self.file_refl = data.mlayer_data_file
                 self.reflectivity_source = 0
                 self.reflectivity_tab_visibility()
             else:
@@ -320,8 +311,7 @@ class OWMultilayer(_OWMultilayer):
     icon        = "icons/plane_multilayer.png"
 
     inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
-    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
-    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "set_VlsPgmPreProcessorData"))
+    inputs.append(("MLayer PreProcessor Data", MLayerPreProcessorData, "set_MLayerPreProcessorData"))
 
     priority = 1.391
 
