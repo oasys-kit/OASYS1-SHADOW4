@@ -1,10 +1,8 @@
 import os, sys
-import numpy
 
 from PyQt5.QtWidgets import QLabel, QApplication, QMessageBox, QSizePolicy
 from PyQt5.QtGui import QTextCursor, QIntValidator, QDoubleValidator, QPixmap
 from PyQt5.QtCore import Qt
-from shadow4.physical_models.mlayer.mlayer import MLayer
 
 import orangecanvas.resources as resources
 
@@ -14,23 +12,18 @@ from orangewidget.settings import Setting
 from oasys.widgets.widget import OWWidget
 from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
-from oasys.util.oasys_util import EmittingStream
 
 from shadow4.physical_models.mlayer.mlayer import MLayer
 
-from orangecontrib.shadow.util.shadow_objects import ShadowPreProcessorData
-from orangecontrib.shadow.util.shadow_util import ShadowPhysics
 
 from oasys.util.oasys_util import EmittingStream
 from orangecontrib.shadow4.util.shadow4_objects import MLayerPreProcessorData
 from orangecontrib.shadow4.util.shadow4_util import ShadowPhysics
 
-from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
-from orangecontrib.shadow4.widgets.gui.plots import plot_data1D, plot_data2D, plot_data3D, plot_multi_data1D
+from orangecontrib.shadow4.widgets.gui.plots import plot_data1D, plot_data2D
 
 
 class OWMLayer(OWWidget):
-# class OWMLayer(AutomaticElement):
     name = "MLayer"
     id = "pre_mlayer"
     description = "Calculation of multilayer mirror reflectivity profile"
@@ -106,28 +99,20 @@ class OWMLayer(OWWidget):
 
     graded_depth_text_list = Setting("[\n[10,10,0.5,0,0],\n[15,20,0.6,0,0],\n]")
 
-    # MAX_WIDTH = 700
-    # MAX_HEIGHT = 560
     IMAGE_WIDTH  = 860
     IMAGE_HEIGHT = 545
-
-    # CONTROL_AREA_WIDTH = 685
-    # TABS_AREA_HEIGHT = 455
 
     MAX_WIDTH          = 1320
     MAX_HEIGHT         = 700
     CONTROL_AREA_WIDTH = 405
-    # TABS_AREA_HEIGHT   = 560
     TABS_AREA_HEIGHT   = 630
 
     usage_path = os.path.join(resources.package_dirname("orangecontrib.shadow4.widgets.gui"), "misc", "premlayer_usage.png")
 
     mlayer_instance = None
-    # idx = -1
 
     def __init__(self):
         super().__init__()
-        # super().__init__(show_automatic_box=False)
 
         self.runaction = widget.OWAction("Compute", self)
         self.runaction.triggered.connect(self.compute)
@@ -142,10 +127,6 @@ class OWMLayer(OWWidget):
 
         button = gui.button(box0, self, "Compute", callback=self.compute)
         button.setFixedHeight(35)
-        # button = gui.button(box0, self, "Defaults", callback=self.defaults)
-        # button.setFixedHeight(45)
-        # button = gui.button(box0, self, "Help", callback=self.help1)
-        # button.setFixedHeight(45)
 
         gui.separator(self.controlArea)
 
@@ -174,23 +155,6 @@ class OWMLayer(OWWidget):
         tab_input_4 = oasysgui.createTabPage(tabs_setting, "Use of the Widget")
         self.populate_tab_use_of_widget(tab_input_4)
 
-
-#         tab_usa = oasysgui.createTabPage(tabs_setting, "Use of the Widget")
-#         tab_usa.setStyleSheet("background-color: white;")
-#         tab_usa.setStyleSheet("background-color: white;")
-#
-#         usage_box = oasysgui.widgetBox(tab_usa, "", addSpace=True, orientation="horizontal")
-#
-#         label = QLabel("")
-#         label.setAlignment(Qt.AlignCenter)
-#         label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-#         label.setPixmap(QPixmap(self.usage_path))
-#
-#         usage_box.layout().addWidget(label)
-#
-#
-# ########################################################
-#
 
         self.shadow_output = oasysgui.textArea()
 
@@ -282,8 +246,6 @@ class OWMLayer(OWWidget):
                            addSpace=True, labelWidth=550, orientation="horizontal", callback=self.set_SDensity)
         oasysgui.lineEdit(box_substrate, self, "S_DENSITY", label='Density [g/cm3]', tooltip="S_DENISTY",
                           addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
-        # oasysgui.lineEdit(box_substrate, self, "ROUGHNESS_S", label='Roughness [A]', tooltip="ROUGHNESS_SUBSTRATE",
-        #                   addSpace=True, valueType=float, labelWidth=250, orientation="horizontal")
 
 
     def populate_tab_graded(self, tab_input_2):
@@ -319,7 +281,6 @@ class OWMLayer(OWWidget):
         oasysgui.lineEdit(self.box_lateral_ellipse, self, "ell_photon_energy", tooltip="ell_photon_energy", label='main photon energy [eV]',
                           addSpace=True, valueType=float, labelWidth=200, orientation="horizontal")
 
-
         #
         # depth graded
         #
@@ -327,79 +288,6 @@ class OWMLayer(OWWidget):
         self.depth_graded_text_area = oasysgui.textArea(readOnly=False)
         self.depth_graded_box.layout().addWidget(self.depth_graded_text_area)
         self.depth_graded_text_area.setText(self.graded_depth_text_list)
-
-        # print(">>>>> got text: ", self.depth_graded_text_area.toPlainText())
-
-        # box_byl = gui.widgetBox(tab_input_2, "Multilayer Parameters",orientation="vertical")
-        # #
-        #
-        # #widget index 9
-        # self.idx += 1
-        # gui.comboBox(box_byl, self, "GRADE_DEPTH",
-        #              label=self.unitLabels()[self.idx], addSpace=True,
-        #              items=['No (Constant)', 'thicknesses, gamma, rough_even, rough_odd from file '],
-        #              valueType=int, orientation="horizontal", labelWidth=270)
-        # self.show_at(self.unitFlags()[self.idx], box_byl)
-        #
-        #
-        # box_2 = oasysgui.widgetBox(box_byl, "",orientation="vertical", height=160)
-        #
-
-        #
-        # #widget index 11
-        # self.idx += 1
-        # oasysgui.lineEdit(box_2, self, "THICKNESS",
-        #              label=self.unitLabels()[self.idx], addSpace=True,
-        #             valueType=float, labelWidth=550, orientation="horizontal")
-        # self.show_at(self.unitFlags()[self.idx], box_2)
-        #
-        # #widget index 12
-        # self.idx += 1
-        # oasysgui.lineEdit(box_2, self, "GAMMA",
-        #              label=self.unitLabels()[self.idx], addSpace=True,
-        #             valueType=float, labelWidth=550, orientation="horizontal")
-        # self.show_at(self.unitFlags()[self.idx], box_2)
-        #
-        # #widget index 13
-        # self.idx += 1
-
-        #
-        # #widget index 14
-        # self.idx += 1
-        # oasysgui.lineEdit(box_2, self, "ROUGHNESS_ODD",
-        #              label=self.unitLabels()[self.idx], addSpace=True,
-        #             valueType=float, labelWidth=550, orientation="horizontal")
-        # self.show_at(self.unitFlags()[self.idx], box_2)
-        #
-        # #widget index 15
-        # self.idx += 1
-        # box_file_depth = oasysgui.widgetBox(box_byl, "", addSpace=True, orientation="horizontal", height=160)
-        #
-        # self.le_FILE_DEPTH = oasysgui.lineEdit(box_file_depth, self, "FILE_DEPTH",
-        #                                        label=self.unitLabels()[self.idx], addSpace=True, labelWidth=400, orientation="horizontal")
-        #
-        # gui.button(box_file_depth, self, "...", callback=self.selectFileDepth)
-        #
-        # self.show_at(self.unitFlags()[self.idx], box_file_depth)
-        #
-        # #widget index 16
-        # self.idx += 1
-        # gui.comboBox(box_byl, self, "GRADE_SURFACE",
-        #              label=self.unitLabels()[self.idx], addSpace=True,
-        #              items=['No (Constant)',
-        #                     # 'thick and gamma graded (from spline files)',
-        #                     'thickness graded (from quadratic fit)'],
-        #              valueType=int, orientation="horizontal", labelWidth=380)
-        # self.show_at(self.unitFlags()[self.idx], box_byl)
-        #
-        #
-        # box_3_empty = oasysgui.widgetBox(box_byl, "", orientation="vertical", height=100)
-        # self.show_at("self.GRADE_SURFACE == 0", box_3_empty)
-        #
-        # box_4 = oasysgui.widgetBox(box_byl, "",orientation="vertical", height=100)
-        #
-        # #widget index 20
-        # self.idx += 1
 
     def populate_tab_plots(self, tab_plots):
 
@@ -432,16 +320,12 @@ class OWMLayer(OWWidget):
         oasysgui.lineEdit(self.box_plot_a, self, "scan_a_n", label="points", tooltip="scan_a_n",
                           valueType=int, addSpace=True, labelWidth=50, orientation="horizontal")
         self.box_plot_e0 = oasysgui.widgetBox(self.box_plots, "", addSpace=True, orientation="horizontal")
-        oasysgui.lineEdit(self.box_plot_e0, self, "scan_e0", label="Energy angle [eV]", tooltip="scan_e0",
+        oasysgui.lineEdit(self.box_plot_e0, self, "scan_e0", label="Fixed energy [eV]", tooltip="scan_e0",
                           valueType=float, addSpace=True, labelWidth=200, orientation="horizontal")
-
-
 
 
     def populate_tab_use_of_widget(self, tab_usa):
 
-
-        # tab_usa = oasysgui.createTabPage(tabs_setting, "Use of the Widget")
         tab_usa.setStyleSheet("background-color: white;")
         tab_usa.setStyleSheet("background-color: white;")
 
@@ -453,9 +337,6 @@ class OWMLayer(OWWidget):
         label.setPixmap(QPixmap(self.usage_path))
 
         usage_box.layout().addWidget(label)
-
-
-# ########################################################
 
 
     def set_structure(self):
@@ -577,7 +458,6 @@ class OWMLayer(OWWidget):
             else:
                 raise NotImplementedError()
 
-
             self.mlayer_instance = MLayer.pre_mlayer(
                              FILE=congruence.checkFileName(self.FILE),
                              E_MIN=self.E_MIN,
@@ -652,35 +532,11 @@ class OWMLayer(OWWidget):
     def selectFileDepth(self):
         self.le_FILE_DEPTH.setText(oasysgui.selectFileFromDialog(self, self.FILE_DEPTH, "Open File with list of t_bilayer,gamma,roughness_even,roughness_odd", file_extension_filter="Data Files (*.dat)"))
 
-    # def selectFileThickness(self):
-    #     self.le_FILE_THICKNESS.setText(oasysgui.selectFileFromDialog(self, self.FILE_THICKNESS, "Open File with bilayer thicknesses versus surface (PRESURFACE format)", file_extension_filter="Data Files (*.dat)"))
-    #
-    # def selectFileShadow(self):
-    #     self.le_FILE_SHADOW.setText(oasysgui.selectFileFromDialog(self, self.FILE_SHADOW, "Select Output binary file (for SHADOW) with splines", file_extension_filter="Data Files (*.dat)"))
-    #
-    # def selectFileGamma(self):
-    #     self.le_FILE_GAMMA.setText(oasysgui.selectFileFromDialog(self, self.FILE_GAMMA, "Open File with bilayer gamma versus surface (PRESURFACE format)", file_extension_filter="Data Files (*.dat)"))
-
-    # def defaults(self):
-    #      self.resetSettings()
-    #      #self.compute()
-    #      return
-    #
-    # def help1(self):
-    #     print("help pressed.")
-    #     try:
-    #         xoppy_doc('xsh_pre_mlayer')
-    #     except:
-    #         pass
-
     def do_plots(self):
 
         self.set_visibility()
 
-        print(">>>>> removing plot...", self.plot_tab.layout().itemAt(0))
         self.plot_tab.layout().removeItem(self.plot_tab.layout().itemAt(0))
-
-        # if self.plot_flag == 0: return
 
         if self.mlayer_instance is None: return
 
@@ -722,14 +578,7 @@ class OWMLayer(OWWidget):
             plot_widget_id = plot_data2D(R_S_array**2, energy_array, theta_array, title="title",
                                          xtitle="photon energy [eV]", ytitle="grazing angle [deg]")
 
-        print(">>>>> adding plot: ", plot_widget_id)
         self.plot_tab.layout().addWidget(plot_widget_id)
-
-        # print(">>>>> removing plot...", self.plot_tab.layout().itemAt(0))
-        # self.plot_tab.layout().removeItem(self.plot_tab.layout().itemAt(0))
-
-        # print(">>>>> removing plot...", plot_widget_id)
-        # self.plot_tab.layout().removeWidget(plot_widget_id)
 
     def writeStdOut(self, text):
         cursor = self.shadow_output.textCursor()
