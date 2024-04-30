@@ -25,20 +25,13 @@ from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape imp
 from orangecontrib.shadow4.util.shadow4_objects import MLayerPreProcessorData
 
 class _OWMultilayer(OWOpticalElementWithSurfaceShape):
-    #########################################################
-    # reflectivity
-    #########################################################
 
-    reflectivity_flag             = Setting(0)  # f_reflec
-    reflectivity_source           = Setting(0) # f_refl
+    reflectivity_source           = Setting(4) # f_refl
     file_refl                     = Setting("<none>")
 
-    refraction_index_delta        = Setting(1e-5)
-    refraction_index_beta         = Setting(1e-3)
-
-    coating_material = Setting("Si")
-    coating_density = Setting(2.33)
-    coating_roughness = Setting(0.0)
+    structure = Setting('[C,Pt]x30+Si')
+    period = Setting(50.0)
+    Gamma = Setting(0.4)
 
     def __init__(self, switch_icons=True):
         super(_OWMultilayer, self).__init__(switch_icons=switch_icons)
@@ -51,10 +44,6 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
 
     def populate_basic_settings_specific_subtabs(self, specific_subtabs):
         subtab_reflectivity = specific_subtabs
-
-        #########################################################
-        # Basic Settings / Reflectivity
-        #########################################################
         self.populate_tab_reflectivity(subtab_reflectivity)
 
     def populate_tab_reflectivity(self, subtab_reflectivity):
@@ -72,34 +61,24 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                      sendSelectedValue=False, orientation="horizontal",
                      tooltip="reflectivity_source", callback=self.reflectivity_tab_visibility)
 
-
         self.file_refl_box = oasysgui.widgetBox(reflectivity_flag_box, "", addSpace=False, orientation="horizontal", height=25)
         self.le_file_refl = oasysgui.lineEdit(self.file_refl_box, self, "file_refl", "File Name", labelWidth=100,
                                               valueType=str, orientation="horizontal", tooltip="file_refl")
         gui.button(self.file_refl_box, self, "...", callback=self.select_file_refl)
 
+        self.box_xraylib_dabax = oasysgui.widgetBox(reflectivity_flag_box, "", addSpace=False, orientation="vertical") #, height=25)
 
-        # self.refraction_index_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical", height=50)
-        # oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_delta",
-        #                   "n=1-delta+i beta; delta: ", labelWidth=180, valueType=float,
-        #                   orientation="horizontal", tooltip="refraction_index_delta")
-        #
-        # oasysgui.lineEdit(self.refraction_index_box, self, "refraction_index_beta",
-        #                   "                  beta: ", labelWidth=180, valueType=float,
-        #                   orientation="horizontal", tooltip="refraction_index_beta")
-        #
-        # self.material_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical", height=150)
-        # oasysgui.lineEdit(self.material_refl_box, self, "coating_material",
-        #                   "Coating material (formula): ", labelWidth=180, valueType=str,
-        #                   orientation="horizontal", tooltip="coating_material")
-        #
-        # oasysgui.lineEdit(self.material_refl_box, self, "coating_density",
-        #                   "Coating density [g/cm^3]: ", labelWidth=180, valueType=float,
-        #                   orientation="horizontal", tooltip="coating_density")
-        #
-        # oasysgui.lineEdit(self.material_refl_box, self, "coating_roughness",
-        #                   "Coating rouughness rms [A]: ", labelWidth=180, valueType=float,
-        #                   orientation="horizontal", tooltip="coating_roughness")
+        oasysgui.lineEdit(self.box_xraylib_dabax, self, "structure",
+                          "ML structure [odd,even]xN+Sub: ", labelWidth=220, valueType=str,
+                          orientation="horizontal", tooltip="structure")
+        oasysgui.lineEdit(self.box_xraylib_dabax, self, "period",
+                          "Bilayer thick [A]: ", labelWidth=180, valueType=float,
+                          orientation="horizontal", tooltip="period")
+        oasysgui.lineEdit(self.box_xraylib_dabax, self, "Gamma",
+                          "Gamma [even/total]: ", labelWidth=180, valueType=float,
+                          orientation="horizontal", tooltip="Gamma")
+
+        oasysgui.widgetLabel(self.box_xraylib_dabax, "(Use preprocessor for graded ML & more options)")
 
         self.reflectivity_tab_visibility()
 
@@ -111,6 +90,13 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
 
         if self.reflectivity_source < 4:
             self.file_refl_box.setVisible(True)
+        else:
+            self.file_refl_box.setVisible(False)
+
+        if self.reflectivity_source >= 4:
+            self.box_xraylib_dabax.setVisible(True)
+        else:
+            self.box_xraylib_dabax.setVisible(False)
 
     def select_file_refl(self):
         self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
@@ -118,7 +104,6 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
     #########################################################
     # preprocessor
     #########################################################
-
     def set_MLayerPreProcessorData(self, data):
         if data is not None:
             if data.mlayer_data_file != MLayerPreProcessorData.NONE:
@@ -127,20 +112,6 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 self.reflectivity_tab_visibility()
             else:
                 QMessageBox.warning(self, "Warning", "Incompatible Preprocessor Data", QMessageBox.Ok)
-
-    def set_VlsPgmPreProcessorData(self, data):
-        if data is not None:
-            self.surface_shape_type = 0
-            self.surface_shape_tab_visibility()
-
-            self.source_plane_distance = data.d_source_plane_to_multilayer * 1e-3
-            self.image_plane_distance =  data.d_multilayer_to_grating/2 * 1e-3
-            self.angles_respect_to = 0
-            self.incidence_angle_deg  = (data.alpha + data.beta)/2
-            self.reflection_angle_deg = (data.alpha + data.beta)/2
-
-            self.calculate_incidence_angle_mrad()
-            self.calculate_reflection_angle_mrad()
 
     #########################################################
     # S4 objects
@@ -161,6 +132,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 boundary_shape=self.get_boundary_shape(),
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
         elif self.surface_shape_type == 1:
             print("FOCUSING DISTANCES: convexity:  ", numpy.logical_not(self.surface_curvature).astype(int))
@@ -184,6 +158,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 # inputs related to multilayer reflectivity
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
         elif self.surface_shape_type == 2:
             multilayer = S4EllipsoidMultilayer(
@@ -202,6 +179,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 # inputs related to multilayer reflectivity
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
         elif self.surface_shape_type == 3:
             multilayer = S4HyperboloidMultilayer(
@@ -220,6 +200,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 # inputs related to multilayer reflectivity
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
         elif self.surface_shape_type == 4:
             multilayer = S4ParaboloidMultilayer(
@@ -238,6 +221,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 # inputs related to multilayer reflectivity
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
         elif self.surface_shape_type == 5:
             multilayer = S4ToroidMultilayer(
@@ -253,6 +239,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 # inputs related to multilayer reflectivity
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
         elif self.surface_shape_type == 6:
             multilayer = S4ConicMultilayer(
@@ -266,6 +255,9 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 # inputs related to multilayer reflectivity
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
+                structure=self.structure,
+                period=self.period,
+                Gamma=self.Gamma,
             )
 
         # if error is selected...
@@ -320,6 +312,7 @@ class OWMultilayer(_OWMultilayer):
 
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline
+    from orangecontrib.shadow4.util.shadow4_objects import ShadowData
     def get_test_beam():
         from shadow4.beamline.s4_beamline import S4Beamline
 
@@ -333,7 +326,7 @@ if __name__ == "__main__":
         light_source.set_spatial_type_point()
         light_source.set_depth_distribution_off()
         light_source.set_angular_distribution_uniform(hdiv1=-0.000000, hdiv2=0.000000, vdiv1=-0.000000, vdiv2=0.000000)
-        light_source.set_energy_distribution_uniform(value_min=88000.000000, value_max=92000.000000, unit='eV')
+        light_source.set_energy_distribution_uniform(value_min=12000.000000, value_max=13000.000000, unit='eV')
         light_source.set_polarization(polarization_degree=1.000000, phase_diff=0.000000, coherent_beam=0)
         beam = light_source.get_beam()
 
