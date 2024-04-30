@@ -4,7 +4,6 @@ import numpy
 from PyQt5.QtWidgets import QLabel, QApplication, QMessageBox, QSizePolicy
 from PyQt5.QtGui import QTextCursor, QIntValidator, QDoubleValidator, QPixmap
 from PyQt5.QtCore import Qt
-# from Shadow.ShadowPreprocessorsXraylib import pre_mlayer
 from shadow4.physical_models.mlayer.mlayer import MLayer
 
 import orangecanvas.resources as resources
@@ -105,15 +104,7 @@ class OWMLayer(OWWidget):
     scan_a_to = Setting(10.0)
     scan_e0 = Setting(8000.0)
 
-    ##########################################
-    GRADE_DEPTH = Setting(0)
-    FILE_DEPTH = Setting("myfile_depth.dat")
-    GRADE_SURFACE = Setting(0)
-
-    # FILE_SHADOW = Setting("mlayer1.sha")
-    # FILE_THICKNESS = Setting("mythick.dat")
-    # FILE_GAMMA = Setting("mygamma.dat")
-
+    graded_depth_text_list = Setting("[\n[10,10,0.5,0,0],\n[15,20,0.6,0,0],\n]")
 
     # MAX_WIDTH = 700
     # MAX_HEIGHT = 560
@@ -126,7 +117,7 @@ class OWMLayer(OWWidget):
     MAX_WIDTH          = 1320
     MAX_HEIGHT         = 700
     CONTROL_AREA_WIDTH = 405
-    TABS_AREA_HEIGHT   = 560
+    # TABS_AREA_HEIGHT   = 560
     TABS_AREA_HEIGHT   = 630
 
     usage_path = os.path.join(resources.package_dirname("orangecontrib.shadow4.widgets.gui"), "misc", "premlayer_usage.png")
@@ -201,48 +192,9 @@ class OWMLayer(OWWidget):
 # ########################################################
 #
 
-#         # box_3 = oasysgui.widgetBox(box_byl, "", orientation="vertical", height=100)
-#
-#         # #widget index 17
-#         # self.idx += 1
-#         # box_file_shadow = oasysgui.widgetBox(box_3, "", addSpace=True, orientation="horizontal")
-#         #
-#         # self.le_FILE_SHADOW = oasysgui.lineEdit(box_file_shadow, self, "FILE_SHADOW",
-#         #                                          label=self.unitLabels()[self.idx], addSpace=True, labelWidth=400, orientation="horizontal")
-#         #
-#         # gui.button(box_file_shadow, self, "...", callback=self.selectFileShadow)
-#         #
-#         # self.show_at(self.unitFlags()[self.idx], box_3)
-#
-#         # #widget index 18
-#         # self.idx += 1
-#         # box_file_thickness = oasysgui.widgetBox(box_3, "", addSpace=True, orientation="horizontal")
-#         #
-#         # self.le_FILE_THICKNESS = oasysgui.lineEdit(box_file_thickness, self, "FILE_THICKNESS",
-#         #                                          label=self.unitLabels()[self.idx], addSpace=True, labelWidth=400, orientation="horizontal")
-#         #
-#         # gui.button(box_file_thickness, self, "...", callback=self.selectFileThickness)
-#         #
-#         # self.show_at(self.unitFlags()[self.idx], box_3)
-#
-#         # #widget index 19
-#         # self.idx += 1
-#         # box_file_gamma = oasysgui.widgetBox(box_3, "", addSpace=True, orientation="horizontal")
-#         #
-#         # self.le_FILE_GAMMA = oasysgui.lineEdit(box_file_gamma, self, "FILE_GAMMA",
-#         #                                          label=self.unitLabels()[self.idx], addSpace=True, labelWidth=400, orientation="horizontal")
-#         #
-#         # gui.button(box_file_gamma, self, "...", callback=self.selectFileGamma)
-#         #
-#         # self.show_at(self.unitFlags()[self.idx], box_3)
-#         #
-#
-        #
-        # self.process_showers()
-
         self.shadow_output = oasysgui.textArea()
 
-        out_box = oasysgui.widgetBox(tab_out, "System Output", addSpace=True, orientation="horizontal", height=400)
+        out_box = oasysgui.widgetBox(tab_out, "System Output", addSpace=True, orientation="horizontal", height=self.TABS_AREA_HEIGHT)
         out_box.layout().addWidget(self.shadow_output)
 
         gui.rubber(self.controlArea)
@@ -274,30 +226,31 @@ class OWMLayer(OWWidget):
 
 
         gui.comboBox(box, self, "flag_graded", label="graded ML", tooltip="flag_graded", addSpace=True,
-                     items=['No (Constant)', 'laterally graded', 'depth gradded', 'both'],
+                     items=['No (Constant)', 'laterally graded', 'depth graded', 'both'],
                      valueType=int, orientation="horizontal", labelWidth=270, callback=self.set_visibility)
 
 
         #
         # structure
         #
+        self.box_structure = gui.widgetBox(tab_input, "", orientation="vertical")
 
-
-        # box = gui.widgetBox(tab_input, "Structure [Even, Odd]xN+Substrate", orientation="vertical")
-        box = gui.widgetBox(tab_input, "", orientation="vertical")
-
-        oasysgui.lineEdit(box, self, "structure", label="ML structure [Even,Odd]xN+Substrate", tooltip="structure", addSpace=True,
+        oasysgui.lineEdit(self.box_structure, self, "structure", label="ML structure [Odd,Even]xN+Substrate", tooltip="structure", addSpace=True,
                           labelWidth=250, orientation="horizontal", callback=self.set_structure)
 
 
-        box_thick_gamma = oasysgui.widgetBox(box, "", addSpace=True, orientation="horizontal")
+        box_thick_gamma = oasysgui.widgetBox(self.box_structure, "", addSpace=True, orientation="horizontal")
         oasysgui.lineEdit(box_thick_gamma, self, "THICKNESS", label="Bilayer thickness [A]", tooltip="THICKNESS",
                           addSpace=True, labelWidth=225, orientation="horizontal")
         oasysgui.lineEdit(box_thick_gamma, self, "GAMMA", label="gamma=even/total", tooltip="GAMMA",
                           addSpace=True, labelWidth=200, orientation="horizontal")
 
+
+        #
         box = gui.widgetBox(tab_input, "Sublayers", orientation="vertical")
-        oasysgui.lineEdit(box, self, "N_PAIRS", tooltip="N_PAIRS", label="Number of bilayers", addSpace=True,
+
+        self.box_number_of_bilayers = gui.widgetBox(box, orientation="horizontal")
+        oasysgui.lineEdit(self.box_number_of_bilayers, self, "N_PAIRS", tooltip="N_PAIRS", label="Number of bilayers", addSpace=True,
                     valueType=int, labelWidth=550, orientation="horizontal", callback=self.get_structure)
 
         # odd sublayer
@@ -307,7 +260,8 @@ class OWMLayer(OWWidget):
         bb = gui.widgetBox(box_odd, "", orientation="horizontal")
         oasysgui.lineEdit(bb, self, "O_DENSITY", label='Density [g/cm3]', tooltip="O_DENISTY",
                           addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
-        oasysgui.lineEdit(bb, self, "ROUGHNESS_ODD", label='Roughness [A]', tooltip="ROUGHNESS_ODD",
+        self.box_roughnessO = gui.widgetBox(bb, orientation="horizontal")
+        oasysgui.lineEdit(self.box_roughnessO, self, "ROUGHNESS_ODD", label='Roughness [A]', tooltip="ROUGHNESS_ODD",
                           addSpace=True, valueType=float, labelWidth=250, orientation="horizontal")
 
         # even sublayer
@@ -317,7 +271,8 @@ class OWMLayer(OWWidget):
         bb = gui.widgetBox(box_even, "", orientation="horizontal")
         oasysgui.lineEdit(bb, self, "E_DENSITY", label='Density [g/cm3]', tooltip="E_DENISTY",
                           addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
-        oasysgui.lineEdit(bb, self, "ROUGHNESS_EVEN", label='Roughness [A]', tooltip="ROUGHNESS_EVEN",
+        self.box_roughnessE = gui.widgetBox(bb, orientation="horizontal")
+        oasysgui.lineEdit(self.box_roughnessE, self, "ROUGHNESS_EVEN", label='Roughness [A]', tooltip="ROUGHNESS_EVEN",
                           addSpace=True, valueType=float, labelWidth=250, orientation="horizontal")
 
 
@@ -363,6 +318,17 @@ class OWMLayer(OWWidget):
                           addSpace=True, valueType=float, labelWidth=200, orientation="horizontal")
         oasysgui.lineEdit(self.box_lateral_ellipse, self, "ell_photon_energy", tooltip="ell_photon_energy", label='main photon energy [eV]',
                           addSpace=True, valueType=float, labelWidth=200, orientation="horizontal")
+
+
+        #
+        # depth graded
+        #
+        self.depth_graded_box = gui.widgetBox(tab_input_2, "Depth graded: [ [N,thck,gmma,rouE,rouO], ...]", orientation="vertical")
+        self.depth_graded_text_area = oasysgui.textArea(readOnly=False)
+        self.depth_graded_box.layout().addWidget(self.depth_graded_text_area)
+        self.depth_graded_text_area.setText(self.graded_depth_text_list)
+
+        # print(">>>>> got text: ", self.depth_graded_text_area.toPlainText())
 
         # box_byl = gui.widgetBox(tab_input_2, "Multilayer Parameters",orientation="vertical")
         # #
@@ -529,6 +495,20 @@ class OWMLayer(OWWidget):
         self.box_lateral_ellipse.setVisible(self.flag_graded in [1,3] and self.grade_coeffs_flag == 1)
         self.box_lateral.setVisible(self.flag_graded in [1,3])
 
+        if self.flag_graded in [2,3]:
+            self.depth_graded_box.setVisible(True)
+            self.box_structure.setVisible(False)
+            self.box_number_of_bilayers.setVisible(False)
+            self.box_roughnessE.setVisible(False)
+            self.box_roughnessO.setVisible(False)
+        else:
+            self.depth_graded_box.setVisible(False)
+            self.box_structure.setVisible(True)
+            self.box_number_of_bilayers.setVisible(True)
+            self.box_roughnessE.setVisible(True)
+            self.box_roughnessO.setVisible(True)
+
+
         self.box_plots.setVisible(self.plot_flag > 0)
         if self.plot_flag == 1:
             self.box_plot_e.setVisible(True)
@@ -572,16 +552,33 @@ class OWMLayer(OWWidget):
 
             if self.flag_graded == 0:
                 GRADE_SURFACE = 0
+                GRADE_DEPTH = 0
+                LIST_N_THICK_GAMMA_ROUGHE_ROUGHO_FROM_TOP_TO_BOTTOM = None
             elif self.flag_graded == 1: # lateral
                 if self.grade_coeffs_flag == 0: # external coefficients in m
                     GRADE_SURFACE = 3  # S4 coeffs
                 else:
                     GRADE_SURFACE = 4
+                GRADE_DEPTH = 0
+                LIST_N_THICK_GAMMA_ROUGHE_ROUGHO_FROM_TOP_TO_BOTTOM = None
+            elif self.flag_graded == 2:  # depth
+                GRADE_SURFACE = 0
+                GRADE_DEPTH = 1
+                LIST_N_THICK_GAMMA_ROUGHE_ROUGHO_FROM_TOP_TO_BOTTOM = self.depth_graded_text_area.toPlainText()
+                self.graded_depth_text_list = self.depth_graded_text_area.toPlainText()
+            elif self.flag_graded == 3:  # both
+                if self.grade_coeffs_flag == 0: # external coefficients in m
+                    GRADE_SURFACE = 3  # S4 coeffs
+                else:
+                    GRADE_SURFACE = 4
+                GRADE_DEPTH = 1
+                LIST_N_THICK_GAMMA_ROUGHE_ROUGHO_FROM_TOP_TO_BOTTOM = self.depth_graded_text_area.toPlainText()
+                self.graded_depth_text_list = self.depth_graded_text_area.toPlainText()
             else:
                 raise NotImplementedError()
 
 
-            self.mlayer_instance = MLayer.pre_mlayer(interactive=False,
+            self.mlayer_instance = MLayer.pre_mlayer(
                              FILE=congruence.checkFileName(self.FILE),
                              E_MIN=self.E_MIN,
                              E_MAX=self.E_MAX,
@@ -591,17 +588,12 @@ class OWMLayer(OWWidget):
                              E_MATERIAL=self.E_MATERIAL,
                              O_DENSITY=self.O_DENSITY,
                              O_MATERIAL=self.O_MATERIAL,
-                             # GRADE_DEPTH=self.GRADE_DEPTH,
                              N_PAIRS=self.N_PAIRS,
                              THICKNESS=self.THICKNESS,
                              GAMMA=self.GAMMA,
                              ROUGHNESS_EVEN=self.ROUGHNESS_EVEN,
                              ROUGHNESS_ODD=self.ROUGHNESS_ODD,
-                             # FILE_DEPTH=FILE_DEPTH,
                              GRADE_SURFACE=GRADE_SURFACE,
-                             # FILE_SHADOW=FILE_SHADOW,
-                             # FILE_THICKNESS=FILE_THICKNESS,
-                             # FILE_GAMMA=FILE_GAMMA,
                              AA0=self.AA0,
                              AA1=self.AA1,
                              AA2=self.AA2,
@@ -611,7 +603,8 @@ class OWMLayer(OWWidget):
                              ell_theta_grazing_deg=self.ell_theta_deg,
                              ell_length=self.ell_length,
                              ell_photon_energy=self.ell_photon_energy,
-
+                             GRADE_DEPTH=GRADE_DEPTH,
+                             LIST_N_THICK_GAMMA_ROUGHE_ROUGHO_FROM_TOP_TO_BOTTOM=LIST_N_THICK_GAMMA_ROUGHE_ROUGHO_FROM_TOP_TO_BOTTOM,
                              )
 
             # this is for just info
@@ -639,24 +632,19 @@ class OWMLayer(OWWidget):
         self.O_MATERIAL = ShadowPhysics.checkCompoundName(self.O_MATERIAL)
         self.O_DENSITY = congruence.checkStrictlyPositiveNumber(float(self.O_DENSITY), "Density (odd sublayer)")
 
-        if self.GRADE_DEPTH == 0:
+        if self.flag_graded in [0,1,3]:
             self.N_PAIRS = congruence.checkStrictlyPositiveNumber(int(self.N_PAIRS), "Number of bilayers")
             self.THICKNESS = congruence.checkStrictlyPositiveNumber(float(self.THICKNESS), "bilayer thickness t")
             self.GAMMA = congruence.checkStrictlyPositiveNumber(float(self.GAMMA), "gamma ratio")
             self.ROUGHNESS_EVEN = congruence.checkPositiveNumber(float(self.ROUGHNESS_EVEN), "Roughness even layer")
             self.ROUGHNESS_ODD = congruence.checkPositiveNumber(float(self.ROUGHNESS_ODD), "Roughness odd layer")
-        else:
-            congruence.checkDir(self.FILE_DEPTH)
 
-        if self.GRADE_SURFACE == 1:
-            # congruence.checkDir(self.FILE_SHADOW)
-            # congruence.checkDir(self.FILE_THICKNESS)
-            # congruence.checkDir(self.FILE_GAMMA)
-        # elif self.GRADE_SURFACE == 2:
+        if self.flag_graded in [1,3]:
             self.AA0 = congruence.checkNumber(float(self.AA0), "zero-order coefficient")
             self.AA1 = congruence.checkNumber(float(self.AA1), "linear coefficient")
             self.AA2 = congruence.checkNumber(float(self.AA2), "2nd degree coefficient")
             self.AA3 = congruence.checkNumber(float(self.AA3), "3rd degree coefficient")
+            # todo add ellipse
 
     def selectFile(self):
         self.le_FILE.setText(oasysgui.selectFileFromDialog(self, self.FILE, "Select Output File", file_extension_filter="Data Files (*.dat)"))
