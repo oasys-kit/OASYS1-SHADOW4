@@ -21,7 +21,7 @@ from xoppylib.decorators.dabax_decorated import DabaxDecorated
 from xoppylib.crystals.create_bragg_preprocessor_file_v2 import create_bragg_preprocessor_file_v2
 
 from urllib.error import HTTPError
-from orangecontrib.shadow4.widgets.gui.plots import plot_data1D, plot_data2D
+from orangecontrib.shadow4.widgets.gui.plots import plot_data1D, plot_multi_data1D
 
 from crystalpy.diffraction.GeometryType import BraggDiffraction
 from crystalpy.diffraction.DiffractionSetupShadowPreprocessorV1 import DiffractionSetupShadowPreprocessorV1
@@ -87,6 +87,10 @@ class OWBragg(OWWidget):
 
     bragg_dict = None
 
+    #crystalpy (plots)
+    calculation_method = 1         # 0=Zachariasen, 1=Guigay
+    calculation_strategy_flag = 2  # 0=mpmath 1=numpy 2=numpy-truncated
+
     def __init__(self):
         super().__init__()
 
@@ -96,8 +100,6 @@ class OWBragg(OWWidget):
         self.runaction.triggered.connect(self.compute)
         self.addAction(self.runaction)
 
-        # self.setFixedWidth(650)
-        # self.setFixedHeight(550)
         self.setFixedWidth(self.MAX_WIDTH)
         self.setFixedHeight(self.MAX_HEIGHT)
 
@@ -122,14 +124,9 @@ class OWBragg(OWWidget):
         tab_usa = oasysgui.createTabPage(tabs_setting, "Use of the Widget")
         self.populate_tab_use_of_widget(tab_usa)
 
-
-
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
         tab_out = oasysgui.createTabPage(self.main_tabs, "Output")
         self.plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots (optional scan)")
-
-
-
 
         self.shadow_output = oasysgui.textArea()
 
@@ -141,7 +138,6 @@ class OWBragg(OWWidget):
         gui.rubber(self.controlArea)
 
     def populate_crystal_lists(self):
-
         dx1 = DabaxDecorated(file_Crystals="Crystals.dat")
         try: list1 = dx1.Crystal_GetCrystalsList()
         except HTTPError as e: # Anti-bot policies can block this call
@@ -166,7 +162,6 @@ class OWBragg(OWWidget):
         usage_box.layout().addWidget(label)
 
     def populate_tab_plots(self, tab_plots):
-
         box = gui.widgetBox(tab_plots, "Optional scan plots", orientation="vertical")
 
         gui.comboBox(box, self, "plot_flag", tooltip="plot_flag",
@@ -306,7 +301,6 @@ class OWBragg(OWWidget):
         self.le_SHADOW_FILE.setText(oasysgui.selectFileFromDialog(self, self.SHADOW_FILE, "Select Output File"))
 
     def set_visibility(self):
-
         self.box_plots.setVisible(self.plot_flag > 0)
         if self.plot_flag == 1:
             self.box_plot_e.setVisible(True)
@@ -318,8 +312,6 @@ class OWBragg(OWWidget):
             self.box_plot_e0.setVisible(True)
 
     def compute(self):
-
-        print(">>>>>> DESCRIPTOR_XRAYSERVER", self.DESCRIPTOR_XRAYSERVER)
         sys.stdout = EmittingStream(textWritten=self.writeStdOut)
         self.checkFields()
 
@@ -344,7 +336,6 @@ class OWBragg(OWWidget):
                                           )
 
         self.send("BraggPreProcessorData", BraggPreProcessorData(bragg_data_file=self.SHADOW_FILE))
-
         self.do_plots()
 
     def checkFields(self):
@@ -358,60 +349,26 @@ class OWBragg(OWWidget):
         congruence.checkLessOrEqualThan(self.E_MIN, self.E_MAX, "From Energy", "To Energy")
         congruence.checkDir(self.SHADOW_FILE)
 
-    # def defaults(self):
-    #      self.resetSettings()
-    #      self.compute()
-    #      return
-    #
-    # def help1(self):
-    #     print("help pressed. To be implemented.")
-
     def do_plots(self):
-
         self.set_visibility()
-
+        if self.bragg_dict is None: self.compute()
         self.plot_tab.layout().removeItem(self.plot_tab.layout().itemAt(0))
-
-        if self.bragg_dict is None: return
 
         if self.plot_flag == 0:
             plot_widget_id = plot_data1D([0], [0], xtitle="", ytitle="")
         elif self.plot_flag == 1:
-            energy_array, R_S_array, _ = self.calculate_simple_diffraction_energy_scan()
-            plot_widget_id = plot_data1D(energy_array, R_S_array, xtitle="Photon energy [eV]",
-                                         ytitle="Reflectivity")
+            energy_array, R_S_array, R_P_array = self.calculate_simple_diffraction_energy_scan()
+            plot_widget_id = plot_multi_data1D(energy_array, [R_S_array, R_P_array], xtitle="Photon energy [eV]",
+                                         ytitle="Reflectivity", ytitles=['S-polaized','P-polarized'])
         elif self.plot_flag == 2:
-            print(">>>>>>>>>>>>> theta scan")
-            theta_array, R_S_array, _ = self.calculate_simple_diffraction_theta_scan()
-            plot_widget_id = plot_data1D(1e6 * numpy.array(theta_array), numpy.array(R_S_array, dtype=float),
-                                         xtitle="theta - theta_B [urad]", ytitle="Reflectivity-S")
-            print(">>>>>>>>>>>>>", plot_widget_id)
-        # elif self.plot_flag == 3:
-        #     energyN = self.scan_e_n
-        #     energy1 = self.scan_e_from
-        #     energy2 = self.scan_e_to
-        #     thetaN = self.scan_a_n
-        #     theta1 = self.scan_a_from
-        #     theta2 = self.scan_a_to
-        #     R_S_array, R_P_array, energy_array, theta_array = self.mlayer_instance.scan(
-        #         energyN=energyN, energy1=energy1, energy2=energy2,
-        #         thetaN=thetaN, theta1=theta1, theta2=theta2)
-        #     plot_widget_id = plot_data2D(R_S_array**2, energy_array, theta_array, title="title",
-        #                                  xtitle="photon energy [eV]", ytitle="grazing angle [deg]")
-
+            theta_array, R_S_array, R_P_array = self.calculate_simple_diffraction_theta_scan()
+            plot_widget_id = plot_multi_data1D(1e6 * numpy.array(theta_array),
+                                        [numpy.array(R_S_array, dtype=float), numpy.array(R_P_array, dtype=float)],
+                                        xtitle="theta - theta_B [urad]", ytitle="Reflectivity-S",
+                                        ytitles=['S-polaized','P-polarized'])
         self.plot_tab.layout().addWidget(plot_widget_id)
 
-    # R_S_array, R_P_array, energy_array, theta_array = self.calculate_simple_diffraction.scan(
-    #     energyN=energyN, energy1=energy1, energy2=energy2,
-    #     thetaN=thetaN, theta1=theta1, theta2=theta2)
-
-
     def calculate_simple_diffraction_theta_scan(self):
-
-        energy0 = self.scan_e0
-        thetaN = self.scan_a_n
-        theta_delta = self.scan_a_delta
-
         print("\nCreating a diffraction setup (shadow preprocessor file V2)...")
         diffraction_setup = DiffractionSetupShadowPreprocessorV2(geometry_type=BraggDiffraction(),  # todo: use oe._diffraction_geometry
                                              crystal_name="",  # string
@@ -423,55 +380,40 @@ class OWBragg(OWWidget):
                                              azimuthal_angle=0.0,
                                              preprocessor_file=self.SHADOW_FILE)
 
-        energy = energy0
-        angle_deviation_min = -0.5 * theta_delta * 1e-6  # radians
-        angle_deviation_max = 0.5 * theta_delta * 1e-6 # radians
-        angle_deviation_points = thetaN
-
+        angle_deviation_min = -0.5 * self.scan_a_delta * 1e-6  # radians
+        angle_deviation_max = 0.5 * self.scan_a_delta * 1e-6 # radians
+        angle_deviation_points = self.scan_a_n
         angle_step = (angle_deviation_max - angle_deviation_min) / angle_deviation_points
-
         #
         # gets Bragg angle needed to create deviation's scan
         #
-        bragg_angle = diffraction_setup.angleBragg(energy)
-
-        print("Bragg angle for E=%f eV is %f deg" % (energy, bragg_angle * 180.0 / numpy.pi))
-
+        bragg_angle = diffraction_setup.angleBragg(self.scan_e0)
+        print("Bragg angle for E=%f eV is %f deg" % (self.scan_e0, bragg_angle * 180.0 / numpy.pi))
         deviations = numpy.zeros(angle_deviation_points)
-
         bunch_in = ComplexAmplitudePhotonBunch()
-        K0 = diffraction_setup.vectorK0(energy)
+        K0 = diffraction_setup.vectorK0(self.scan_e0)
         K0unitary = K0.getNormalizedVector()
+
         for ia in range(angle_deviation_points):
             deviation = angle_deviation_min + ia * angle_step
             # minus sign in angle is to perform cw rotation when deviation increses
             Vin = K0unitary.rotateAroundAxis(Vector(1, 0, 0), -deviation)
-            photon = ComplexAmplitudePhoton(energy_in_ev=energy, direction_vector=Vin)
+            photon = ComplexAmplitudePhoton(energy_in_ev=self.scan_e0, direction_vector=Vin)
 
             bunch_in.addPhoton(photon)
             deviations[ia] = angle_deviation_min + ia * angle_step
 
-        calculation_method=0
-        method = 2
-        if method == 1:
-            bunch_out = Diffraction.calculateDiffractedComplexAmplitudePhotonBunch(diffraction_setup,
-                                                                                   bunch_in,
-                                                                                   calculation_method=calculation_method)
-            bunch_out_dict = bunch_out.toDictionary()
-            intensityS = bunch_out_dict["intensityS"]
-            intensityP = bunch_out_dict["intensityP"]
-        elif method == 2:
-            coeffs = Diffraction.calculateDiffractedComplexAmplitudes(diffraction_setup,
-                                                                      bunch_in,
-                                                                      calculation_method=calculation_method)
-            intensityS = numpy.abs(coeffs["S"]) ** 2
-            intensityP = numpy.abs(coeffs["P"]) ** 2
+        coeffs = Diffraction.calculateDiffractedComplexAmplitudes(diffraction_setup,
+                                                                  bunch_in,
+                                                                  is_thick=1,
+                                                                  calculation_method=self.calculation_method,
+                                                                  calculation_strategy_flag=self.calculation_strategy_flag)
+        intensityS = numpy.abs(coeffs["S"]) ** 2
+        intensityP = numpy.abs(coeffs["P"]) ** 2
 
         return deviations, intensityS, intensityP
 
     def calculate_simple_diffraction_energy_scan(self):
-
-
         print("\nCreating a diffraction setup (shadow preprocessor file V2)...")
         diffraction_setup = DiffractionSetupShadowPreprocessorV2(geometry_type=BraggDiffraction(),  # todo: use oe._diffraction_geometry
                                              crystal_name="",  # string
@@ -482,52 +424,40 @@ class OWBragg(OWWidget):
                                              asymmetry_angle=0.0,  # radians
                                              azimuthal_angle=0.0,
                                              preprocessor_file=self.SHADOW_FILE)
-        diffraction = Diffraction()
 
+        diffraction = Diffraction()
         energies = numpy.linspace(self.scan_e0 - 0.5 * self.scan_e_delta,
                                   self.scan_e0 + 0.5 * self.scan_e_delta,
                                   self.scan_e_n)
-
         scan = numpy.zeros_like(energies)
         intensityS = numpy.zeros_like(scan, dtype=float)
         intensityP = numpy.zeros_like(scan, dtype=float)
-
         r = numpy.zeros_like(energies)
-
         bragg_angle = diffraction_setup.angleBragg(self.scan_e0)
         print("Bragg angle for E=%f eV is %f deg" % (self.scan_e0, bragg_angle * 180.0 / numpy.pi))
-
-        calculation_method = 0 # 0=Zachariasen, 1=Guigay
-        calculation_strategy_flag = 2  # 0=mpmath 1=numpy 2=numpy-truncated
 
         for i in range(energies.size):
             #
             # gets Bragg angle needed to create deviation's scan
             #
             energy = energies[i]
-
             # Create a Diffraction object (the calculator)
-
             deviation = 0.0 # angle_deviation_min + ia * angle_step
             angle = deviation  + bragg_angle
-
             # calculate the components of the unitary vector of the incident photon scan
             # Note that diffraction plane is YZ
             yy = numpy.cos(angle)
             zz = - numpy.abs(numpy.sin(angle))
             photon = Photon(energy_in_ev=energy,direction_vector=Vector(0.0,yy,zz))
-
             # perform the calculation
             coeffs_r = Diffraction.calculateDiffractedComplexAmplitudes(diffraction_setup,
                                                                         photon,
-                                                                        calculation_method=calculation_method,
-                                                                        calculation_strategy_flag=calculation_strategy_flag)
-
+                                                                        is_thick=1,
+                                                                        calculation_method=self.calculation_method,
+                                                                        calculation_strategy_flag=self.calculation_strategy_flag)
             scan[i] = energy
-
             intensityS[i] = numpy.abs(coeffs_r["S"]) ** 2
             intensityP[i] = numpy.abs(coeffs_r["P"]) ** 2
-
         return scan, intensityS, intensityP
 
 
