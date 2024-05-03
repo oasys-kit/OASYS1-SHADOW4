@@ -163,20 +163,17 @@ class OWMLayer(OWWidget):
 
         gui.rubber(self.controlArea)
 
-
         self.set_visibility()
 
     def populate_tab_basic_settings(self, tab_input):
         #
         # Basic Settings
         #
-
-        # box = gui.widgetBox(tab_input, "Multilayer parameters", orientation="vertical")
         box = gui.widgetBox(tab_input, "", orientation="vertical")
 
         box_file = oasysgui.widgetBox(box, "", addSpace=True, orientation="horizontal", height=25)
         self.le_FILE = oasysgui.lineEdit(box_file, self, "FILE",
-                                         label="Output file name: ", addSpace=True, labelWidth=150, orientation="horizontal")
+                                         label="File name (for SHADOW): ", addSpace=True, labelWidth=150, orientation="horizontal")
         gui.button(box_file, self, "...", callback=self.selectFile)
 
 
@@ -290,7 +287,6 @@ class OWMLayer(OWWidget):
         self.depth_graded_text_area.setText(self.graded_depth_text_list)
 
     def populate_tab_plots(self, tab_plots):
-
 
         box = gui.widgetBox(tab_plots, "Optional scan plots", orientation="vertical")
 
