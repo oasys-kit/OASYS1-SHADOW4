@@ -310,6 +310,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
 
     def run_shadow4(self):
         set_verbose()
+        self.shadow_output.setText("")
         self.lightsource = None # clean
 
         sys.stdout = EmittingStream(textWritten=self._write_stdout)

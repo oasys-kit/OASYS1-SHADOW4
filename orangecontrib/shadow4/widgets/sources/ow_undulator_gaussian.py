@@ -263,6 +263,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
     def run_shadow4(self):
         set_verbose()
+        self.shadow_output.setText("")
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()

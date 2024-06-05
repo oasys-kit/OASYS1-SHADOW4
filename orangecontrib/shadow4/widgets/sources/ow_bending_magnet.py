@@ -110,8 +110,8 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
             self.bm_tabs.removeTab(size-1-index)
 
         self.bm_tab = [
-            orangegui.createTabPage(self.bm_tabs, "Wiggler Spectrum"),
-            orangegui.createTabPage(self.bm_tabs, "Wiggler Spectral power")
+            orangegui.createTabPage(self.bm_tabs, "BM Spectrum"),
+            orangegui.createTabPage(self.bm_tabs, "BM Spectral power")
         ]
 
         for tab in self.bm_tab:
@@ -194,6 +194,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
 
     def run_shadow4(self):
         set_verbose()
+        self.shadow_output.setText("")
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
         self._set_plot_quality()
