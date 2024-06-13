@@ -339,7 +339,7 @@ class ShowSurfaceShapeDialog(QDialog):
 
                 self.calculate_surface()
 
-                write_surface_file(self.zz, self.xx, self.yy, file_path)
+                write_surface_file(self.zz.T, self.xx, self.yy, file_path)
         except Exception as exception:
             if self.parent is not None:
                 self.parent.prompt_exception(exception)
