@@ -212,12 +212,12 @@ class OWMLayer(OWWidget):
 
         self.box_number_of_bilayers = gui.widgetBox(box, orientation="horizontal")
         oasysgui.lineEdit(self.box_number_of_bilayers, self, "N_PAIRS", tooltip="N_PAIRS", label="Number of bilayers", addSpace=True,
-                    valueType=int, labelWidth=550, orientation="horizontal", callback=self.get_structure)
+                    valueType=int, labelWidth=200, orientation="horizontal", callback=self.get_structure)
 
         # odd sublayer
         box_odd = gui.widgetBox(box, "Odd sublayer", orientation="vertical")
         oasysgui.lineEdit(box_odd, self, "O_MATERIAL", label='Material [formula]', tooltip="O_MATERIAL",
-                           addSpace=True, labelWidth=550, orientation="horizontal", callback=self.set_ODensity)
+                           addSpace=True, labelWidth=200, orientation="horizontal", callback=self.set_ODensity)
         bb = gui.widgetBox(box_odd, "", orientation="horizontal")
         oasysgui.lineEdit(bb, self, "O_DENSITY", label='Density [g/cm3]', tooltip="O_DENISTY",
                           addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
@@ -228,7 +228,7 @@ class OWMLayer(OWWidget):
         # even sublayer
         box_even = gui.widgetBox(box, "Even sublayer", orientation="vertical")
         oasysgui.lineEdit(box_even, self, "E_MATERIAL", label='Material [formula]', tooltip="E_MATERIAL",
-                          addSpace=True, labelWidth=550, orientation="horizontal", callback=self.set_EDensity)
+                          addSpace=True, labelWidth=200, orientation="horizontal", callback=self.set_EDensity)
         bb = gui.widgetBox(box_even, "", orientation="horizontal")
         oasysgui.lineEdit(bb, self, "E_DENSITY", label='Density [g/cm3]', tooltip="E_DENISTY",
                           addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
@@ -240,9 +240,9 @@ class OWMLayer(OWWidget):
         # substrate sublayer
         box_substrate = gui.widgetBox(box, "Substrate", orientation="vertical")
         oasysgui.lineEdit(box_substrate, self, "S_MATERIAL", label='Material [formula]', tooltip="S_MATERIAL",
-                           addSpace=True, labelWidth=550, orientation="horizontal", callback=self.set_SDensity)
+                           addSpace=True, labelWidth=200, orientation="horizontal", callback=self.set_SDensity)
         oasysgui.lineEdit(box_substrate, self, "S_DENSITY", label='Density [g/cm3]', tooltip="S_DENISTY",
-                          addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
+                          addSpace=True, valueType=float, labelWidth=200, orientation="horizontal")
 
 
     def populate_tab_graded(self, tab_input_2):

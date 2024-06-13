@@ -163,7 +163,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         else:
             flag_emittance = 1
 
-        magnetic_radius = S4BendingMagnet.calculate_magnetic_radius(self.magnetic_field, electron_beam.energy())
+        magnetic_radius = numpy.abs(S4BendingMagnet.calculate_magnetic_radius(self.magnetic_field, electron_beam.energy()))
         length = numpy.abs(self.divergence * magnetic_radius)
 
         print(">>> calculated magnetic_radius = S4BendingMagnet.calculate_magnetic_radius(%f, %f) = %f" %\
@@ -171,7 +171,9 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
 
         print(">>> calculated BM length = divergence * magnetic_radius = %f " % length)
 
-        bm = S4BendingMagnet(magnetic_radius,self.magnetic_field,length,
+        bm = S4BendingMagnet(magnetic_radius,
+                             self.magnetic_field,
+                             length,
                              emin=self.emin,  # Photon energy scan from energy (in eV)
                              emax=self.emax,  # Photon energy scan to energy (in eV)
                              ng_e=self.ng_e,  # Photon energy scan number of points

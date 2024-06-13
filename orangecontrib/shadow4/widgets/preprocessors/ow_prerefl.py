@@ -130,14 +130,14 @@ class OWPrerefl(OWWidget):
         # widget index 0
         idx += 1
         oasysgui.lineEdit(box, self, "symbol", tooltip="symbol",
-                          label=self.unitLabels()[idx], addSpace=True, labelWidth=350, orientation="horizontal",
+                          label=self.unitLabels()[idx], addSpace=True, labelWidth=200, orientation="horizontal",
                           callback=self.set_Density)
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 1
         idx += 1
         oasysgui.lineEdit(box, self, "density", tooltip="density",
-                          label=self.unitLabels()[idx], addSpace=True, valueType=float, labelWidth=350,
+                          label=self.unitLabels()[idx], addSpace=True, valueType=float, labelWidth=200,
                           orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
@@ -157,21 +157,21 @@ class OWPrerefl(OWWidget):
         idx += 1
         oasysgui.lineEdit(box, self, "e_min", tooltip="e_min",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 4
         idx += 1
         oasysgui.lineEdit(box, self, "e_max", tooltip="e_max",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 5
         idx += 1
         oasysgui.lineEdit(box, self, "e_step", tooltip="e_step",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
     def populate_tab_plots(self, tab_plots):

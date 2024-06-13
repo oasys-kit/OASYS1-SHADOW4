@@ -255,28 +255,28 @@ class OWBragg(OWWidget):
         idx += 1
         oasysgui.lineEdit(box, self, "TEMPERATURE_FACTOR", tooltip="TEMPERATURE_FACTOR",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 5
         idx += 1
         oasysgui.lineEdit(box, self, "E_MIN", tooltip="E_MIN",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 6
         idx += 1
         oasysgui.lineEdit(box, self, "E_MAX", tooltip="E_MAX",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 7
         idx += 1
         oasysgui.lineEdit(box, self, "E_STEP", tooltip="E_STEP",
                           label=self.unitLabels()[idx], addSpace=True,
-                          valueType=float, labelWidth=350, orientation="horizontal")
+                          valueType=float, labelWidth=200, orientation="horizontal")
         self.show_at(self.unitFlags()[idx], box)
 
         # widget index 8
