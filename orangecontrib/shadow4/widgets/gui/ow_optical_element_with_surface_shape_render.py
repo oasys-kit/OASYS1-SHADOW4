@@ -351,6 +351,8 @@ if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    dialog = ShowSurfaceShapeDialog(ccc=[1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,-764,0.0], is_torus=0)
+    # dialog = ShowSurfaceShapeDialog(ccc=[1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,-764,0.0], is_torus=0)
+    dialog = ShowSurfaceShapeDialog(is_torus=1, torus_major_radius=7499.954, torus_minor_radius = 0.046, f_torus=0,
+                 x_min=-0.04, x_max=0.04, y_min=-0.3, y_max=0.3,)
     dialog.show()
     app.exec()

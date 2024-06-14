@@ -141,8 +141,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_adv, self, "psi_interval_number_of_points", "Number of Points in sampling vertical angle", labelWidth=280, tooltip="psi_interval_number_of_points", valueType=int, orientation="horizontal")
 
 
-        oasysgui.lineEdit(left_box_adv, self, "epsi_dx", "Distance from waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(left_box_adv, self, "epsi_dz", "Distance from waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "position y of waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "position y of waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
 
         orangegui.comboBox(left_box_adv, self, "flag_interpolation", tooltip="flag_interpolation", label="Sample psi via interpolation",
                            items=["No (accurate, exact Bessel)", "Yes (good for mono or quasi monochromatic)", "No (accurate, approx Bessel)"], labelWidth=260, orientation="horizontal")
