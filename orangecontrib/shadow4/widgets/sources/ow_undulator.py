@@ -146,7 +146,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
 
         # code far field
         left_box_11 = oasysgui.widgetBox(tab_advanced, "Far field simulation", addSpace=False, orientation="vertical")
-        orangegui.comboBox(left_box_11, self, "code_undul_phot", label="Code (for far fielf and backpropagation)", tooltip="code_undul_phot",
+        orangegui.comboBox(left_box_11, self, "code_undul_phot", label="Code (for far field and backpropagation)", tooltip="code_undul_phot",
                            items=["internal", "pysru+wofry", "srw"], labelWidth=260, orientation="horizontal",
                            callback=self.set_visibility)
         oasysgui.lineEdit(left_box_11, self, "distance", "Distance to far field plane [m]", tooltip="distance",

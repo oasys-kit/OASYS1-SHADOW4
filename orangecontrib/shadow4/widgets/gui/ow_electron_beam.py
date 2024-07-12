@@ -170,8 +170,8 @@ class OWElectronBeam(GenericElement):
             congruence.checkPositiveNumber(self.moment_ypyp , "Moment ypyp")
         elif self.type_of_properties == 1:
             congruence.checkPositiveNumber(self.electron_beam_size_h       , "Horizontal Beam Size")
-            congruence.checkPositiveNumber(self.electron_beam_divergence_h , "Vertical Beam Size")
-            congruence.checkPositiveNumber(self.electron_beam_size_v       , "Horizontal Beam Divergence")
+            congruence.checkPositiveNumber(self.electron_beam_divergence_h , "Horizontal Beam Divergence")
+            congruence.checkPositiveNumber(self.electron_beam_size_v       , "Vertical Beam Size")
             congruence.checkPositiveNumber(self.electron_beam_divergence_v , "Vertical Beam Divergence")
         elif self.type_of_properties == 2:
             congruence.checkPositiveNumber(self.electron_beam_emittance_h, "Horizontal Beam Emittance")
@@ -191,26 +191,19 @@ class OWElectronBeam(GenericElement):
     def run_shadow4(self):
         raise Exception("To be defined in the superclass")
 
-    def get_electron_beam(self): #to do: remove script
+    def get_electron_beam(self):
         electron_beam = S4ElectronBeam(energy_in_GeV=self.electron_energy_in_GeV,
                                      energy_spread=self.electron_energy_spread,
                                      current=self.ring_current,
                                      # number_of_bunches=self.number_of_bunches,
                                      )
 
-        script = "\n# electron beam"
-        script += "\nfrom shadow4.sources.s4_electron_beam import S4ElectronBeam"
-        script += "\nelectron_beam = S4ElectronBeam(energy_in_GeV=%g,energy_spread=%g,current=%g)" % \
-                  (self.electron_energy_in_GeV,self.electron_energy_spread,self.ring_current)
 
         recalculate_fields = False
 
         if self.type_of_properties == 0:
-            electron_beam.set_moments_horizontal(self.moment_xx,self.moment_xxp,self.moment_xpxp)
+            electron_beam.set_moments_horizontal(self.moment_xx, self.moment_xxp, self.moment_xpxp)
             electron_beam.set_moments_vertical(self.moment_yy, self.moment_yyp, self.moment_ypyp)
-
-            script += "\nelectron_beam.set_moments_horizontal(%g,%g,%g)" % (self.moment_xx,self.moment_xxp,self.moment_xpxp)
-            script +=   "\nelectron_beam.set_moments_vertical(%g,%g,%g)" % (self.moment_yy, self.moment_yyp, self.moment_ypyp)
 
             if recalculate_fields:
 
@@ -236,14 +229,10 @@ class OWElectronBeam(GenericElement):
 
         elif self.type_of_properties == 1:
             electron_beam.set_sigmas_all(sigma_x=self.electron_beam_size_h,
-                                         sigma_y=self.electron_beam_size_v,
                                          sigma_xp=self.electron_beam_divergence_h,
+                                         sigma_y=self.electron_beam_size_v,
                                          sigma_yp=self.electron_beam_divergence_v)
-            script += "\nelectron_beam.set_sigmas_all(sigma_x=%g,sigma_y=%g,sigma_xp=%g,sigma_yp=%g)" % \
-                        (self.electron_beam_size_h,
-                        self.electron_beam_size_v,
-                        self.electron_beam_divergence_h,
-                        self.electron_beam_divergence_v)
+
             if recalculate_fields:
                 moments_all = electron_beam.get_moments_all()
 
@@ -277,20 +266,6 @@ class OWElectronBeam(GenericElement):
                                              self.electron_beam_beta_v,
                                              self.electron_beam_eta_v,
                                              self.electron_beam_etap_v)
-            script += "\nelectron_beam.set_twiss_horizontal(%g,%g,%g,%g,%g)" % (
-                  self.electron_beam_emittance_h,
-                  self.electron_beam_alpha_h,
-                  self.electron_beam_beta_h,
-                  self.electron_beam_eta_h,
-                  self.electron_beam_etap_h,
-            )
-            script += "\nelectron_beam.set_twiss_vertical(%g,%g,%g,%g,%g)" % (
-                  self.electron_beam_emittance_v,
-                  self.electron_beam_alpha_v,
-                  self.electron_beam_beta_v,
-                  self.electron_beam_eta_v,
-                  self.electron_beam_etap_v,
-            )
 
 
 
@@ -312,7 +287,6 @@ class OWElectronBeam(GenericElement):
                 self.moment_ypyp = moments_all[5]
         elif self.type_of_properties == 3:
             electron_beam.set_moments_all(0,0,0,0,0,0)
-            script += "\nelectron_beam.set_moments_all(0,0,0,0,0,0)"
 
         return electron_beam
 

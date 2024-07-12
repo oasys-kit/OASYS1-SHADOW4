@@ -1,5 +1,8 @@
 import sys
 import time
+import numpy
+
+from PyQt5.QtWidgets import QMessageBox
 
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
 from orangecontrib.shadow4.widgets.gui.plots import plot_data1D
@@ -141,8 +144,8 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_adv, self, "psi_interval_number_of_points", "Number of Points in sampling vertical angle", labelWidth=280, tooltip="psi_interval_number_of_points", valueType=int, orientation="horizontal")
 
 
-        oasysgui.lineEdit(left_box_adv, self, "position y of waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(left_box_adv, self, "position y of waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "epsi_dx", "position y of waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(left_box_adv, self, "epsi_dz", "position y of waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
 
         orangegui.comboBox(left_box_adv, self, "flag_interpolation", tooltip="flag_interpolation", label="Sample psi via interpolation",
                            items=["No (accurate, exact Bessel)", "Yes (good for mono or quasi monochromatic)", "No (accurate, approx Bessel)"], labelWidth=260, orientation="horizontal")
@@ -223,39 +226,43 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         # syned
         electron_beam = self.get_electron_beam()
 
+        moment_xx, moment_xxp, moment_xpxp, moment_yy, moment_yyp, moment_ypyp = electron_beam.get_moments_all()
+        if (numpy.abs(moment_xxp) > 1e-10) or (numpy.abs(moment_yyp) > 1e-10):
+            QMessageBox.warning(self, "Warning", "S4 Wiggler uses electron beam values at waist, therefore <x x'>=<z z'>=0. The entered not zero values are not considered.", QMessageBox.Ok)
+
         if self.type_of_properties == 3:
             flag_emittance = 0
         else:
             flag_emittance = 1
+
+        if self.e_min == self.e_max:
+            ng_e = 1
+        else:
+            ng_e = self.ng_e
         # S4Wiggler
         if self.magnetic_field_source == 0:
             sourcewiggler = S4Wiggler(
                     magnetic_field_periodic  = 1,   # 0=external, 1=periodic
                     file_with_magnetic_field = "",  # useful if magnetic_field_periodic=0
-                    K_vertical               = self.k_value,
-                    period_length            = self.id_period,
-                    number_of_periods        = self.number_of_periods, # syned Wiggler pars: useful if magnetic_field_periodic=1
-                    emin                     = self.e_min,     # Photon energy scan from energy (in eV)
-                    emax                     = self.e_max,     # Photon energy scan to energy (in eV)
-                    ng_e                     = self.ng_e,      # Photon energy scan number of points
-                    ng_j                     = self.ng_j ,     # Number of points in electron trajectory (per period) for internal calculation only
+                    K_vertical                    = self.k_value,
+                    period_length                 = self.id_period,
+                    number_of_periods             = self.number_of_periods, # syned Wiggler pars: useful if magnetic_field_periodic=1
+                    emin                          = self.e_min,     # Photon energy scan from energy (in eV)
+                    emax                          = self.e_max,     # Photon energy scan to energy (in eV)
+                    ng_e                          = ng_e,      # Photon energy scan number of points
+                    ng_j                          = self.ng_j ,     # Number of points in electron trajectory (per period) for internal calculation only
                     psi_interval_number_of_points = self.psi_interval_number_of_points,
-                    flag_interpolation       = self.flag_interpolation,  # Use intyerpolation to sample psi (0=No, 1=Yes)
-                    flag_emittance           = flag_emittance, # Use emittance (0=No, 1=Yes)
-                    shift_x_flag             = 0,
-                    shift_x_value            = 0.0,
-                    shift_betax_flag         = 0,
-                    shift_betax_value        = 0.0,
-                    epsi_dx                  = self.epsi_dx,
-                    epsi_dz                  = self.epsi_dz,
+                    flag_interpolation            = self.flag_interpolation,  # Use intyerpolation to sample psi (0=No, 1=Yes)
+                    flag_emittance                = flag_emittance, # Use emittance (0=No, 1=Yes)
+                    shift_x_flag                  = 0,
+                    shift_x_value                 = 0.0,
+                    shift_betax_flag              = 0,
+                    shift_betax_value             = 0.0,
+                    epsi_dx                       = self.epsi_dx,
+                    epsi_dz                       = self.epsi_dz,
                     )
 
         elif self.magnetic_field_source == 1:
-            if self.e_min == self.e_max:
-                ng_e = 1
-            else:
-                ng_e = self.ng_e
-
             sourcewiggler = S4Wiggler(
                 magnetic_field_periodic   = 0,
                 file_with_magnetic_field  = self.file_with_b_vs_y,
@@ -263,13 +270,15 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                 emax                      = self.e_max,
                 ng_e                      = ng_e,
                 ng_j                      = self.ng_j,
-                psi_interval_number_of_points=self.psi_interval_number_of_points,
-                flag_interpolation=self.flag_interpolation,  # Use intyerpolation to sample psi (0=No, 1=Yes)
+                psi_interval_number_of_points = self.psi_interval_number_of_points,
+                flag_interpolation        = self.flag_interpolation,  # Use intyerpolation to sample psi (0=No, 1=Yes)
                 flag_emittance            = flag_emittance,  # Use emittance (0=No, 1=Yes)
                 shift_x_flag              = 4,
                 shift_x_value             = 0.0,
                 shift_betax_flag          = 4,
                 shift_betax_value         = 0.0,
+                epsi_dx                   = self.epsi_dx,
+                epsi_dz                   = self.epsi_dz,
             )
             sourcewiggler.set_electron_initial_conditions_by_label(
                 position_label="value_at_zero",
