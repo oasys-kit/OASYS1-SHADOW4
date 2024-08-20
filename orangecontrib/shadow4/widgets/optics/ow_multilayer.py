@@ -302,7 +302,7 @@ class OWMultilayer(_OWMultilayer):
     description = "Shadow Multilayer"
     icon        = "icons/plane_multilayer.png"
 
-    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs = copy.deepcopy(_OWMultilayer.inputs)
     inputs.append(("MLayer PreProcessor Data", MLayerPreProcessorData, "set_MLayerPreProcessorData"))
 
     priority = 1.391

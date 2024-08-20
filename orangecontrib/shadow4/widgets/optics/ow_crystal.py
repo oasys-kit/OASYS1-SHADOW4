@@ -27,18 +27,18 @@ from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape imp
 from orangecontrib.shadow4.util.shadow4_objects import BraggPreProcessorData
 import copy
 
-class OWCrystal(OWOpticalElementWithSurfaceShape):
-    name = "Generic Crystal"
-    description = "Shadow Crystal"
-    icon = "icons/plane_crystal.png"
-
-    priority = 1.3
-
-    def get_oe_type(self):
-        return "crystal", "Crystal"
-
-    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
-    inputs.append(("Bragg PreProcessor Data", BraggPreProcessorData, "setBraggProcessorData"))
+class _OWCrystal(OWOpticalElementWithSurfaceShape):
+    # name = "Generic Crystal"
+    # description = "Shadow Crystal"
+    # icon = "icons/plane_crystal.png"
+    #
+    # priority = 1.3
+    #
+    # def get_oe_type(self):
+    #     return "crystal", "Crystal"
+    #
+    # inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    # inputs.append(("Bragg PreProcessor Data", BraggPreProcessorData, "setBraggProcessorData"))
 
     #########################################################
     # crystal
@@ -79,7 +79,7 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
     below_onto_bragg_planes = Setting(-1)
 
     def __init__(self):
-        super(OWCrystal, self).__init__()
+        super(_OWCrystal, self).__init__()
         # with crystals no "internal surface parameters" allowed. Fix value and hide selecting combo:
         self.surface_shape_parameters = 1
         self.surface_shape_internal_external_box.setVisible(False)
@@ -645,6 +645,18 @@ class OWCrystal(OWOpticalElementWithSurfaceShape):
         self.incidence_angle_mrad  = numpy.round(1e3 * (numpy.pi / 2 - angle_radial),5)
         self.reflection_angle_mrad = numpy.round(1e3 * (numpy.pi / 2 - angle_radial_out),5)
 
+class OWCrystal(_OWCrystal):
+    name = "Generic Crystal"
+    description = "Shadow Crystal"
+    icon = "icons/plane_crystal.png"
+
+    priority = 1.3
+
+    def get_oe_type(self):
+        return "crystal", "Crystal"
+
+    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("Bragg PreProcessor Data", BraggPreProcessorData, "setBraggProcessorData"))
 
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline

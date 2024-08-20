@@ -27,18 +27,19 @@ from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape imp
 from orangecontrib.shadow4.util.shadow4_objects import VlsPgmPreProcessorData
 import copy
 
-class OWGrating(OWOpticalElementWithSurfaceShape):
-    name = "Generic Grating"
-    description = "Shadow Grating"
-    icon = "icons/plane_grating.png"
 
-    priority = 1.390
-
-    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
-    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
-
-    def get_oe_type(self):
-        return "grating", "Grating"
+class _OWGrating(OWOpticalElementWithSurfaceShape):
+    # name = "Generic Grating"
+    # description = "Shadow Grating"
+    # icon = "icons/plane_grating.png"
+    #
+    # priority = 1.390
+    #
+    # inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    # inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
+    #
+    # def get_oe_type(self):
+    #     return "grating", "Grating"
 
     #########################################################
     # grating
@@ -54,7 +55,7 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
     # file_refl = Setting("")
 
     def __init__(self):
-        super(OWGrating, self).__init__()
+        super(_OWGrating, self).__init__()
         # with gratings no "internal surface parameters" allowed. Fix value and hide selecting combo:
         self.surface_shape_parameters = 1
         self.surface_shape_internal_external_box.setVisible(False)
@@ -539,6 +540,19 @@ class OWGrating(OWOpticalElementWithSurfaceShape):
             elif self.surface_shape_type == 6: return S4ConicGratingElement()
             else: raise NotImplementedError("surface_shape_type not yet implemented!")
 
+
+class OWGrating(_OWGrating):
+    name = "Generic Grating"
+    description = "Shadow Grating"
+    icon = "icons/plane_grating.png"
+
+    priority = 1.390
+
+    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "setVlsPgmPreProcessorData"))
+
+    def get_oe_type(self):
+        return "grating", "Grating"
 
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline

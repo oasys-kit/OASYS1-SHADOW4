@@ -15,7 +15,8 @@ from syned.beamline.element_coordinates import ElementCoordinates
 
 from shadow4.beamline.optical_elements.refractors.s4_transfocator import S4Transfocator, S4TransfocatorElement
 
-from orangecontrib.shadow.util.shadow_objects import ShadowPreProcessorData
+from orangecontrib.shadow.util.shadow_objects import ShadowPreProcessorData # TODO: remove
+from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
 
 
@@ -55,6 +56,10 @@ class OWTransfocator(OWOpticalElement):
 
     input_data = None
     is_automatic_run = 1
+
+
+    inputs = copy.deepcopy(OWOpticalElement.inputs)
+    inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
 
     def __init__(self):
         super().__init__(has_footprint=False)
@@ -543,7 +548,7 @@ class OWTransfocator(OWOpticalElement):
         for box in self.crl_box_array:
             box.checkFields()
 
-    def setPreProcessorData(self, data):
+    def setPreProcessorData(self, data): # TODO: remove
         if data is not None:
             if data.prerefl_data_file != ShadowPreProcessorData.NONE:
                 for box in self.crl_box_array:
@@ -555,6 +560,21 @@ class OWTransfocator(OWOpticalElement):
                     box.set_ri_calculation_mode()
             else:
                 QMessageBox.warning(self, "Warning", "Incompatible Preprocessor Data", QMessageBox.Ok)
+
+                self.dump_prerefl_file()
+
+    def set_PreReflPreProcessorData(self, data):
+        if data is not None:
+            if data.prerefl_data_file != ShadowPreProcessorData.NONE:
+                for box in self.crl_box_array:
+                    box.prerefl_file = data.prerefl_data_file
+                    box.le_prerefl_file.setText(data.prerefl_data_file)
+                    box.ri_calculation_mode = 1
+                    box.ri_calculation_mode_combo.setCurrentIndex(1)
+
+                    box.set_ri_calculation_mode()
+            else:
+                QMessageBox.warning(self, "Warning", "Incompatible PreReflPreprocessor Data", QMessageBox.Ok)
 
                 self.dump_prerefl_file()
 

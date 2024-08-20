@@ -1,5 +1,5 @@
 import numpy
-import os
+import os, copy
 from scipy.optimize import root
 
 from PyQt5.QtWidgets import QDialog, QGridLayout, QWidget, QDialogButtonBox, QFileDialog
@@ -22,6 +22,7 @@ from oasys.widgets import congruence
 
 from oasys.util.oasys_util import read_surface_file, write_surface_file
 from oasys.util.oasys_objects import OasysPreProcessorData
+from oasys.util.oasys_objects import OasysSurfaceData
 
 from syned.beamline.shape import Rectangle
 from syned.beamline.shape import Ellipse
@@ -34,8 +35,9 @@ from shadow4.beamline.s4_beamline_element_movements import S4BeamlineElementMove
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape_render import ShowSurfaceShapeDialog
 
 class OWOpticalElementWithSurfaceShape(OWOpticalElement):
-    inputs = optical_element_inputs()
-    inputs.append(("PreProcessor Data", OasysPreProcessorData, "set_surface_data"))
+    inputs = copy.deepcopy(OWOpticalElement.inputs)
+    inputs.append(("Surface Data", OasysSurfaceData, "set_oasys_surface_data"))
+
 
     #########################################################
     # surface shape
@@ -421,8 +423,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.mod_surf_err_box_1 = oasysgui.widgetBox(box, "", addSpace=False, orientation="horizontal")
 
         self.le_ms_defect_file_name = oasysgui.lineEdit(self.mod_surf_err_box_1, self, "ms_defect_file_name",
-                                                        "File name", labelWidth=60, valueType=str,
-                                                        orientation="horizontal")
+                                                        "File name", tooltip="ms_defect_file_name", labelWidth=60,
+                                                        valueType=str, orientation="horizontal")
 
         gui.button(self.mod_surf_err_box_1, self, "...", callback=self.select_defect_file_name, width=30)
         gui.button(self.mod_surf_err_box_1, self, "View", callback=self.view_surface_error_data_file, width=40)
@@ -579,7 +581,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         if not is_init: self.__change_icon_from_surface_type()
 
-    def set_surface_data(self, oasys_data : OasysPreProcessorData):
+    def set_surface_data(self, oasys_data : OasysPreProcessorData): # TODO" delete
         if not oasys_data is None:
             if not oasys_data.error_profile_data is None:
                 try:
@@ -593,6 +595,17 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                     self.modified_surface_tab_visibility()
 
                     self.congruence_surface_data_file(surface_data.xx, surface_data.yy, surface_data.zz)
+                except Exception as exception:
+                    self.prompt_exception(exception)
+
+    def set_oasys_surface_data(self, oasys_data : OasysSurfaceData):
+        if oasys_data is not None:
+            if oasys_data.surface_data_file is not None:
+                try:
+                    self.ms_defect_file_name = oasys_data.surface_data_file
+                    self.modified_surface = 1
+                    self.modified_surface_tab_visibility()
+                    self.congruence_surface_data_file(oasys_data.xx, oasys_data.yy, oasys_data.zz)
                 except Exception as exception:
                     self.prompt_exception(exception)
 

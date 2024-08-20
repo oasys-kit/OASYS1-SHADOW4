@@ -419,7 +419,7 @@ class OWMirror(_OWMirror):
     description = "Shadow Mirror"
     icon        = "icons/plane_mirror.png"
 
-    inputs = copy.deepcopy(OWOpticalElementWithSurfaceShape.inputs)
+    inputs = copy.deepcopy(_OWMirror.inputs)
     inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
     inputs.append(("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData, "set_VlsPgmPreProcessorData"))
 
