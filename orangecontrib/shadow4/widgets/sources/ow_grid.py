@@ -71,6 +71,7 @@ class OWGrid(GenericElement, WidgetDecorator):
     # polarization = Setting(1)
     polarization_phase_deg = Setting(0.0)
     polarization_degree = Setting(1.0)
+    coherent_beam = Setting(1.0)
 
 
     def __init__(self):
@@ -231,6 +232,8 @@ class OWGrid(GenericElement, WidgetDecorator):
                           tooltip="polarization_degree", labelWidth=310, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.ewp_box_8, self, "polarization_phase_deg", "Phase Difference [deg,0=linear,+90=ell/right]",
                           tooltip="polarization_phase_deg", labelWidth=310, valueType=float, orientation="horizontal")
+        gui.comboBox(self.ewp_box_8, self, "coherent_beam", label="Phase of the sigma field", labelWidth=310,
+                     tooltip="coherent_beam",items=["Random (incoherent)", "Constant (coherent)"], orientation="horizontal")
 
         gui.rubber(self.controlArea)
         gui.rubber(self.mainArea)
