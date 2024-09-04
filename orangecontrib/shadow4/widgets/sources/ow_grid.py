@@ -71,7 +71,7 @@ class OWGrid(GenericElement, WidgetDecorator):
     # polarization = Setting(1)
     polarization_phase_deg = Setting(0.0)
     polarization_degree = Setting(1.0)
-    coherent_beam = Setting(1.0)
+    coherent_beam = Setting(1)
 
 
     def __init__(self):
@@ -265,6 +265,7 @@ class OWGrid(GenericElement, WidgetDecorator):
                 wavelength=wavelength,
                 polarization_degree=self.polarization_degree,
                 polarization_phase_deg=self.polarization_phase_deg,
+                coherent_beam=self.coherent_beam,
                 name = "Grid Source (Cartesian)")
         else:
             gs =  SourceGridPolar(
@@ -277,6 +278,7 @@ class OWGrid(GenericElement, WidgetDecorator):
                 wavelength=wavelength,
                 polarization_degree=self.polarization_degree,
                 polarization_phase_deg=self.polarization_phase_deg,
+                coherent_beam=self.coherent_beam,
                 name = "Grid Source (Polar)")
 
         return gs
