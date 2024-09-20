@@ -66,7 +66,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     epsi_dx = Setting(0.0)
     epsi_dz = Setting(0.0)
 
-    flag_interpolation = Setting(2)
+    flag_interpolation = Setting(0)
 
     plot_wiggler_graph = 1
 
@@ -148,7 +148,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         oasysgui.lineEdit(left_box_adv, self, "epsi_dz", "position y of waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
 
         orangegui.comboBox(left_box_adv, self, "flag_interpolation", tooltip="flag_interpolation", label="Sample psi via interpolation",
-                           items=["No (accurate, exact Bessel)", "Yes (good for mono or quasi monochromatic)", "No (accurate, approx Bessel)"], labelWidth=260, orientation="horizontal")
+                           items=["No (accurate, exact Bessel)", "Yes (good for mono or quasi monochromatic)", "Yes (ray by ray)"], labelWidth=260, orientation="horizontal")
 
 
         # wiggler plots
