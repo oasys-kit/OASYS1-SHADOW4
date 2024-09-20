@@ -378,7 +378,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                                   title="Magnetic Field",xtitle="y [m]",ytitle="B [T]")
 
             self.plot_widget_item(traj[1, :],traj[6, :],1,
-                                  title="Electron curvature",xtitle="y [m]",ytitle="cirvature [m^-1]")
+                                  title="Electron curvature",xtitle="y [m]",ytitle="curvature [m^-1]")
 
             self.plot_widget_item(traj[1, :],traj[3, :],2,
                                   title="Electron velocity",xtitle="y [m]",ytitle="BetaX")
