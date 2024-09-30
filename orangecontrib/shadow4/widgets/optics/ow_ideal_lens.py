@@ -8,10 +8,9 @@ from syned.beamline.element_coordinates import ElementCoordinates
 
 from shadow4.beamline.optical_elements.ideal_elements.s4_ideal_lens import S4IdealLensElement, S4SuperIdealLensElement, S4IdealLens, S4SuperIdealLens
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
+from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
 
-
-class OWIdealLens(OWOpticalElementWithSurfaceShape):
+class OWIdealLens(OWOpticalElement):
     name        = "Ideal Lens"
     description = "Shadow Ideal Lens"
     icon        = "icons/ideal_lens.png"
@@ -72,6 +71,25 @@ class OWIdealLens(OWOpticalElementWithSurfaceShape):
                           labelWidth=260, valueType=float, orientation="horizontal", tooltip="focal_q_z")
 
         self.set_ideal_lens_type()
+
+    def get_element_instance(self):
+        if self.ideal_lens_type == 0:
+            optical_element = S4IdealLensElement()
+
+        else:
+            optical_element = S4SuperIdealLensElement()
+        optical_element.set_optical_element(self.get_oe_instance())
+        # optical_element.set_coordinates()
+        optical_element.set_input_beam(self.input_data.beam)
+        return optical_element
+
+    def get_oe_instance(self):
+        if self.ideal_lens_type == 0:
+            return S4IdealLens(
+                name='Ideal Lens TF', focal_x=self.focal_x, focal_y=self.focal_z)
+        else:
+            return S4SuperIdealLens(
+                name='Ideal Lens TF', focal_x=self.focal_x, focal_y=self.focal_z)
 
     def set_ideal_lens_type(self):
         self.box_focal_distances.setVisible(self.ideal_lens_type == 0)
