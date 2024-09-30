@@ -159,11 +159,12 @@ class OWInfo(widget.OWWidget):
         if ShadowCongruence.check_empty_data(shadow_data):
             if ShadowCongruence.check_empty_beam(shadow_data.beam):
                 self.input_data = shadow_data
-                if self.is_automatic_run: self.refresh()
+                self.refresh()
             else:
                 MessageDialog.message(self, "Data not displayable: bad content", "Error", "critical")
 
     def refresh(self):
+
         self.fluxPower.setText("")
         self.sysInfo.setText("")
         self.mirInfo.setText("")
@@ -171,55 +172,81 @@ class OWInfo(widget.OWWidget):
         self.distancesSummary.setText("")
         self.synedJson.setText("")
         self.synedInfo.setText("")
+
         # self.shadow4_script.set_code("#")
 
         if self.input_data is None: return
 
-        self.fluxPower.append(flux_summary(self.input_data.beamline))
-        self.sysInfo.append(self.input_data.beamline.sysinfo())
-        self.mirInfo.append(self.input_data.beamline.oeinfo())
-        self.sourceInfo.append( self.input_data.beamline.sourcinfo())
-        self.synedInfo.append(self.input_data.beamline.info())
+        try:
+            self.fluxPower.append(flux_summary(self.input_data.beamline))
+        except:
+            self.fluxPower.append("error in creating fluxPower")
+
+        try:
+            self.sysInfo.append(self.input_data.beamline.sysinfo())
+        except:
+            self.sysInfo.append("error in creating sysInfo")
+
+        try:
+            self.mirInfo.append(self.input_data.beamline.oeinfo())
+        except:
+            self.mirInfo.append("error in creating mirInfo")
+
+        try:
+            self.sourceInfo.append( self.input_data.beamline.sourcinfo())
+        except:
+            self.sourceInfo.append("error in creating xsourceInfoxx")
+
+        try:
+            self.synedInfo.append(self.input_data.beamline.info())
+        except:
+            self.synedInfo.append("error in creating synedInfo")
+
         try:
             self.synedJson.append(self.input_data.beamline.to_json())
         except:
             self.synedJson.append("error in creating json dump")
 
-        self.distancesSummary.append(self.input_data.beamline.distances_summary())
+        try:
+            self.distancesSummary.append(self.input_data.beamline.distances_summary())
+        except:
+            self.distancesSummary.append("error in creating xxdistancesSummaryx")
 
-        self.sysplots()
-
-        # script = self.input_data.beamline.to_python_code()
-        # script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        # script += "\nrays = beam.get_rays()"
-        # script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-        # self.shadow4_script.set_code(script)
+        try:
+            self.sysplots()
+        except:
+            self.outputs.append("error in creating sysplots")
 
     def sysplots(self):
         try:
+            status = 0
             dic = self.input_data.beamline.syspositions()
 
+            status = 1
             self.sysPlotSide.addCurve(dic["optical_axis_y"], dic["optical_axis_z"], symbol='o', replace=True)
             self.sysPlotSide.setGraphXLabel("Y [m]")
             self.sysPlotSide.setGraphYLabel("Z [m]")
             self.sysPlotSide.setGraphTitle("Side View of optical axis")
             self.sysPlotSide.replot()
 
+            status = 2
             self.sysPlotTop.addCurve(dic["optical_axis_y"], dic["optical_axis_x"], symbol='o', replace=True)
             self.sysPlotTop.setGraphXLabel("Y [m]")
             self.sysPlotTop.setGraphYLabel("X [m]")
             self.sysPlotTop.setGraphTitle("Bottom View of optical axis")
             self.sysPlotTop.replot()
 
+            status = 3
             self.sysPlotFront.addCurve(dic["optical_axis_x"], dic["optical_axis_z"], symbol='o', replace=True)
             self.sysPlotFront.setGraphXLabel("X [m]")
             self.sysPlotFront.setGraphYLabel("Z [m]")
             self.sysPlotFront.setGraphTitle("Front View of optical axis")
             self.sysPlotFront.replot()
 
+            status = 4
         except:
             self.shadow_output.setText(
-                "Problem in plotting SysPlot:\n" + str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]))
+                "Problem in plotting SysPlot. status: %d\n" % status)
 
 
     def writeStdOut(self, text):
