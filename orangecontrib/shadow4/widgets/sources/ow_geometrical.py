@@ -743,7 +743,7 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         # beam = light_source.get_beam(NRAYS=self.number_of_rays, SEED=self.seed)
         output_beam = light_source.get_beam()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+        print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         #
         # beam plots

@@ -256,7 +256,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
     def get_lightsource(self):
         # syned
         electron_beam = self.get_electron_beam()
-        print("\n\n>>>>>> ElectronBeam info: ", electron_beam.info(), type(electron_beam))
+        print("\n\n***** ElectronBeam info: ", electron_beam.info(), type(electron_beam))
 
         if self.type_of_properties == 3:
             flag_emittance = 0
@@ -304,7 +304,7 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
             else:                     lightsource.set_energy_at_resonance(harmonic_number=self.harmonic, delta_e=self.delta_e)
 
 
-        print("\n\n>>>>>> S4undulatorLightSource info: ", lightsource.info())
+        print("\n\n***** S4undulatorLightSource info: ", lightsource.info())
 
         return lightsource
 
@@ -337,10 +337,10 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         # run shadow4
         #
         t00 = time.time()
-        print(">>>> starting calculation...")
+        print("***** starting calculation...")
         output_beam = light_source.get_beam()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+        print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         self.lightsource = light_source
 

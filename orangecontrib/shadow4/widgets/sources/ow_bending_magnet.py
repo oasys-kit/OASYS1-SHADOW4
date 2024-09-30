@@ -162,7 +162,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
     def get_lightsource(self):
         # syned electron beam
         electron_beam = self.get_electron_beam()
-        print("\n\n>>>>>> electron_beam info: ", electron_beam.info())
+        print("\n\n***** electron_beam info: ", electron_beam.info())
 
         if self.type_of_properties == 3:
             flag_emittance = 0
@@ -188,7 +188,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
                              epsi_dz=self.epsi_dz,  # position of Z waist [m]
                              )
 
-        print("\n\n>>>>>> BM info: ", bm.info())
+        print("\n\n***** BM info: ", bm.info())
 
 
         # S4UndulatorLightSource
@@ -198,7 +198,7 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
                                              nrays=self.number_of_rays,
                                              seed=self.seed)
 
-        print("\n\n>>>>>> S4BendingMagnetLightSource info: ", lightsource.info())
+        print("\n\n***** S4BendingMagnetLightSource info: ", lightsource.info())
 
         return lightsource
 
@@ -230,11 +230,11 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         # run shadow4
 
         t00 = time.time()
-        print(">>>> starting calculation...")
+        print("***** starting calculation...")
         output_beam = light_source.get_beam()
         photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+        print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
 
         #

@@ -620,8 +620,8 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         if ask_for_fix:
             if xx is None or yy is None or zz is None: xx, yy, zz = read_surface_file(surface_data_file)
 
-            print(">>>> File limits: ", xx.min(), xx.max(), yy.min(), yy.max())
-            print(">>>> Current limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
+            print(">> File limits: ", xx.min(), xx.max(), yy.min(), yy.max())
+            print(">> Current limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
 
             if (xx.min() > -self.dim_x_minus) or \
                     (xx.max() > self.dim_x_plus) or \
@@ -638,11 +638,11 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                     self.dim_y_minus = numpy.min((-yy.min(), self.dim_y_minus))
                     self.dim_y_plus = numpy.min((yy.max(), self.dim_y_plus))
 
-                    print(">>>> NEW limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
+                    print(">> NEW limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
 
                     self.dimensions_tab_visibility()
                 else:
-                    print(">>>> **NOT CHANGED** limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
+                    print(">> **NOT CHANGED** limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
 
     def view_surface_error_data_file(self):
         try:

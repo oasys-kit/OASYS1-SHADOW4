@@ -257,7 +257,7 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
                                              nrays=self.number_of_rays,
                                              seed=self.seed)
 
-        print("\n\n>>>>>> S4UndulatorLightSource info: ", lightsource.info())
+        print("\n\n***** S4UndulatorLightSource info: ", lightsource.info())
 
         return lightsource
 
@@ -284,10 +284,10 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
 
         # run shadow4
         t00 = time.time()
-        print(">>>> starting calculation...")
+        print("***** starting calculation...")
         output_beam = light_source.get_beam()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+        print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         self.lightsource = light_source
 

@@ -45,10 +45,10 @@ class OWElectronBeam(GenericElement):
     electron_beam_beta_v = Setting(0.0)
     electron_beam_alpha_h = Setting(0.0)
     electron_beam_alpha_v = Setting(0.0)
-    electron_beam_eta_h = Setting(0.0)
-    electron_beam_eta_v = Setting(0.0)
-    electron_beam_etap_h = Setting(0.0)
-    electron_beam_etap_v = Setting(0.0)
+    # electron_beam_eta_h = Setting(0.0)
+    # electron_beam_eta_v = Setting(0.0)
+    # electron_beam_etap_h = Setting(0.0)
+    # electron_beam_etap_v = Setting(0.0)
 
     type_of_properties = Setting(1)
     flag_energy_spread = Setting(0)
@@ -132,15 +132,17 @@ class OWElectronBeam(GenericElement):
         oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_emittance_h", "\u03B5x [m.rad]",tooltip="electron_beam_emittance_h",labelWidth=75, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_alpha_h",     "\u03B1x",        tooltip="electron_beam_alpha_h",    labelWidth=75, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_beta_h",      "\u03B2x [m]",    tooltip="electron_beam_beta_h",     labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_eta_h",       "\u03B7x",        tooltip="electron_beam_eta_h",      labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_etap_h",      "\u03B7'x",       tooltip="electron_beam_etap_h",     labelWidth=75, valueType=float, orientation="horizontal")
+        # dispersion effects not considered from Twiss, treated separately
+        # oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_eta_h",       "\u03B7x",        tooltip="electron_beam_eta_h",      labelWidth=75, valueType=float, orientation="horizontal")
+        # oasysgui.lineEdit(self.left_box_2_3_l, self, "electron_beam_etap_h",      "\u03B7'x",       tooltip="electron_beam_etap_h",     labelWidth=75, valueType=float, orientation="horizontal")
 
 
         oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_emittance_v", "\u03B5y [m.rad]",tooltip="electron_beam_emittance_v",labelWidth=75, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_alpha_v",     "\u03B1y",        tooltip="electron_beam_alpha_v",    labelWidth=75,valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_beta_v",      "\u03B2y [m]",    tooltip="electron_beam_beta_v",     labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_eta_v",       "\u03B7y",        tooltip="electron_beam_eta_v",      labelWidth=75, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_etap_v",      "\u03B7'y",       tooltip="electron_beam_etap_v",     labelWidth=75, valueType=float, orientation="horizontal")
+        # dispersion effects not considered from Twiss, treated separately
+        # oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_eta_v",       "\u03B7y",        tooltip="electron_beam_eta_v",      labelWidth=75, valueType=float, orientation="horizontal")
+        # oasysgui.lineEdit(self.left_box_2_3_r, self, "electron_beam_etap_v",      "\u03B7'y",       tooltip="electron_beam_etap_v",     labelWidth=75, valueType=float, orientation="horizontal")
 
         self.set_TypeOfProperties()
 
@@ -180,10 +182,10 @@ class OWElectronBeam(GenericElement):
             congruence.checkNumber(self.electron_beam_alpha_v, "Vertical Beam Alpha")
             congruence.checkNumber(self.electron_beam_beta_h, "Horizontal Beam Beta")
             congruence.checkNumber(self.electron_beam_beta_v, "Vertical Beam Beta")
-            congruence.checkNumber(self.electron_beam_eta_h, "Horizontal Beam Dispersion Eta")
-            congruence.checkNumber(self.electron_beam_eta_v, "Vertical Beam Dispersion Eta")
-            congruence.checkNumber(self.electron_beam_etap_h, "Horizontal Beam Dispersion Eta'")
-            congruence.checkNumber(self.electron_beam_etap_v, "Vertical Beam Dispersion Eta'")
+            # congruence.checkNumber(self.electron_beam_eta_h, "Horizontal Beam Dispersion Eta")
+            # congruence.checkNumber(self.electron_beam_eta_v, "Vertical Beam Dispersion Eta")
+            # congruence.checkNumber(self.electron_beam_etap_h, "Horizontal Beam Dispersion Eta'")
+            # congruence.checkNumber(self.electron_beam_etap_v, "Vertical Beam Dispersion Eta'")
 
         self.check_magnetic_structure()
 
@@ -218,13 +220,13 @@ class OWElectronBeam(GenericElement):
                 self.electron_beam_emittance_h = twiss_all[0]
                 self.electron_beam_alpha_h     = twiss_all[1]
                 self.electron_beam_beta_h      = twiss_all[2]
-                self.electron_beam_eta_h       = 0.0
-                self.electron_beam_etap_h      = 0.0
+                # self.electron_beam_eta_h       = 0.0
+                # self.electron_beam_etap_h      = 0.0
                 self.electron_beam_emittance_v = twiss_all[3]
                 self.electron_beam_alpha_v     = twiss_all[4]
                 self.electron_beam_beta_v      = twiss_all[5]
-                self.electron_beam_eta_v       = 0.0
-                self.electron_beam_etap_v      = 0.0
+                # self.electron_beam_eta_v       = 0.0
+                # self.electron_beam_etap_v      = 0.0
 
 
         elif self.type_of_properties == 1:
@@ -247,25 +249,27 @@ class OWElectronBeam(GenericElement):
                 self.electron_beam_emittance_h = twiss_all[0]
                 self.electron_beam_alpha_h     = twiss_all[1]
                 self.electron_beam_beta_h      = twiss_all[2]
-                self.electron_beam_eta_h       = 0.0
-                self.electron_beam_etap_h      = 0.0
+                # self.electron_beam_eta_h       = 0.0
+                # self.electron_beam_etap_h      = 0.0
                 self.electron_beam_emittance_v = twiss_all[3]
                 self.electron_beam_alpha_v     = twiss_all[4]
                 self.electron_beam_beta_v      = twiss_all[5]
-                self.electron_beam_eta_v       = 0.0
-                self.electron_beam_etap_v      = 0.0
+                # self.electron_beam_eta_v       = 0.0
+                # self.electron_beam_etap_v      = 0.0
 
         elif self.type_of_properties == 2:
             electron_beam.set_twiss_horizontal(self.electron_beam_emittance_h,
                                              self.electron_beam_alpha_h,
                                              self.electron_beam_beta_h,
-                                             self.electron_beam_eta_h,
-                                             self.electron_beam_etap_h)
+                                             0.0,
+                                             0.0,
+                                               )
             electron_beam.set_twiss_vertical(self.electron_beam_emittance_v,
                                              self.electron_beam_alpha_v,
                                              self.electron_beam_beta_v,
-                                             self.electron_beam_eta_v,
-                                             self.electron_beam_etap_v)
+                                             0.0,
+                                             0.0,
+                                             )
 
 
 
@@ -309,6 +313,18 @@ class OWElectronBeam(GenericElement):
         self.electron_beam_size_v       = y
         self.electron_beam_divergence_h = xp
         self.electron_beam_divergence_v = yp
+
+        twiss_all = electron_beam.get_twiss_no_dispersion_all()
+        self.electron_beam_emittance_h = twiss_all[0]
+        self.electron_beam_alpha_h = twiss_all[1]
+        self.electron_beam_beta_h = twiss_all[2]
+        # self.electron_beam_eta_h = 0.0
+        # self.electron_beam_etap_h = 0.0
+        self.electron_beam_emittance_v = twiss_all[3]
+        self.electron_beam_alpha_v = twiss_all[4]
+        self.electron_beam_beta_v = twiss_all[5]
+        # self.electron_beam_eta_v = 0.0
+        # self.electron_beam_etap_v = 0.0
 
         self.type_of_properties = 1
         self.set_TypeOfProperties()

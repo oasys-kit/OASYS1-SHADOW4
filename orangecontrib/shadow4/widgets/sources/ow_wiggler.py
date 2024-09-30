@@ -297,7 +297,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                         shift_betax_flag=self.shift_betax_flag,
                         shift_betax_value=self.shift_betax_value)
 
-        print(">>>>>> \n\n S4Wiggler get_info: \n", sourcewiggler.get_info())
+        print("***** \n\n S4Wiggler get_info: \n", sourcewiggler.get_info())
 
         # S4WigglerLightSource
         lightsource = S4WigglerLightSource(name='wiggler',
@@ -306,7 +306,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
                                            nrays=self.number_of_rays,
                                            seed=self.seed)
 
-        print("\n\n>>>>>> S4WigglerLightSource info: \n", lightsource.info())
+        print("\n\n***** S4WigglerLightSource info: \n", lightsource.info())
 
         return lightsource
 
@@ -340,11 +340,11 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
 
         self.progressBarSet(10)
         t00 = time.time()
-        print(">>>> starting shadow calculation...")
+        print("***** starting shadow calculation...")
         output_beam = light_source.get_beam()
         photon_energy, flux, spectral_power = light_source.calculate_spectrum()
         t11 = time.time() - t00
-        print(">>>> time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+        print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
         #
         # plots
