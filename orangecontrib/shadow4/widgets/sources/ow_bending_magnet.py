@@ -49,8 +49,6 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
     emin                   = Setting(1000.0)  # Photon energy scan from energy (in eV)
     emax                   = Setting(1000.1)  # Photon energy scan to energy (in eV)
     ng_e                   = Setting(100)     # Photon energy scan number of points
-    epsi_dx                = Setting(0.0)
-    epsi_dz                = Setting(0.0)
 
     plot_bm_graph = 1
 
@@ -77,10 +75,6 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
 
         box_3 = oasysgui.widgetBox(tab_advanced, "Advanced settings", addSpace=True, orientation="vertical")
         oasysgui.lineEdit(box_3, self, "ng_e", "Spectrum number of points", tooltip="ng_e", labelWidth=250, valueType=int, orientation="horizontal")
-
-        oasysgui.lineEdit(box_3, self, "epsi_dx", "position y of waist X [m]", labelWidth=260, tooltip="epsi_dx", valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(box_3, self, "epsi_dz", "position y of waist Z [m]", labelWidth=260, tooltip="epsi_dz", valueType=float, orientation="horizontal")
-
 
         self.add_specific_bm_plots()
 
@@ -184,8 +178,6 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
                              emax=self.emax,  # Photon energy scan to energy (in eV)
                              ng_e=self.ng_e,  # Photon energy scan number of points
                              flag_emittance=flag_emittance,  # when sampling rays: Use emittance (0=No, 1=Yes)
-                             epsi_dx=self.epsi_dx,  # position of X waist [m]
-                             epsi_dz=self.epsi_dz,  # position of Z waist [m]
                              )
 
         print("\n\n***** BM info: ", bm.info())

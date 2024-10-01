@@ -254,6 +254,7 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             if self.is_automatic_run: self.run_shadow4()
 
     def run_shadow4(self):
+        self.progressBarInit()
         set_verbose()
         self.shadow_output.setText("")
 
