@@ -8,9 +8,13 @@ from oasys.widgets import gui as oasysgui
 from oasys.util.oasys_objects import OasysSurfaceData
 
 from shadow4.beamline.optical_elements.refractors.s4_conic_interface import S4ConicInterface, S4ConicInterfaceElement
+from shadow4.beamline.optical_elements.refractors.s4_numerical_mesh_interface import S4NumericalMeshInterface
+from shadow4.beamline.optical_elements.refractors.s4_additional_numerical_mesh_interface import S4AdditionalNumericalMeshInterface, S4AdditionalNumericalMeshInterfaceElement
+
 
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape import OWOpticalElementWithSurfaceShape
 from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData
+
 
 class OWRefractiveInterface(OWOpticalElementWithSurfaceShape):
     name        = "Refractive Interface"
@@ -106,10 +110,10 @@ class OWRefractiveInterface(OWOpticalElementWithSurfaceShape):
         try:     name = self.getNode().title
         except:  name = "Refractive Interface"
 
-        return S4ConicInterface(name=name,
+        ifc = S4ConicInterface(name=name,
                                 boundary_shape=self.get_boundary_shape(),
-                                material_object="",  # TODO: discuss with Manolo
-                                material_image="", # TODO: discuss with Manolo
+                                material_object="",
+                                material_image="",
                                 f_r_ind=self.optical_constants_refraction_index,
                                 r_ind_obj=self.refraction_index_in_object_medium,
                                 r_attenuation_obj=self.attenuation_in_object_medium,
@@ -127,8 +131,22 @@ class OWRefractiveInterface(OWOpticalElementWithSurfaceShape):
                                                     self.conic_coefficient_7,
                                                     self.conic_coefficient_8,
                                                     self.conic_coefficient_9])
+        # if error is selected...
+        if self.modified_surface:
+            return S4AdditionalNumericalMeshInterface(name="ideal + surface error",
+                                                   ideal_interface=ifc,
+                                                   numerical_mesh_interface=S4NumericalMeshInterface(
+                                                   surface_data_file=self.ms_defect_file_name,
+                                                   boundary_shape=None),
+                                                   )
+        else:
+            return ifc
 
-    def get_beamline_element_instance(self): return S4ConicInterfaceElement()
+    def get_beamline_element_instance(self):
+        if self.modified_surface:
+            return S4AdditionalNumericalMeshInterfaceElement()
+        else:
+            return S4ConicInterfaceElement()
 
     def set_PreReflPreProcessorData(self, data):
         if data is not None:
@@ -156,8 +174,30 @@ class OWRefractiveInterface(OWOpticalElementWithSurfaceShape):
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
+
+    def get_test_beam():
+        from orangecontrib.shadow4.util.shadow4_objects import ShadowData
+        from shadow4.beamline.s4_beamline import S4Beamline
+        from shadow4.sources.source_geometrical.source_grid_cartesian import SourceGridCartesian
+        light_source = SourceGridCartesian(name='Grid Source (Cartesian)',
+                                           real_space_width=[0.000005, 0.000000, 0.000005],
+                                           real_space_center=[0.000000, 0.000000, 0.000000],
+                                           real_space_points=[11, 1, 11],
+                                           direction_space_width=[0.020000, 0.020000],
+                                           direction_space_center=[0.000000, 0.000000],
+                                           direction_space_points=[1, 1],
+                                           wavelength=1.10013e-10,
+                                           polarization_degree=1,
+                                           polarization_phase_deg=0,
+                                           coherent_beam=1)
+        beam = light_source.get_beam()
+
+        return ShadowData(beam=beam, beamline=S4Beamline(light_source=light_source))
+
+
     a = QApplication(sys.argv)
     ow = OWRefractiveInterface()
+    ow.set_shadow_data(get_test_beam())
 
     ow.show()
     a.exec_()
