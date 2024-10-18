@@ -10,6 +10,8 @@ from matplotlib.figure import Figure
 try:    from mpl_toolkits.mplot3d import Axes3D  # plot 3D
 except: pass
 
+from silx.gui.plot import Plot2D
+
 from orangecanvas.resources import icon_loader
 from orangecanvas.scheme.node import SchemeNode
 
@@ -423,11 +425,14 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
         self.mod_surf_err_box_1 = oasysgui.widgetBox(box, "", addSpace=False, orientation="horizontal")
 
         self.le_ms_defect_file_name = oasysgui.lineEdit(self.mod_surf_err_box_1, self, "ms_defect_file_name",
-                                                        "File name", tooltip="ms_defect_file_name", labelWidth=60,
+                                                        "File", tooltip="ms_defect_file_name", labelWidth=40,
                                                         valueType=str, orientation="horizontal")
 
         gui.button(self.mod_surf_err_box_1, self, "...", callback=self.select_defect_file_name, width=30)
-        gui.button(self.mod_surf_err_box_1, self, "View", callback=self.view_surface_error_data_file, width=40)
+        gui.button(self.mod_surf_err_box_1, self, "View Surf", callback=self.view_surface_error_data_file, width=65,
+                   tooltip="Render data in surface mode [slow]")
+        gui.button(self.mod_surf_err_box_1, self, "View Img", callback=self.view_image_error_data_file, width=65,
+                   tooltip="Render data in image mode [slow]")
 
         self.modified_surface_tab_visibility()
 
@@ -646,7 +651,14 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
     def view_surface_error_data_file(self):
         try:
-            dialog = self.ShowSurfaceErrorDataFileDialog(parent=self)
+            dialog = ShowSurfaceErrorDataFileDialog(parent=self, file_name=self.ms_defect_file_name)
+            dialog.show()
+        except Exception as exception:
+            self.prompt_exception(exception)
+
+    def view_image_error_data_file(self):
+        try:
+            dialog = ShowImageErrorDataFileDialog(parent=self, file_name=self.ms_defect_file_name)
             dialog.show()
         except Exception as exception:
             self.prompt_exception(exception)
@@ -728,49 +740,111 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
                                b_axis_min=-self.dim_y_minus, b_axis_max=self.dim_y_plus)
 
 
-    class ShowSurfaceErrorDataFileDialog(QDialog):
-        def __init__(self, parent=None):
-            QDialog.__init__(self, parent)
-            self.setWindowTitle('Surface Error Profile')
-            self.setFixedHeight(700)
-            layout = QGridLayout(self)
+class ShowSurfaceErrorDataFileDialog(QDialog):
+    def __init__(self, parent=None, file_name=None):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle('Surface Error Profile')
+        self.setFixedHeight(700)
+        layout = QGridLayout(self)
 
-            figure = Figure(figsize=(8, 7))
-            figure.patch.set_facecolor('white')
+        figure = Figure(figsize=(8, 7))
+        figure.patch.set_facecolor('white')
 
-            axis = figure.add_subplot(111, projection='3d')
-            axis.set_xlabel("X [m]")
-            axis.set_ylabel("Y [m]")
-            axis.set_zlabel("Z [nm]")
+        axis = figure.add_subplot(111, projection='3d')
+        axis.set_xlabel("X [m]")
+        axis.set_ylabel("Y [m]")
+        axis.set_zlabel("Z [nm]")
 
-            figure_canvas = FigureCanvas3D(ax=axis, fig=figure, show_legend=False, show_buttons=False)
-            figure_canvas.setFixedWidth(500)
-            figure_canvas.setFixedHeight(645)
+        figure_canvas = FigureCanvas3D(ax=axis, fig=figure, show_legend=False, show_buttons=False)
+        figure_canvas.setFixedWidth(500)
+        figure_canvas.setFixedHeight(645)
 
-            xx, yy, zz = read_surface_file(parent.ms_defect_file_name)
+        xx, yy, zz = read_surface_file(file_name) # parent.ms_defect_file_name)
 
-            x_to_plot, y_to_plot = numpy.meshgrid(xx, yy)
-            zz_slopes = zz.T
+        x_to_plot, y_to_plot = numpy.meshgrid(xx, yy)
+        zz_slopes = zz.T
 
-            axis.plot_surface(x_to_plot, y_to_plot,  zz*1e9, rstride=1, cstride=1, cmap=cm.autumn, linewidth=0.5, antialiased=True)
+        axis.plot_surface(x_to_plot, y_to_plot,  zz*1e9, rstride=1, cstride=1, cmap=cm.autumn, linewidth=0.5, antialiased=True)
 
-            sloperms = profiles_simulation.slopes(zz_slopes, xx, yy, return_only_rms=1)
+        sloperms = profiles_simulation.slopes(zz_slopes, xx, yy, return_only_rms=1)
 
-            title = ' Slope error rms in X direction: %f $\mu$rad' % (sloperms[0]*1e6) + '\n' + \
-                    ' Slope error rms in Y direction: %f $\mu$rad' % (sloperms[1]*1e6) + '\n' + \
-                    ' Figure error rms in X direction: %f nm' % (round(zz_slopes[:, 0].std()*1e9, 6)) + '\n' + \
-                    ' Figure error rms in Y direction: %f nm' % (round(zz_slopes[0, :].std()*1e9, 6))
+        title = ' Slope error rms in X: %g $\mu$rad' % (sloperms[0]*1e6) +  \
+                ' in Y: %g $\mu$rad' % (sloperms[1]*1e6) + '\n' + \
+                ' Figure error rms: %g nm' % (zz.std()*1e9)
 
-            axis.set_title(title)
-            figure_canvas.draw()
-            axis.mouse_init()
+        axis.set_title(title)
+        figure_canvas.draw()
+        axis.mouse_init()
 
-            widget = QWidget(parent=self)
-            container = oasysgui.widgetBox(widget, "", addSpace=False, orientation="horizontal", width=500)
-            #gui.button(container, self, "Export Surface (.hdf5)", callback=self.save_oasys_surface)
-            gui.button(container, self, "Close", callback=self.accept)
+        widget = QWidget(parent=self)
+        container = oasysgui.widgetBox(widget, "", addSpace=False, orientation="horizontal", width=500)
+        #gui.button(container, self, "Export Surface (.hdf5)", callback=self.save_oasys_surface)
+        gui.button(container, self, "Close", callback=self.accept)
 
-            layout.addWidget(figure_canvas, 0, 0)
-            layout.addWidget(widget, 1, 0)
+        layout.addWidget(figure_canvas, 0, 0)
+        layout.addWidget(widget, 1, 0)
 
-            self.setLayout(layout)
+        self.setLayout(layout)
+
+class ShowImageErrorDataFileDialog(QDialog):
+    def __init__(self, parent=None, file_name=None):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle('Surface Error Profile')
+        # self.setFixedHeight(700)
+        layout = QGridLayout(self)
+
+        dataX, dataY, data2D = read_surface_file(file_name) # parent.ms_defect_file_name)
+
+        ##################
+        zz_slopes = data2D.T
+
+        sloperms = profiles_simulation.slopes(zz_slopes, dataX, dataY, return_only_rms=1)
+
+        title = ' Slope error rms in X: %g $\mu$rad' % (sloperms[0]*1e6) +  \
+                ' in Y: %g $\mu$rad' % (sloperms[1]*1e6) + '\n' + \
+                ' Figure error rms: %g nm' % (data2D.std()*1e9)
+        ##################
+
+        origin = (dataX[0], dataY[0])
+        scale = (dataX[1] - dataX[0], dataY[1] - dataY[0])
+
+        colormap = {"name": "temperature", "normalization": "linear",
+                    "autoscale": True, "vmin": 0, "vmax": 0, "colors": 256}
+
+
+        tmp = Plot2D()
+        tmp.resetZoom()
+        tmp.setXAxisAutoScale(True)
+        tmp.setYAxisAutoScale(True)
+        tmp.setGraphGrid(False)
+        tmp.setKeepDataAspectRatio(True)
+        tmp.yAxisInvertedAction.setVisible(False)
+        tmp.setXAxisLogarithmic(False)
+        tmp.setYAxisLogarithmic(False)
+        tmp.getMaskAction().setVisible(False)
+        tmp.getRoiAction().setVisible(False)
+        tmp.getColormapAction().setVisible(True)
+        tmp.setKeepDataAspectRatio(False)
+        tmp.addImage(data2D, legend="1", scale=scale, origin=origin, colormap=colormap, replace=True)
+        tmp.setActiveImage("1")
+        tmp.setGraphXLabel("X [m] (%d pixels)" % dataX.size)
+        tmp.setGraphYLabel("Y [m] (%d pixels)" % dataY.size)
+        tmp.setGraphTitle("Z [m]\n" + title)
+
+        widget = QWidget(parent=self)
+
+        layout.addWidget(tmp, 0, 0)
+        layout.addWidget(widget, 1, 0)
+
+        self.setLayout(layout)
+
+
+if __name__ == "__main__":
+    import sys
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+    dialog1 = ShowImageErrorDataFileDialog(file_name="/home/srio/Oasys/conic.h5")
+    dialog2 = ShowSurfaceErrorDataFileDialog(file_name="/home/srio/Oasys/conic.h5")
+    dialog1.show()
+    dialog2.show()
+    app.exec()
