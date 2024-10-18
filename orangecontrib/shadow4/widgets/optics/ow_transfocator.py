@@ -47,8 +47,8 @@ class OWTransfocator(OWOpticalElement):
     prerefl_file = Setting([NONE_SPECIFIED, NONE_SPECIFIED])
     refraction_index = Setting([1.0, 1.0])
     attenuation_coefficient = Setting([0.0, 0.0])
-    material = ["Be", "Al"]
-    density = [1.848, 2.7]
+    material = Setting(["Be", "Al"])
+    density =  Setting([1.848, 2.7])
 
     radius = Setting([0.1, 0.2])
     thickness = Setting([0.03, 0.03])
@@ -89,7 +89,7 @@ class OWTransfocator(OWOpticalElement):
         self.tab_crls = oasysgui.tabWidget(basic_setting_subtabs)
         self.crl_box_array = []
 
-        for index in range(len(self.empty_space_after_last_interface)):
+        for index in range(len(self.material)):
             tab_crl = oasysgui.createTabPage(self.tab_crls, "CRL " + str(index + 1))
 
             crl_box = CRLBox(transfocator=self,
@@ -134,7 +134,7 @@ class OWTransfocator(OWOpticalElement):
             boundary_shape = Rectangle() (x_left=-rr, x_right=rr, y_bottom=-rr, y_top=rr)
 
 
-        n = len(self.cylinder_angle)
+        n = len(self.n_lenses)
         cylinder_angle = [0] * n
         piling_thickness = [0] * n
         thickness = [0] * n

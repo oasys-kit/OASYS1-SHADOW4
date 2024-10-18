@@ -77,6 +77,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
     asymmetric_cut = Setting(0)
     planes_angle = Setting(0.0)
     below_onto_bragg_planes = Setting(-1)
+    method_efields_management = Setting(0)
 
     def __init__(self):
         super(_OWCrystal, self).__init__()
@@ -209,6 +210,17 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
         oasysgui.lineEdit(self.autosetting_box_units_2, self, "photon_wavelength", "Set wavelength [Å]",
                           tooltip="photon_wavelength", labelWidth=260,
                           valueType=float, orientation="horizontal")
+
+
+        #
+        advanced_box = oasysgui.widgetBox(subtab_crystal_diffraction, "Advanced Settings", addSpace=True, orientation="vertical")
+
+        gui.comboBox(advanced_box, self, "method_efields_management", tooltip="method_efields_management",
+                     label="manage electric fields", labelWidth=160,
+                     items=["via Jones calculus (S4)",
+                            "via rotations (S3)"],
+                     sendSelectedValue=False, orientation="horizontal",
+                     callback=self.crystal_diffraction_tab_visibility)
 
 
         self.crystal_diffraction_tab_visibility()
@@ -439,6 +451,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
                 f_bragg_a=True if self.asymmetric_cut else False,
                 f_ext=0,
                 material_constants_library_flag=self.diffraction_calculation,
+                method_efields_management=self.method_efields_management,
             )
 
         elif self.surface_shape_type == 1:
