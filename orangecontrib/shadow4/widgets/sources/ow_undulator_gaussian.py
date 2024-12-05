@@ -26,7 +26,11 @@ from shadow4.sources.undulator.s4_undulator_gaussian import S4UndulatorGaussian
 from shadow4.sources.undulator.s4_undulator_gaussian_light_source import S4UndulatorGaussianLightSource
 from shadow4.tools.logger import set_verbose
 
-class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
+from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn
+
+
+class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
     name = "Undulator Gaussian"
     description = "Shadow Source: Undulator Gaussian"
@@ -39,6 +43,9 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
     outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
+
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
     undulator_length = Setting(4.0)
     energy = Setting(15000.0)
@@ -301,11 +308,12 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator):
         self.progressBarFinished()
 
         #
-        # send beam
+        # send beam and trigger
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
                                            number_of_rays=self.number_of_rays,
                                            beamline=S4Beamline(light_source=light_source)))
+        self.send("Trigger", TriggerIn(new_object=True))
 
 
     def receive_syned_data(self, data):

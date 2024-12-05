@@ -183,6 +183,10 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
 
     def run_shadow4(self):
+        if self.input_data is None:
+            self.prompt_exception("No input beam")
+            return
+
         set_verbose()
         self.shadow_output.setText("")
 

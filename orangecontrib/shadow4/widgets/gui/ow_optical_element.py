@@ -17,21 +17,22 @@ from shadow4.tools.logger import set_verbose
 
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
-from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
+
+from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn, TriggerOut
 
 NO_FILE_SPECIFIED = "<specify file name>"
 SUBTAB_INNER_BOX_WIDTH = 375
 
+class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
 
-def optical_element_inputs():
     inputs = [("Shadow Data", ShadowData, "set_shadow_data")]
+    TriggerToolsDecorator.append_trigger_input_for_optics(inputs)
     WidgetDecorator.append_syned_input_data(inputs)
 
-    return inputs
-
-class OWOpticalElement(GenericElement, WidgetDecorator):
-    inputs  = optical_element_inputs()
     outputs = [{"name":"Shadow Data", "type":ShadowData, "doc":"",}]
+    TriggerToolsDecorator.append_trigger_output(outputs)
+
 
     #########################################################
     # Position
@@ -253,7 +254,13 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             self.input_data = input_data.duplicate()
             if self.is_automatic_run: self.run_shadow4()
 
+
     def run_shadow4(self):
+
+        if self.input_data is None:
+            self.prompt_exception("No input beam")
+            return
+
         self.progressBarInit()
         set_verbose()
         self.shadow_output.setText("")
@@ -300,9 +307,11 @@ class OWOpticalElement(GenericElement, WidgetDecorator):
             self.progressBarFinished()
 
             #
-            # send beam
+            # send beam and trigger
             #
             self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline, footprint=footprint))
+            self.send("Trigger", TriggerIn(new_object=True))
+
         except Exception as exception:
             self.prompt_exception(exception)
             self._initialize_tabs()

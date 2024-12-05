@@ -25,7 +25,10 @@ from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
 from shadow4.beamline.s4_beamline import S4Beamline
 from shadow4.tools.logger import set_verbose
 
-class OWWiggler(OWElectronBeam, WidgetDecorator):
+from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn
+
+class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
     name = "Wiggler Light Source"
     description = "Wiggler Light Source"
@@ -39,6 +42,9 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
     outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
+
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
     magnetic_field_source = Setting(1)
     number_of_periods = Setting(1)
@@ -340,11 +346,12 @@ class OWWiggler(OWElectronBeam, WidgetDecorator):
         self.progressBarFinished()
 
         #
-        # send beam
+        # send beam and trigger
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
                                            number_of_rays=self.number_of_rays,
                                            beamline=S4Beamline(light_source=light_source)))
+        self.send("Trigger", TriggerIn(new_object=True))
 
     def refresh_specific_wiggler_plots(self, lightsource=None, e=None, f=None, w=None):
 

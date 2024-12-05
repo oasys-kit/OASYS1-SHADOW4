@@ -22,8 +22,8 @@ class OWCRL(OWAbstractLens):
     def populate_basic_setting_subtabs(self, basic_setting_subtabs):
         crl_box = oasysgui.widgetBox(basic_setting_subtabs, "CRL Parameters", addSpace=False, orientation="vertical", height=90)
 
-        oasysgui.lineEdit(crl_box, self, "n_lens", "Number of lenses", labelWidth=260, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(crl_box, self, "piling_thickness", "Piling thickness [mm]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(crl_box, self, "n_lens", "Number of lenses", tooltip="n_lens", labelWidth=260, valueType=int, orientation="horizontal")
+        oasysgui.lineEdit(crl_box, self, "piling_thickness", "Piling thickness [mm]", tooltip="piling_thickness", labelWidth=260, valueType=float, orientation="horizontal")
 
         super(OWCRL, self).populate_basic_setting_subtabs(basic_setting_subtabs)
 

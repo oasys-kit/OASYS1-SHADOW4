@@ -25,7 +25,11 @@ from shadow4.sources.bending_magnet.s4_bending_magnet import S4BendingMagnet
 from shadow4.sources.bending_magnet.s4_bending_magnet_light_source import S4BendingMagnetLightSource
 from shadow4.tools.logger import set_verbose
 
-class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
+from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn
+
+
+class OWBendingMagnet(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
     name = "Bending Magnet"
     description = "Shadow Source: Bending Magnet"
@@ -39,6 +43,8 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
                 "type":ShadowData,
                 "doc":"",}]
 
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
     number_of_rays = Setting(5000)
     seed = Setting(5676561)
@@ -240,12 +246,12 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator):
         self.progressBarFinished()
 
         #
-        # send beam
+        # send beam and trigger
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
                                            number_of_rays=self.number_of_rays,
                                            beamline=S4Beamline(light_source=light_source)))
-
+        self.send("Trigger", TriggerIn(new_object=True))
 
     def receive_syned_data(self, data):
         if data is not None:

@@ -31,7 +31,7 @@ from syned.beamline.shape import Ellipse
 
 from srxraylib.metrology import profiles_simulation
 
-from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement, optical_element_inputs, SUBTAB_INNER_BOX_WIDTH
+from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement, SUBTAB_INNER_BOX_WIDTH
 
 from shadow4.beamline.s4_beamline_element_movements import S4BeamlineElementMovements
 from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape_render import ShowSurfaceShapeDialog

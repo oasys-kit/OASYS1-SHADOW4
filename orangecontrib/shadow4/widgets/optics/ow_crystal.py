@@ -277,7 +277,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
                                                              orientation="vertical")
 
         self.le_thickness_1 = oasysgui.lineEdit(self.thickness_box_1, self,
-                                                "thickness", "Crystal thickness [m]",tooltip="thickness",
+                                                "thickness", "Crystal thickness [m]", tooltip="thickness",
                                                 valueType=float, labelWidth=260, orientation="horizontal")
 
         # self.set_BraggLaue()

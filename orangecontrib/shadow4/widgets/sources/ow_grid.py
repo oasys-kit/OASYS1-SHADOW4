@@ -19,8 +19,11 @@ from shadow4.sources.source_geometrical.source_grid_polar import SourceGridPolar
 from shadow4.sources.source_geometrical.source_grid_cartesian import SourceGridCartesian
 from shadow4.tools.logger import set_verbose
 
+from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn
 
-class OWGrid(GenericElement, WidgetDecorator):
+
+class OWGrid(GenericElement, WidgetDecorator, TriggerToolsDecorator):
 
     name = "Grid Source"
     description = "Shadow Source: Grid Source"
@@ -34,6 +37,8 @@ class OWGrid(GenericElement, WidgetDecorator):
                 "type":ShadowData,
                 "doc":"",}]
 
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
     # for both grid and cartesian
     coordinates = Setting(1)
@@ -319,11 +324,13 @@ class OWGrid(GenericElement, WidgetDecorator):
         self.progressBarFinished()
 
         #
-        # send beam
+        # send beam and trigger
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
                                            number_of_rays=output_beam.get_number_of_rays(),
                                            beamline=S4Beamline(light_source=light_source)))
+        self.send("Trigger", TriggerIn(new_object=True))
+
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

@@ -22,8 +22,11 @@ from shadow4.tools.logger import set_verbose
 
 from syned.widget.widget_decorator import WidgetDecorator
 
+from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn
 
-class OWGeometrical(GenericElement, WidgetDecorator):
+
+class OWGeometrical(GenericElement, WidgetDecorator, TriggerToolsDecorator):
 
     name = "Geometrical Source"
     description = "Shadow Source: Geometrical Source"
@@ -36,6 +39,9 @@ class OWGeometrical(GenericElement, WidgetDecorator):
     outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
                 "doc":"",}]
+
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
     number_of_rays = Setting(5000)
     seed = Setting(5676561)
@@ -755,11 +761,13 @@ class OWGeometrical(GenericElement, WidgetDecorator):
         self.progressBarFinished()
 
         #
-        # send beam
+        # send beam and trigger
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
                                            number_of_rays=self.number_of_rays,
                                            beamline=S4Beamline(light_source=light_source)))
+        self.send("Trigger", TriggerIn(new_object=True))
+
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)

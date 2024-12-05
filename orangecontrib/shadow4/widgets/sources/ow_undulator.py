@@ -5,10 +5,12 @@ import numpy
 from orangecontrib.shadow4.widgets.gui.ow_electron_beam import OWElectronBeam
 from orangecontrib.shadow4.widgets.gui.plots import plot_data1D, plot_data2D, plot_data3D
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
-
+from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
+from oasys.util.oasys_util import TriggerIn
 from oasys.widgets import gui as oasysgui
 
 from oasys.util.oasys_util import EmittingStream
+
 
 from syned.beamline.beamline import Beamline
 from syned.storage_ring.magnetic_structures.insertion_device import InsertionDevice
@@ -24,7 +26,9 @@ from shadow4.sources.undulator.s4_undulator_light_source import S4UndulatorLight
 from shadow4.beamline.s4_beamline import S4Beamline
 from shadow4.tools.logger import set_verbose
 
-class OWUndulator(OWElectronBeam, WidgetDecorator):
+
+
+class OWUndulator(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
     name = "Undulator Light Source"
     description = "Undulator Light Source"
@@ -36,7 +40,10 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
 
     outputs = [{"name":"Shadow Data",
                 "type":ShadowData,
-                "doc":"",}]
+                "doc":""}]
+
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
     # undulator parameters
     K_vertical = Setting(0.25)  # syned Undulator parameter
@@ -355,11 +362,13 @@ class OWUndulator(OWElectronBeam, WidgetDecorator):
         self.progressBarFinished()
 
         #
-        # send beam
+        # send beam and trigger
         #
         self.send("Shadow Data", ShadowData(beam=output_beam,
                                            number_of_rays=self.number_of_rays,
                                            beamline=S4Beamline(light_source=light_source)))
+
+        self.send("Trigger", TriggerIn(new_object=True))
 
     def get_title_for_stack_view_flux(self, idx):
         photon_energy = self.lightsource.get_result_dictionary()['photon_energy']

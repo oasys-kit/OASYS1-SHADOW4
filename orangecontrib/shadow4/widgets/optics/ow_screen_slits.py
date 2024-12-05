@@ -93,7 +93,7 @@ class OWScreenSlits(OWOpticalElement):
         box_aperturing = oasysgui.widgetBox(tab_beam_stopper_type, "Screen/Slit Shape", addSpace=False, orientation="vertical", height=240)
 
         gui.comboBox(box_aperturing, self, "aperturing", label="Aperturing", labelWidth=350,
-                     items=["No", "Yes"],
+                     items=["No", "Yes"], tooltip="aperturing",
                      callback=self.set_aperturing, sendSelectedValue=False, orientation="horizontal")
 
         gui.separator(box_aperturing)
@@ -101,36 +101,40 @@ class OWScreenSlits(OWOpticalElement):
         self.box_aperturing_shape = oasysgui.widgetBox(box_aperturing, "", addSpace=False, orientation="vertical")
 
         gui.comboBox(self.box_aperturing_shape, self, "open_slit_solid_stop", label="Open slit/Solid stop", labelWidth=260,
-                     items=["aperture/slit", "obstruction/stop"],
+                     items=["aperture/slit", "obstruction/stop"], tooltip="open_slit_solid_stop",
                      callback=self.set_open_slit_solid_stop, sendSelectedValue=False, orientation="horizontal")
 
         gui.comboBox(self.box_aperturing_shape, self, "aperture_shape", label="Aperture shape", labelWidth=260,
-                     items=["Rectangular", "Ellipse"],
+                     items=["Rectangular", "Ellipse"], tooltip="aperture_shape",
                      sendSelectedValue=False, orientation="horizontal")
 
         box_aperturing_shape = oasysgui.widgetBox(self.box_aperturing_shape, "", addSpace=False, orientation="vertical")
 
-        oasysgui.lineEdit(box_aperturing_shape, self, "slit_width_xaxis", "Slit width/x-axis   [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(box_aperturing_shape, self, "slit_height_zaxis", "Slit height/z-axis [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(box_aperturing_shape, self, "slit_center_xaxis", "Slit center/x-axis [m]", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(box_aperturing_shape, self, "slit_center_zaxis", "Slit center/z-axis [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box_aperturing_shape, self, "slit_width_xaxis", "Slit width/x-axis   [m]", tooltip="slit_width_xaxis",  labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box_aperturing_shape, self, "slit_height_zaxis", "Slit height/z-axis [m]", tooltip="slit_height_zaxis", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box_aperturing_shape, self, "slit_center_xaxis", "Slit center/x-axis [m]", tooltip="slit_center_xaxis", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box_aperturing_shape, self, "slit_center_zaxis", "Slit center/z-axis [m]", tooltip="slit_center_zaxis", labelWidth=260, valueType=float, orientation="horizontal")
 
         box_absorption = oasysgui.widgetBox(tab_beam_stopper_type, "Absorption Parameters", addSpace=False, orientation="vertical", height=200)
 
         gui.comboBox(box_absorption, self, "absorption", label="Absorption", labelWidth=350,
                      items=["No", "Yes (using preprocessor file)", "Yes (using xraylib)", "Yes (using dabax)"],
+                     tooltip="absorption",
                      callback=self.set_absorption, sendSelectedValue=False, orientation="horizontal")
 
         gui.separator(box_absorption)#, width=self.INNER_BOX_WIDTH_L0)
         self.box_thickness = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
 
-        oasysgui.lineEdit(self.box_thickness, self, "thickness", "Thickness [m]", labelWidth=180, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.box_thickness, self, "thickness", "Thickness [m]", labelWidth=180, valueType=float,
+                          tooltip="thickness", orientation="horizontal")
 
-        self.box_absorption       = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
+        self.box_absorption = oasysgui.widgetBox(box_absorption, "", addSpace=False, orientation="vertical")
 
         file_box = oasysgui.widgetBox(self.box_absorption, "", addSpace=False, orientation="horizontal", height=25)
 
-        self.le_opt_const_file_name = oasysgui.lineEdit(file_box, self, "opt_const_file_name", "prerefl file", labelWidth=130, valueType=str, orientation="horizontal")
+        self.le_opt_const_file_name = oasysgui.lineEdit(file_box, self, "opt_const_file_name", "prerefl file",
+                                                        tooltip="opt_const_file_name", labelWidth=130, valueType=str,
+                                                        orientation="horizontal")
 
         gui.button(file_box, self, "...", callback=self.select_opt_const_file_name)
 

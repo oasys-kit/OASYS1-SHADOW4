@@ -9,6 +9,11 @@ import numpy
 import xraylib
 import h5py
 
+import re
+import time
+
+from oasys.util.oasys_util import TriggerIn, TriggerOut
+
 try:
     from PyQt5.QtCore import QSettings
     from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
@@ -38,7 +43,6 @@ except ImportError:
     print(sys.exc_info()[1])
     pass
 
-# import Shadow.ShadowToolsPrivate as stp
 from shadow4.beam.s4_beam import S4Beam
 
 import scipy.constants as codata
@@ -1441,8 +1445,62 @@ class ShadowPhysics:
         else:
             return int(round(background-noise, 0))
 
-import re
-import time
+
+
+class TriggerToolsDecorator(object):
+
+    @classmethod
+    def append_trigger_input_for_sources(cls, inputs):
+        inputs.append(("Trigger", TriggerOut, "set_trigger_parameters_for_sources"))
+
+    @classmethod
+    def append_trigger_input_for_optics(cls, inputs):
+        inputs.append(("Trigger", TriggerOut, "set_trigger_parameters_for_optics"))
+
+    @classmethod
+    def append_trigger_output(cls, outputs):
+        outputs.append({"name":"Trigger", "type":TriggerIn, "doc":""})
+
+    def set_trigger_parameters_for_sources(self, trigger):
+
+        if trigger and trigger.new_object == True:
+            if trigger.has_additional_parameter("variable_name"):
+                variable_name = trigger.get_additional_parameter("variable_name").strip()
+                variable_display_name = trigger.get_additional_parameter(
+                    "variable_display_name").strip()
+                variable_value = trigger.get_additional_parameter("variable_value")
+                variable_um = trigger.get_additional_parameter("variable_um")
+
+                print(">>>>> trigger contains variable(s): ")
+                print(">>>>> name(s): ", variable_name, variable_display_name)
+                print(">>>>> values(s): ", variable_value, type(variable_value), variable_um)
+
+                try:
+                    command = "self."+variable_name+" = "+str(variable_value)
+                    exec(command)
+                except:
+                    raise Exception("Error executing: %s" % command)
+
+        self.run_shadow4()
+
+    def set_trigger_parameters_for_optics(self, trigger): # TODO: complete
+
+        if trigger and trigger.new_object == True:
+            if trigger.has_additional_parameter("variable_name"):
+                variable_name = trigger.get_additional_parameter("variable_name").strip()
+                variable_display_name = trigger.get_additional_parameter(
+                    "variable_display_name").strip()
+                variable_value = trigger.get_additional_parameter("variable_value")
+                variable_um = trigger.get_additional_parameter("variable_um")
+
+                try:
+                    command = "self."+variable_name+" = "+str(variable_value)
+                    exec(command)
+                except:
+                    raise Exception("Error executing: %s" % command)
+
+        if self.input_data is not None:
+            self.run_shadow4()
 
 class Properties(object):
     def __init__(self, props=None):
@@ -1778,3 +1836,4 @@ if __name__ == "__main__":
 
     app.exec()
     '''
+
