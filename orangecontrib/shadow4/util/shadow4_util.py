@@ -1476,7 +1476,10 @@ class TriggerToolsDecorator(object):
                 print(">>>>> values(s): ", variable_value, type(variable_value), variable_um)
 
                 try:
-                    command = "self."+variable_name+" = "+str(variable_value)
+                    if isinstance(variable_value, str):
+                        command = "self." + variable_name + " = '" + str(variable_value) + "'"
+                    else:
+                        command = "self."+variable_name+" = "+str(variable_value)
                     exec(command)
                 except:
                     raise Exception("Error executing: %s" % command)
@@ -1494,7 +1497,10 @@ class TriggerToolsDecorator(object):
                 variable_um = trigger.get_additional_parameter("variable_um")
 
                 try:
-                    command = "self."+variable_name+" = "+str(variable_value)
+                    if isinstance(variable_value, str):
+                        command = "self." + variable_name + " = '" + str(variable_value) + "'"
+                    else:
+                        command = "self."+variable_name+" = "+str(variable_value)
                     exec(command)
                 except:
                     raise Exception("Error executing: %s" % command)
