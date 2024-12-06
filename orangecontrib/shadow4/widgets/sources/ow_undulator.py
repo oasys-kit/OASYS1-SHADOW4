@@ -516,13 +516,14 @@ class OWUndulator(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
         if data is not None:
             if isinstance(data, Beamline):
-                if not data.get_light_source() is None:
+                if data.get_light_source() is not None:
+                    light_source = data.get_light_source()
+                    # electron parameters
+                    if light_source.get_electron_beam() is not None:
+                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
+
                     if isinstance(data.get_light_source().get_magnetic_structure(), InsertionDevice):
                         print(data.get_light_source().get_magnetic_structure(), InsertionDevice)
-                        light_source = data.get_light_source()
-
-                        # electron parameters
-                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
                         # undulator parameters
                         w = light_source.get_magnetic_structure()
                         self.K_vertical        = w.K_vertical()
@@ -531,14 +532,15 @@ class OWUndulator(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
                         #others
                         self.set_at_resonance = 1
                         self.is_monochromatic = 1
-
-                        self.set_visibility()
                     else:
-                        raise ValueError("Syned light source not congruent")
+                        self.type_of_properties = 0 # if not ID defined, use electron moments instead of sigmas
+                        self.set_TypeOfProperties()
+
+                    self.set_visibility()
                 else:
                     raise ValueError("Syned data not correct: light source not present")
             else:
-                raise ValueError("Syned data not correct")
+                raise ValueError("Syned data not correct: it must be Beamline()")
 
 
 if __name__ == "__main__":

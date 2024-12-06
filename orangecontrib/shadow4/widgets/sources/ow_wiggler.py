@@ -396,7 +396,12 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
         sys.stdout = EmittingStream(textWritten=self._write_stdout)
         if data is not None:
             if isinstance(data, Beamline):
-                if not data.get_light_source() is None:
+                if data.get_light_source() is not None:
+                    light_source = data.get_light_source()
+                    # electron parameters
+                    if light_source.get_electron_beam() is not None:
+                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
+
                     if isinstance(data.get_light_source().get_magnetic_structure(), InsertionDevice):
                         print(data.get_light_source().get_magnetic_structure(), InsertionDevice)
                         light_source = data.get_light_source()
@@ -408,14 +413,13 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
                         self.number_of_periods = int(w.number_of_periods())
                         self.id_period = w.period_length()
                         self.k_value = w.K_vertical()
-
-                        self.populate_fields_from_electron_beam(light_source.get_electron_beam())
                     else:
-                        raise ValueError("Syned light source not congruent")
+                        self.type_of_properties = 0 # if not ID defined, use electron moments instead of sigmas
+                        self.set_TypeOfProperties()
                 else:
                     raise ValueError("Syned data not correct: light source not present")
             else:
-                raise ValueError("Syned data not correct")
+                raise ValueError("Syned data not correct: it must be Beamline()")
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
