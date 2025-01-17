@@ -56,7 +56,7 @@ from setuptools import find_packages, setup
 import subprocess
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.64'
+VERSION = '0.0.65'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'

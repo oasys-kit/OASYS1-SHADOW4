@@ -39,6 +39,7 @@ from orangecontrib.shadow4.widgets.gui.ow_optical_element_with_surface_shape_ren
 class OWOpticalElementWithSurfaceShape(OWOpticalElement):
     inputs = copy.deepcopy(OWOpticalElement.inputs)
     inputs.append(("Surface Data", OasysSurfaceData, "set_oasys_surface_data"))
+    inputs.append(("PreProcessor_Data", OasysPreProcessorData, "set_oasys_preprocessor_data"))
 
 
     #########################################################
@@ -586,7 +587,7 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         if not is_init: self.__change_icon_from_surface_type()
 
-    def set_surface_data(self, oasys_data : OasysPreProcessorData): # TODO" delete
+    def set_oasys_preprocessor_data(self, oasys_data : OasysPreProcessorData):
         if not oasys_data is None:
             if not oasys_data.error_profile_data is None:
                 try:
