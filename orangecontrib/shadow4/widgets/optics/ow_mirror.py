@@ -102,7 +102,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
                           "                  beta: ", labelWidth=180, valueType=float,
                           orientation="horizontal", tooltip="refraction_index_beta")
 
-        self.material_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical", height=150)
+        self.material_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(self.material_refl_box, self, "coating_material",
                           "Coating material (formula): ", labelWidth=180, valueType=str,
                           orientation="horizontal", tooltip="coating_material")
@@ -111,9 +111,11 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
                           "Coating density [g/cm^3]: ", labelWidth=180, valueType=float,
                           orientation="horizontal", tooltip="coating_density")
 
-        oasysgui.lineEdit(self.material_refl_box, self, "coating_roughness",
-                          "Coating rouughness rms [A]: ", labelWidth=180, valueType=float,
+        self.roughness_refl_box = oasysgui.widgetBox(self.reflectivity_flag_box, "", addSpace=False, orientation="vertical")
+        oasysgui.lineEdit(self.roughness_refl_box, self, "coating_roughness",
+                          "Coating roughness rms [A]: ", labelWidth=180, valueType=float,
                           orientation="horizontal", tooltip="coating_roughness")
+
         self.reflectivity_tab_visibility()
 
     #########################################################
@@ -124,17 +126,22 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
         self.file_refl_box.setVisible(False)
         self.refraction_index_box.setVisible(False)
         self.material_refl_box.setVisible(False)
+        self.roughness_refl_box.setVisible(False)
 
         if self.reflectivity_flag == 1:
             self.reflectivity_flag_box.setVisible(True)
 
-        if self.reflectivity_source == 1: self.refraction_index_box.setVisible(True)
+        if self.reflectivity_source == 1:
+            self.refraction_index_box.setVisible(True)
 
         if self.reflectivity_source in [0, 2, 3, 4]:
             self.file_refl_box.setVisible(True)
 
-        if self.reflectivity_source in [5,6]:
+        if self.reflectivity_source in [5, 6]:
             self.material_refl_box.setVisible(True)
+
+        if self.reflectivity_source in [0, 1, 5, 6]:
+            self.roughness_refl_box.setVisible(True)
 
     def select_file_refl(self):
         self.le_file_refl.setText(oasysgui.selectFileFromDialog(self, self.file_refl, "Select File with Reflectivity")) #, file_extension_filter="Data Files (*.dat)"))
