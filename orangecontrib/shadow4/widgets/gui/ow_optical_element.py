@@ -191,24 +191,24 @@ class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
     def calculate_incidence_angle_mrad(self):
         digits = 7
 
-        if self.angles_respect_to == 0: self.incidence_angle_mrad = round(numpy.radians(90-self.incidence_angle_deg)*1000, digits)
-        else:                           self.incidence_angle_mrad = round(numpy.radians(self.incidence_angle_deg)*1000, digits)
+        if self.angles_respect_to == 0: self.incidence_angle_mrad = numpy.round(numpy.radians(90-self.incidence_angle_deg)*1000, digits)
+        else:                           self.incidence_angle_mrad = numpy.round(numpy.radians(self.incidence_angle_deg)*1000, digits)
 
     def calculate_reflection_angle_mrad(self):
         digits = 7
-        if self.angles_respect_to == 0: self.reflection_angle_mrad = round(numpy.radians(90 - self.reflection_angle_deg)*1000, digits)
-        else:                           self.reflection_angle_mrad = round(numpy.radians(self.reflection_angle_deg)*1000, digits)
+        if self.angles_respect_to == 0: self.reflection_angle_mrad = numpy.round(numpy.radians(90 - self.reflection_angle_deg)*1000, digits)
+        else:                           self.reflection_angle_mrad = numpy.round(numpy.radians(self.reflection_angle_deg)*1000, digits)
 
     def calculate_incidence_angle_deg(self):
         digits = 10
-        if self.angles_respect_to == 0: self.incidence_angle_deg = round(numpy.degrees(0.5 * numpy.pi - (self.incidence_angle_mrad / 1000)), digits)
-        else:                           self.incidence_angle_deg = round(numpy.degrees(self.incidence_angle_mrad / 1000), digits)
+        if self.angles_respect_to == 0: self.incidence_angle_deg = numpy.round(numpy.degrees(0.5 * numpy.pi - (self.incidence_angle_mrad / 1000)), digits)
+        else:                           self.incidence_angle_deg = numpy.round(numpy.degrees(self.incidence_angle_mrad / 1000), digits)
 
     def calculate_reflection_angle_deg(self):
         digits = 10
 
-        if self.angles_respect_to == 0: self.reflection_angle_deg = round(numpy.degrees(0.5*numpy.pi-(self.reflection_angle_mrad/1000)), digits)
-        else:                           self.reflection_angle_deg = round(numpy.degrees(self.reflection_angle_mrad/1000), digits)
+        if self.angles_respect_to == 0: self.reflection_angle_deg = numpy.round(numpy.degrees(0.5*numpy.pi-(self.reflection_angle_mrad/1000)), digits)
+        else:                           self.reflection_angle_deg = numpy.round(numpy.degrees(self.reflection_angle_mrad/1000), digits)
 
     def oe_orientation_angle_user(self):
         if self.oe_orientation_angle < 4: self.oe_orientation_angle_user_value_le.setVisible(False)

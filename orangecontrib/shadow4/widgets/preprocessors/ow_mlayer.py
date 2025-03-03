@@ -202,9 +202,9 @@ class OWMLayer(OWWidget):
 
         box_thick_gamma = oasysgui.widgetBox(self.box_structure, "", addSpace=True, orientation="horizontal")
         oasysgui.lineEdit(box_thick_gamma, self, "THICKNESS", label="Bilayer thickness [A]", tooltip="THICKNESS",
-                          addSpace=True, labelWidth=225, orientation="horizontal")
+                          addSpace=True, labelWidth=125, orientation="horizontal", valueType=float)
         oasysgui.lineEdit(box_thick_gamma, self, "GAMMA", label="gamma=even/total", tooltip="GAMMA",
-                          addSpace=True, labelWidth=200, orientation="horizontal")
+                          addSpace=True, labelWidth=115, orientation="horizontal", valueType=float)
 
 
         #
@@ -220,10 +220,10 @@ class OWMLayer(OWWidget):
                            addSpace=True, labelWidth=200, orientation="horizontal", callback=self.set_ODensity)
         bb = gui.widgetBox(box_odd, "", orientation="horizontal")
         oasysgui.lineEdit(bb, self, "O_DENSITY", label='Density [g/cm3]', tooltip="O_DENISTY",
-                          addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
+                          addSpace=True, valueType=float, labelWidth=105, orientation="horizontal")
         self.box_roughnessO = gui.widgetBox(bb, orientation="horizontal")
         oasysgui.lineEdit(self.box_roughnessO, self, "ROUGHNESS_ODD", label='Roughness [A]', tooltip="ROUGHNESS_ODD",
-                          addSpace=True, valueType=float, labelWidth=250, orientation="horizontal")
+                          addSpace=True, valueType=float, labelWidth=95, orientation="horizontal")
 
         # even sublayer
         box_even = gui.widgetBox(box, "Even sublayer", orientation="vertical")
@@ -231,10 +231,10 @@ class OWMLayer(OWWidget):
                           addSpace=True, labelWidth=200, orientation="horizontal", callback=self.set_EDensity)
         bb = gui.widgetBox(box_even, "", orientation="horizontal")
         oasysgui.lineEdit(bb, self, "E_DENSITY", label='Density [g/cm3]', tooltip="E_DENISTY",
-                          addSpace=True, valueType=float, labelWidth=550, orientation="horizontal")
+                          addSpace=True, valueType=float, labelWidth=105, orientation="horizontal")
         self.box_roughnessE = gui.widgetBox(bb, orientation="horizontal")
         oasysgui.lineEdit(self.box_roughnessE, self, "ROUGHNESS_EVEN", label='Roughness [A]', tooltip="ROUGHNESS_EVEN",
-                          addSpace=True, valueType=float, labelWidth=250, orientation="horizontal")
+                          addSpace=True, valueType=float, labelWidth=95, orientation="horizontal")
 
 
         # substrate sublayer
