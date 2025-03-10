@@ -49,14 +49,12 @@ __authors__ = ["M Sanchez del Rio, Luca Rebuffi"]
 __license__ = "MIT"
 __date__ = "25/10/2019"
 
-import imp
 import os
 import sys
 from setuptools import find_packages, setup
-import subprocess
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.68'
+VERSION = '0.0.69'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
