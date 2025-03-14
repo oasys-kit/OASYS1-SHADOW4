@@ -206,9 +206,9 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
         oasysgui.lineEdit(output_box_2, self, "raytracing_alpha", "Alpha [deg]", labelWidth=220, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(output_box_2, self, "raytracing_beta", "Beta [deg]", labelWidth=220, valueType=float, orientation="horizontal")
         gui.separator(output_box_2)
-        oasysgui.lineEdit(output_box_2, self, "d_source_to_mirror", "Source to Mirror distance", labelWidth=230, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(output_box_2, self, "d_source_plane_to_mirror", "Source Plane to Mirror distance", labelWidth=230, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(output_box_2, self, "d_mirror_to_grating", "Mirror to Grating distance", labelWidth=230, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_2, self, "d_source_to_mirror", "Source to Mirror distance [m]", labelWidth=230, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_2, self, "d_source_plane_to_mirror", "Source Plane to Mirror distance [m]", labelWidth=230, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_2, self, "d_mirror_to_grating", "Mirror to Grating distance [m]", labelWidth=230, valueType=float, orientation="horizontal")
 
 
         self.shadow_output = oasysgui.textArea()
@@ -229,109 +229,108 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
     def set_CfactorNew(self):
         self.c_box_new.setVisible(self.new_c_flag == 1)
 
+    @classmethod
+    def calculate_vls_parameters(cls,
+                                 m=-1,
+                                 wavelength=1e-10,
+                                 newwavelength=1e-10,
+                                 k=0.0,
+                                 c=1.0,
+                                 r_a=0.0,
+                                 r_b=0.0,
+                                 h=0.0,
+                                 new_c_flag=0,
+                                 new_c_value=1.0,
+                                 last_element_distance=0.0,
+                                 verbose=1):
 
-    def compute(self):
-        try:
-            self.shadow_output.setText("")
+        sin_alpha = (-m * k * wavelength / (c ** 2 - 1)) + \
+                    numpy.sqrt(1 + (m * m * c * c * k * k * wavelength * wavelength) / (
+                                (c ** 2 - 1) ** 2))
+        alpha = numpy.arcsin(sin_alpha)
+        beta = numpy.arcsin(sin_alpha - m * k * wavelength)
 
-            sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        design_alpha = numpy.degrees(alpha)
+        design_beta  = numpy.degrees(beta)
 
-            self.checkFields()
-
-            m = -self.grating_diffraction_order
-
-            if self.units_in_use == 0:
-                wavelength =  ShadowPhysics.getWavelengthFromEnergy(self.photon_energy) * 1e-10
-            elif self.units_in_use == 1:
-                wavelength = self.photon_wavelength * 1e-10
-
-            sin_alpha = (-m * self.k * wavelength / (self.c**2 - 1)) + \
-                        numpy.sqrt(1 + (m * m * self.c * self.c * self.k * self.k * wavelength * wavelength) / ((self.c**2 - 1)**2))
-
-            alpha = numpy.arcsin(sin_alpha)
-            beta = numpy.arcsin(sin_alpha-m * self.k * wavelength)
-
-            self.design_alpha =  round(numpy.degrees(alpha), 3)
-            self.design_beta = round(numpy.degrees(beta), 3)
-            #_beta = numpy.arccos(self.c*numpy.cos(alpha))
-
+        if verbose:
             print("####################################################")
             print("# DESIGN PHASE")
             print("####################################################\n")
 
             print("Photon Wavelength [m]:", wavelength)
-            print("Design ALPHA [deg]    :", self.design_alpha)
-            print("Design BETA [deg]     :", self.design_beta)
+            print("Design ALPHA [deg]    :", round(design_alpha, 3))
+            print("Design BETA [deg]     :", round(design_beta, 3))
 
-            self.b2 = (((numpy.cos(alpha)**2) / self.r_a) + ((numpy.cos(beta)**2) / self.r_b)) / (-2 * m * self.k * wavelength)
-            self.b3 = ((numpy.sin(alpha) * numpy.cos(alpha)**2) / self.r_a**2 - \
-                      (numpy.sin(beta) * numpy.cos(beta)**2) / self.r_b**2) / (-2 * m * self.k * wavelength)
-            self.b4 = (((4 * numpy.sin(alpha)**2 - numpy.cos(alpha)**2) * numpy.cos(alpha)**2) / self.r_a**3 + \
-                      ((4 * numpy.sin(beta)**2 - numpy.cos(beta)**2) * numpy.cos(beta)**2) / self.r_b**3) / (-8 * m * self.k * wavelength)
+        b2 = (((numpy.cos(alpha)**2) / r_a) + ((numpy.cos(beta)**2) / r_b)) / (-2 * m * k * wavelength)
+        b3 = ((numpy.sin(alpha) * numpy.cos(alpha)**2) / r_a**2 - \
+                  (numpy.sin(beta) * numpy.cos(beta)**2) / r_b**2) / (-2 * m * k * wavelength)
+        b4 = (((4 * numpy.sin(alpha)**2 - numpy.cos(alpha)**2) * numpy.cos(alpha)**2) / r_a**3 + \
+                  ((4 * numpy.sin(beta)**2 - numpy.cos(beta)**2) * numpy.cos(beta)**2) / r_b**3) / (-8 * m * k * wavelength)
+        if verbose:
+            print("\nb2:", b2)
+            print("b3:",   b3)
+            print("b4:",   b4)
 
-            print("\nb2:", self.b2)
-            print("b3:", self.b3)
-            print("b4:", self.b4)
+        shadow_coeff_0 = k
+        shadow_coeff_1 = -2 * k * b2
+        shadow_coeff_2 = 3 * k * b3
+        shadow_coeff_3 = -4 * k * b4
 
-            self.shadow_coeff_0 = round(self.k, 8)
-            self.shadow_coeff_1 = round(-2 * self.k * self.b2, 8)
-            self.shadow_coeff_2 = round(3 * self.k * self.b3, 8)
-            self.shadow_coeff_3 = round(-4 * self.k * self.b4, 8)
+        if verbose:
+            print("\nshadow_coeff_0:", round(shadow_coeff_0, 8))
+            print("shadow_coeff_1:",   round(shadow_coeff_1, 8))
+            print("shadow_coeff_2:",   round(shadow_coeff_2, 8))
+            print("shadow_coeff_3:",   round(shadow_coeff_3, 8))
 
-            print("\nshadow_coeff_0:", self.shadow_coeff_0)
-            print("shadow_coeff_1:", self.shadow_coeff_1)
-            print("shadow_coeff_2:", self.shadow_coeff_2)
-            print("shadow_coeff_3:", self.shadow_coeff_3)
+        ############################################
+        #
+        # 1 - in case of mirror recalculate real ray tracing distance (r_a') from initial r_a and vertical distance
+        #     between grating and mirror (h)
+        #
 
-            ############################################
-            #
-            # 1 - in case of mirror recalculate real ray tracing distance (r_a') from initial r_a and vertical distance
-            #     between grating and mirror (h)
-            #
+        gamma = (alpha + beta) / 2
 
-            gamma = (alpha + beta) / 2
+        d_source_to_mirror = r_a - (h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
+        d_mirror_to_grating = h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
 
-            d_source_to_mirror = self.r_a - (self.h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
-            d_mirror_to_grating = self.h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
+        r_a_first = d_source_to_mirror + d_mirror_to_grating
 
-            r_a_first = d_source_to_mirror + d_mirror_to_grating
-
+        if verbose:
             print("\ngamma [deg]                 :", numpy.degrees(gamma), "deg")
             print("Source to Mirror distance [m] :", d_source_to_mirror)
             print("Mirror to Grating distance [m]:", d_mirror_to_grating)
             print("R_a' [m]                      :", r_a_first)
 
-            ############################################
+        ############################################
 
-            if self.new_units_in_use == 0:
-                newwavelength =  ShadowPhysics.getWavelengthFromEnergy(self.new_photon_energy) * 1e-10
-            elif self.new_units_in_use == 1:
-                newwavelength = self.new_photon_wavelength * 1e-10
+        r = r_b / r_a_first
 
-            r = self.r_b / r_a_first
+        A0 = k * newwavelength
+        A2 = k * newwavelength * r_b * b2
 
-            A0 = self.k * newwavelength
-            A2 = self.k * newwavelength * self.r_b * self.b2
+        new_c_num = 2 * A2 + 4 * (A2 / A0)**2 + \
+                    (4 + 2 * A2 - A0**2) * r - \
+                    4 * (A2 / A0) * numpy.sqrt((1 + r)**2 + 2 * A2 * (1 + r) - r * A0**2)
 
-            new_c_num = 2 * A2 + 4 * (A2 / A0)**2 + \
-                        (4 + 2 * A2 - A0**2) * r - \
-                        4 * (A2 / A0) * numpy.sqrt((1 + r)**2 + 2 * A2 * (1 + r) - r * A0**2)
+        new_c_den = -4 + A0**2 - 4 * A2 + 4 * (A2 / A0)**2
 
-            new_c_den = -4 + A0**2 - 4 * A2 + 4 * (A2 / A0)**2
+        new_c = numpy.sqrt(new_c_num / new_c_den)
 
-            new_c = numpy.sqrt(new_c_num / new_c_den)
+        if new_c_flag == 1:
+            new_c = new_c_value
 
-            if self.new_c_flag == 1:
-                new_c = self.new_c_value
+        new_sin_alpha = (-m * k * newwavelength / (new_c**2 - 1)) + \
+                    numpy.sqrt(1 + (m * m * new_c * new_c * k * k * newwavelength * newwavelength) / ((new_c**2 - 1)**2))
 
-            new_sin_alpha = (-m * self.k*newwavelength / (new_c**2 - 1)) + \
-                        numpy.sqrt(1 + (m * m * new_c * new_c * self.k * self.k * newwavelength * newwavelength) / ((new_c**2 - 1)**2))
+        new_alpha =  numpy.arcsin(new_sin_alpha)
+        new_beta  = numpy.arcsin(new_sin_alpha-m * k * newwavelength)
 
-            new_alpha =  numpy.arcsin(new_sin_alpha)
-            new_beta  = numpy.arcsin(new_sin_alpha-m*self.k*newwavelength)
+        raytracing_alpha = numpy.degrees(new_alpha)
+        raytracing_beta  = numpy.degrees(new_beta)
 
-            self.raytracing_alpha = round(numpy.degrees(new_alpha), 6)
-            self.raytracing_beta  = round(numpy.degrees(new_beta), 6)
+        if verbose:
+
             #_new_beta = numpy.arccos(new_c*numpy.cos(new_alpha))
 
             print("####################################################")
@@ -341,35 +340,225 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
             print("Ray-Tracing Wavelength [m]:", newwavelength)
             print("Ray-Tracing Wavelength [A]:", newwavelength * 1e10)
             print("Ray-Tracing C         :", new_c)
-            print("Ray-Tracing ALPHA     :", self.raytracing_alpha, "deg")
-            print("Ray-Tracing BETA      :", self.raytracing_beta, "deg")
+            print("Ray-Tracing ALPHA     :", round(raytracing_alpha, 6), "deg")
+            print("Ray-Tracing BETA      :", round(raytracing_beta, 6), "deg")
 
-            gamma = (new_alpha + new_beta)/2
+        gamma = (new_alpha + new_beta) / 2
 
-            self.d_source_to_mirror  = self.r_a - (self.h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
-            self.d_mirror_to_grating = self.h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
+        d_source_to_mirror  = r_a - (h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
+        d_mirror_to_grating = h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
 
-            r_a_first = self.d_source_to_mirror + self.d_mirror_to_grating
+        r_a_first = d_source_to_mirror + d_mirror_to_grating
 
-            self.d_source_to_mirror  = round(self.d_source_to_mirror , 3)
-            self.d_source_plane_to_mirror = round(self.d_source_to_mirror - self.last_element_distance, 3)
-            self.d_mirror_to_grating = round(self.d_mirror_to_grating, 3)
-
+        d_source_plane_to_mirror = d_source_to_mirror - last_element_distance
+        if verbose:
             print("\ngamma [deg]                       :", numpy.degrees(gamma))
-            print("Source to Mirror distance [m]       :", self.d_source_to_mirror)
-            print("Source Plane to Mirror distance [m] :", self.d_source_plane_to_mirror)
-            print("Mirror to Grating distance [m]      :", self.d_mirror_to_grating)
+            print("Source to Mirror distance [m]       :", round(d_source_to_mirror, 3))
+            print("Source Plane to Mirror distance [m] :", round(d_source_plane_to_mirror, 3))
+            print("Mirror to Grating distance [m]      :", round(d_mirror_to_grating, 3))
             print("R_a' [m]                            :", r_a_first)
 
-            self.send("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData(shadow_coeff_0 = self.shadow_coeff_0,
-                                                                  shadow_coeff_1 = self.shadow_coeff_1,
-                                                                  shadow_coeff_2 = self.shadow_coeff_2,
-                                                                  shadow_coeff_3 = self.shadow_coeff_3,
-                                                                  d_source_plane_to_mirror= self.d_source_plane_to_mirror,
-                                                                  d_mirror_to_grating = self.d_mirror_to_grating,
-                                                                  d_grating_to_exit_slits = self.r_b,
-                                                                  alpha = self.raytracing_alpha,
-                                                                  beta= self.raytracing_beta))
+        return(
+            shadow_coeff_0,
+            shadow_coeff_1,
+            shadow_coeff_2,
+            shadow_coeff_3,
+            d_source_to_mirror,
+            d_source_plane_to_mirror,
+            d_mirror_to_grating,
+            design_alpha,
+            design_beta,
+            raytracing_alpha,
+            raytracing_beta)
+
+
+
+
+    def compute(self):
+        try:
+            self.shadow_output.setText("")
+
+            sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+
+            self.checkFields()
+
+            # m = -self.grating_diffraction_order
+            #
+            # if self.units_in_use == 0:
+            #     wavelength =  ShadowPhysics.getWavelengthFromEnergy(self.photon_energy) * 1e-10
+            # elif self.units_in_use == 1:
+            #     wavelength = self.photon_wavelength * 1e-10
+            #
+            # sin_alpha = (-m * self.k * wavelength / (self.c**2 - 1)) + \
+            #             numpy.sqrt(1 + (m * m * self.c * self.c * self.k * self.k * wavelength * wavelength) / ((self.c**2 - 1)**2))
+            #
+            # alpha = numpy.arcsin(sin_alpha)
+            # beta = numpy.arcsin(sin_alpha-m * self.k * wavelength)
+            #
+            # self.design_alpha =  round(numpy.degrees(alpha), 3)
+            # self.design_beta = round(numpy.degrees(beta), 3)
+            # #_beta = numpy.arccos(self.c*numpy.cos(alpha))
+            #
+            # print("####################################################")
+            # print("# DESIGN PHASE")
+            # print("####################################################\n")
+            #
+            # print("Photon Wavelength [m]:", wavelength)
+            # print("Design ALPHA [deg]    :", self.design_alpha)
+            # print("Design BETA [deg]     :", self.design_beta)
+            #
+            # self.b2 = (((numpy.cos(alpha)**2) / self.r_a) + ((numpy.cos(beta)**2) / self.r_b)) / (-2 * m * self.k * wavelength)
+            # self.b3 = ((numpy.sin(alpha) * numpy.cos(alpha)**2) / self.r_a**2 - \
+            #           (numpy.sin(beta) * numpy.cos(beta)**2) / self.r_b**2) / (-2 * m * self.k * wavelength)
+            # self.b4 = (((4 * numpy.sin(alpha)**2 - numpy.cos(alpha)**2) * numpy.cos(alpha)**2) / self.r_a**3 + \
+            #           ((4 * numpy.sin(beta)**2 - numpy.cos(beta)**2) * numpy.cos(beta)**2) / self.r_b**3) / (-8 * m * self.k * wavelength)
+            #
+            # print("\nb2:", self.b2)
+            # print("b3:", self.b3)
+            # print("b4:", self.b4)
+            #
+            # self.shadow_coeff_0 = round(self.k, 8)
+            # self.shadow_coeff_1 = round(-2 * self.k * self.b2, 8)
+            # self.shadow_coeff_2 = round(3 * self.k * self.b3, 8)
+            # self.shadow_coeff_3 = round(-4 * self.k * self.b4, 8)
+            #
+            # print("\nshadow_coeff_0:", self.shadow_coeff_0)
+            # print("shadow_coeff_1:", self.shadow_coeff_1)
+            # print("shadow_coeff_2:", self.shadow_coeff_2)
+            # print("shadow_coeff_3:", self.shadow_coeff_3)
+            #
+            # ############################################
+            # #
+            # # 1 - in case of mirror recalculate real ray tracing distance (r_a') from initial r_a and vertical distance
+            # #     between grating and mirror (h)
+            # #
+            #
+            # gamma = (alpha + beta) / 2
+            #
+            # d_source_to_mirror = self.r_a - (self.h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
+            # d_mirror_to_grating = self.h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
+            #
+            # r_a_first = d_source_to_mirror + d_mirror_to_grating
+            #
+            # print("\ngamma [deg]                 :", numpy.degrees(gamma), "deg")
+            # print("Source to Mirror distance [m] :", d_source_to_mirror)
+            # print("Mirror to Grating distance [m]:", d_mirror_to_grating)
+            # print("R_a' [m]                      :", r_a_first)
+            #
+            # ############################################
+            #
+            # if self.new_units_in_use == 0:
+            #     newwavelength =  ShadowPhysics.getWavelengthFromEnergy(self.new_photon_energy) * 1e-10
+            # elif self.new_units_in_use == 1:
+            #     newwavelength = self.new_photon_wavelength * 1e-10
+            #
+            # r = self.r_b / r_a_first
+            #
+            # A0 = self.k * newwavelength
+            # A2 = self.k * newwavelength * self.r_b * self.b2
+            #
+            # new_c_num = 2 * A2 + 4 * (A2 / A0)**2 + \
+            #             (4 + 2 * A2 - A0**2) * r - \
+            #             4 * (A2 / A0) * numpy.sqrt((1 + r)**2 + 2 * A2 * (1 + r) - r * A0**2)
+            #
+            # new_c_den = -4 + A0**2 - 4 * A2 + 4 * (A2 / A0)**2
+            #
+            # new_c = numpy.sqrt(new_c_num / new_c_den)
+            #
+            # if self.new_c_flag == 1:
+            #     new_c = self.new_c_value
+            #
+            # new_sin_alpha = (-m * self.k*newwavelength / (new_c**2 - 1)) + \
+            #             numpy.sqrt(1 + (m * m * new_c * new_c * self.k * self.k * newwavelength * newwavelength) / ((new_c**2 - 1)**2))
+            #
+            # new_alpha =  numpy.arcsin(new_sin_alpha)
+            # new_beta  = numpy.arcsin(new_sin_alpha-m*self.k*newwavelength)
+            #
+            # self.raytracing_alpha = round(numpy.degrees(new_alpha), 6)
+            # self.raytracing_beta  = round(numpy.degrees(new_beta), 6)
+            # #_new_beta = numpy.arccos(new_c*numpy.cos(new_alpha))
+            #
+            # print("####################################################")
+            # print("# RAY-TRACING PHASE")
+            # print("####################################################\n")
+            #
+            # print("Ray-Tracing Wavelength [m]:", newwavelength)
+            # print("Ray-Tracing Wavelength [A]:", newwavelength * 1e10)
+            # print("Ray-Tracing C         :", new_c)
+            # print("Ray-Tracing ALPHA     :", self.raytracing_alpha, "deg")
+            # print("Ray-Tracing BETA      :", self.raytracing_beta, "deg")
+            #
+            # gamma = (new_alpha + new_beta)/2
+            #
+            # self.d_source_to_mirror  = self.r_a - (self.h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
+            # self.d_mirror_to_grating = self.h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
+            #
+            # r_a_first = self.d_source_to_mirror + self.d_mirror_to_grating
+            #
+            # self.d_source_to_mirror  = round(self.d_source_to_mirror , 3)
+            # self.d_source_plane_to_mirror = round(self.d_source_to_mirror - self.last_element_distance, 3)
+            # self.d_mirror_to_grating = round(self.d_mirror_to_grating, 3)
+            #
+            # print("\ngamma [deg]                       :", numpy.degrees(gamma))
+            # print("Source to Mirror distance [m]       :", self.d_source_to_mirror)
+            # print("Source Plane to Mirror distance [m] :", self.d_source_plane_to_mirror)
+            # print("Mirror to Grating distance [m]      :", self.d_mirror_to_grating)
+            # print("R_a' [m]                            :", r_a_first)
+
+
+            m = -self.grating_diffraction_order
+
+            if self.units_in_use == 0:
+                wavelength =  ShadowPhysics.getWavelengthFromEnergy(self.photon_energy) * 1e-10
+            elif self.units_in_use == 1:
+                wavelength = self.photon_wavelength * 1e-10
+
+            if self.new_units_in_use == 0:
+                newwavelength =  ShadowPhysics.getWavelengthFromEnergy(self.new_photon_energy) * 1e-10
+            elif self.new_units_in_use == 1:
+                newwavelength = self.new_photon_wavelength * 1e-10
+
+
+            shadow_coeff_0, shadow_coeff_1, shadow_coeff_2, shadow_coeff_3, \
+            d_source_to_mirror, d_source_plane_to_mirror, d_mirror_to_grating, \
+            design_alpha, design_beta, raytracing_alpha, raytracing_beta = \
+                self.calculate_vls_parameters(
+                    m=m,
+                    wavelength=wavelength,
+                    newwavelength=newwavelength,
+                    k=self.k,
+                    c=self.c,
+                    r_a=self.r_a,
+                    r_b=self.r_b,
+                    h=self.h,
+                    new_c_flag=self.new_c_flag,
+                    new_c_value=self.new_c_value,
+                    last_element_distance=self.last_element_distance,
+                    verbose=1)
+
+            self.shadow_coeff_0           = round(shadow_coeff_0, 3)
+            self.shadow_coeff_1           = round(shadow_coeff_1, 3)
+            self.shadow_coeff_2           = round(shadow_coeff_2, 3)
+            self.shadow_coeff_3           = round(shadow_coeff_3, 3)
+            self.d_source_plane_to_mirror = round(d_source_plane_to_mirror, 6)
+            self.d_source_to_mirror       = round(d_source_to_mirror, 6)
+            self.d_mirror_to_grating      = round(d_mirror_to_grating, 6)
+            self.design_alpha             = round(design_alpha, 6)
+            self.design_beta              = round(design_beta, 6)
+            self.raytracing_alpha         = round(raytracing_alpha, 6)
+            self.raytracing_beta          = round(raytracing_beta, 6)
+
+
+            self.send("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData(shadow_coeff_0=self.shadow_coeff_0,
+                                                                          shadow_coeff_1=self.shadow_coeff_1,
+                                                                          shadow_coeff_2=self.shadow_coeff_2,
+                                                                          shadow_coeff_3=self.shadow_coeff_3,
+                                                                          d_source_plane_to_mirror=self.d_source_plane_to_mirror,
+                                                                          d_mirror_to_grating=self.d_mirror_to_grating,
+                                                                          d_grating_to_exit_slits=self.r_b,
+                                                                          alpha=self.raytracing_alpha,
+                                                                          beta=self.raytracing_beta))
+
         except Exception as exception:
             QMessageBox.critical(self, "Error",
                                  str(exception),
