@@ -165,8 +165,8 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             self.surface_shape_type = 0
             self.surface_shape_tab_visibility()
 
-            self.source_plane_distance = data.d_source_plane_to_mirror * 1e-3
-            self.image_plane_distance =  data.d_mirror_to_grating/2 * 1e-3
+            self.source_plane_distance = data.d_source_plane_to_mirror
+            self.image_plane_distance =  data.d_mirror_to_grating/2
             self.angles_respect_to = 0
             self.incidence_angle_deg  = (data.alpha + data.beta)/2
             self.reflection_angle_deg = (data.alpha + data.beta)/2

@@ -80,8 +80,6 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
 
 
     def __init__(self):
-        self.workspace_units_to_m = 1.0
-        self.workspace_units_label = "m"
 
         super().__init__()
 
@@ -120,12 +118,12 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
 
         box = oasysgui.widgetBox(tab_step_1, "VLS-PGM Layout Parameters", orientation="vertical")
 
-        self.le_r_a = oasysgui.lineEdit(box, self, "r_a", "Distance Source-Grating", labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_r_b = oasysgui.lineEdit(box, self, "r_b", "Distance Grating-Exit Slits", labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_h = oasysgui.lineEdit(box, self, "h", "Vertical Distance Mirror-Grating", labelWidth=260, valueType=float, orientation="horizontal")
-        self.le_l_e = oasysgui.lineEdit(box, self, "last_element_distance", "Distance Source-Last Image Plane\nbefore Mirror (if present)", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box, self, "r_a", "Distance Source-Grating [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box, self, "r_b", "Distance Grating-Exit Slits [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box, self, "h", "Vertical Distance Mirror-Grating [m]", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box, self, "last_element_distance", "Distance Source-Last Image Plane\nbefore Mirror (if present) [m]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        self.le_k   = oasysgui.lineEdit(box, self, "k", "Line Density (0th coeff.)", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(box, self, "k", "Line Density (0th coeff.) [Lines/m]", labelWidth=260, valueType=float, orientation="horizontal")
 
         gui.separator(box)
 
@@ -198,19 +196,19 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
         oasysgui.lineEdit(output_box_1, self, "design_alpha", "Alpha [deg]", labelWidth=220, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(output_box_1, self, "design_beta", "Beta [deg]", labelWidth=220, valueType=float, orientation="horizontal")
         gui.separator(output_box_1)
-        self.le_shadow_coeff_0 = oasysgui.lineEdit(output_box_1, self, "shadow_coeff_0", "Line Density 0-coeff.", labelWidth=220, valueType=float, orientation="horizontal")
-        self.le_shadow_coeff_1 = oasysgui.lineEdit(output_box_1, self, "shadow_coeff_1", "Line Density 1-coeff.", labelWidth=220, valueType=float, orientation="horizontal")
-        self.le_shadow_coeff_2 = oasysgui.lineEdit(output_box_1, self, "shadow_coeff_2", "Line Density 2-coeff.", labelWidth=220, valueType=float, orientation="horizontal")
-        self.le_shadow_coeff_3 = oasysgui.lineEdit(output_box_1, self, "shadow_coeff_3", "Line Density 3-coeff.", labelWidth=220, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_1, self, "shadow_coeff_0", "Line Density 0-coeff. [Lines/m]", labelWidth=220, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_1, self, "shadow_coeff_1", "Line Density 1-coeff. [Lines/m\u00b2]", labelWidth=220, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_1, self, "shadow_coeff_2", "Line Density 2-coeff. [Lines/m\u00b3]", labelWidth=220, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_1, self, "shadow_coeff_3", "Line Density 3-coeff. [Lines/m\u00b4]", labelWidth=220, valueType=float, orientation="horizontal")
 
         output_box_2 = oasysgui.widgetBox(output_box, "Ray-Tracing Ouput", addSpace=True, orientation="vertical")
 
         oasysgui.lineEdit(output_box_2, self, "raytracing_alpha", "Alpha [deg]", labelWidth=220, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(output_box_2, self, "raytracing_beta", "Beta [deg]", labelWidth=220, valueType=float, orientation="horizontal")
         gui.separator(output_box_2)
-        self.le_d_source_to_mirror = oasysgui.lineEdit(output_box_2, self, "d_source_to_mirror", "Source to Mirror distance", labelWidth=230, valueType=float, orientation="horizontal")
-        self.le_d_source_plane_to_mirror = oasysgui.lineEdit(output_box_2, self, "d_source_plane_to_mirror", "Source Plane to Mirror distance", labelWidth=230, valueType=float, orientation="horizontal")
-        self.le_d_mirror_to_grating = oasysgui.lineEdit(output_box_2, self, "d_mirror_to_grating", "Mirror to Grating distance", labelWidth=230, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_2, self, "d_source_to_mirror", "Source to Mirror distance", labelWidth=230, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_2, self, "d_source_plane_to_mirror", "Source Plane to Mirror distance", labelWidth=230, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(output_box_2, self, "d_mirror_to_grating", "Mirror to Grating distance", labelWidth=230, valueType=float, orientation="horizontal")
 
 
         self.shadow_output = oasysgui.textArea()
@@ -219,30 +217,6 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
         out_box.layout().addWidget(self.shadow_output)
 
         gui.rubber(self.controlArea)
-
-    def after_change_workspace_units(self):
-        label = self.le_r_a.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [" + self.workspace_units_label + "]")
-        label = self.le_r_b.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [" + self.workspace_units_label + "]")
-        label = self.le_l_e.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [" + self.workspace_units_label + "]")
-        label = self.le_k.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [Lines/" + self.workspace_units_label + "]")
-        label = self.le_d_source_to_mirror.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [" + self.workspace_units_label + "]")
-        label = self.le_d_source_plane_to_mirror.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [" + self.workspace_units_label + "]")
-        label = self.le_d_mirror_to_grating.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [" + self.workspace_units_label + "]")
-        label = self.le_shadow_coeff_0.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [Lines." + self.workspace_units_label + "-1]")
-        label = self.le_shadow_coeff_1.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [Lines." + self.workspace_units_label + "-2]")
-        label = self.le_shadow_coeff_2.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [Lines." + self.workspace_units_label + "-3]")
-        label = self.le_shadow_coeff_3.parent().layout().itemAt(0).widget()
-        label.setText(label.text() + " [Lines." + self.workspace_units_label + "-4]")
 
     def set_UnitsInUse(self):
         self.autosetting_box_units_1.setVisible(self.units_in_use == 0)
@@ -267,15 +241,15 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
             m = -self.grating_diffraction_order
 
             if self.units_in_use == 0:
-                wavelength =  ShadowPhysics.getWavelengthFromEnergy(self.photon_energy)/self.workspace_units_to_m*1e-10
+                wavelength =  ShadowPhysics.getWavelengthFromEnergy(self.photon_energy) * 1e-10
             elif self.units_in_use == 1:
-                wavelength = self.photon_wavelength/self.workspace_units_to_m*1e-10
+                wavelength = self.photon_wavelength * 1e-10
 
-            sin_alpha = (-m*self.k*wavelength/(self.c**2 - 1)) + \
-                        numpy.sqrt(1 + (m*m*self.c*self.c*self.k*self.k*wavelength*wavelength)/((self.c**2 - 1)**2))
+            sin_alpha = (-m * self.k * wavelength / (self.c**2 - 1)) + \
+                        numpy.sqrt(1 + (m * m * self.c * self.c * self.k * self.k * wavelength * wavelength) / ((self.c**2 - 1)**2))
 
             alpha = numpy.arcsin(sin_alpha)
-            beta = numpy.arcsin(sin_alpha-m*self.k*wavelength)
+            beta = numpy.arcsin(sin_alpha-m * self.k * wavelength)
 
             self.design_alpha =  round(numpy.degrees(alpha), 3)
             self.design_beta = round(numpy.degrees(beta), 3)
@@ -285,24 +259,24 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
             print("# DESIGN PHASE")
             print("####################################################\n")
 
-            print("Photon Wavelength:", wavelength, self.workspace_units_label)
-            print("Design ALPHA     :", self.design_alpha, "deg")
-            print("Design BETA      :", self.design_beta, "deg")
+            print("Photon Wavelength [m]:", wavelength)
+            print("Design ALPHA [deg]    :", self.design_alpha)
+            print("Design BETA [deg]     :", self.design_beta)
 
-            self.b2 = (((numpy.cos(alpha)**2)/self.r_a) + ((numpy.cos(beta)**2)/self.r_b))/(-2*m*self.k*wavelength)
-            self.b3 = ((numpy.sin(alpha)*numpy.cos(alpha)**2)/self.r_a**2 - \
-                      (numpy.sin(beta)*numpy.cos(beta)**2)/self.r_b**2)/(-2*m*self.k*wavelength)
-            self.b4 = (((4*numpy.sin(alpha)**2 - numpy.cos(alpha)**2)*numpy.cos(alpha)**2)/self.r_a**3 + \
-                      ((4*numpy.sin(beta)**2 - numpy.cos(beta)**2)*numpy.cos(beta)**2)/self.r_b**3)/(-8*m*self.k*wavelength)
+            self.b2 = (((numpy.cos(alpha)**2) / self.r_a) + ((numpy.cos(beta)**2) / self.r_b)) / (-2 * m * self.k * wavelength)
+            self.b3 = ((numpy.sin(alpha) * numpy.cos(alpha)**2) / self.r_a**2 - \
+                      (numpy.sin(beta) * numpy.cos(beta)**2) / self.r_b**2) / (-2 * m * self.k * wavelength)
+            self.b4 = (((4 * numpy.sin(alpha)**2 - numpy.cos(alpha)**2) * numpy.cos(alpha)**2) / self.r_a**3 + \
+                      ((4 * numpy.sin(beta)**2 - numpy.cos(beta)**2) * numpy.cos(beta)**2) / self.r_b**3) / (-8 * m * self.k * wavelength)
 
             print("\nb2:", self.b2)
             print("b3:", self.b3)
             print("b4:", self.b4)
 
             self.shadow_coeff_0 = round(self.k, 8)
-            self.shadow_coeff_1 = round(-2*self.k*self.b2, 8)
-            self.shadow_coeff_2 = round(3*self.k*self.b3, 8)
-            self.shadow_coeff_3 = round(-4*self.k*self.b4, 8)
+            self.shadow_coeff_1 = round(-2 * self.k * self.b2, 8)
+            self.shadow_coeff_2 = round(3 * self.k * self.b3, 8)
+            self.shadow_coeff_3 = round(-4 * self.k * self.b4, 8)
 
             print("\nshadow_coeff_0:", self.shadow_coeff_0)
             print("shadow_coeff_1:", self.shadow_coeff_1)
@@ -315,43 +289,43 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
             #     between grating and mirror (h)
             #
 
-            gamma = (alpha + beta)/2
+            gamma = (alpha + beta) / 2
 
-            d_source_to_mirror = self.r_a - (self.h/numpy.abs(numpy.tan(numpy.pi-2*gamma)))
-            d_mirror_to_grating = self.h/numpy.abs(numpy.sin(numpy.pi-2*gamma))
+            d_source_to_mirror = self.r_a - (self.h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
+            d_mirror_to_grating = self.h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
 
             r_a_first = d_source_to_mirror + d_mirror_to_grating
 
-            print("\ngamma                   :", numpy.degrees(gamma), "deg")
-            print("Source to Mirror distance :", d_source_to_mirror, self.workspace_units_label)
-            print("Mirror to Grating distance:", d_mirror_to_grating, self.workspace_units_label)
-            print("R_a'                      :", r_a_first, self.workspace_units_label)
+            print("\ngamma [deg]                 :", numpy.degrees(gamma), "deg")
+            print("Source to Mirror distance [m] :", d_source_to_mirror)
+            print("Mirror to Grating distance [m]:", d_mirror_to_grating)
+            print("R_a' [m]                      :", r_a_first)
 
             ############################################
 
             if self.new_units_in_use == 0:
-                newwavelength =  ShadowPhysics.getWavelengthFromEnergy(self.new_photon_energy)/self.workspace_units_to_m*1e-10
+                newwavelength =  ShadowPhysics.getWavelengthFromEnergy(self.new_photon_energy) * 1e-10
             elif self.new_units_in_use == 1:
-                newwavelength = self.new_photon_wavelength/self.workspace_units_to_m*1e-10
+                newwavelength = self.new_photon_wavelength * 1e-10
 
-            r = self.r_b/r_a_first
+            r = self.r_b / r_a_first
 
-            A0 = self.k*newwavelength
-            A2 = self.k*newwavelength*self.r_b*self.b2
+            A0 = self.k * newwavelength
+            A2 = self.k * newwavelength * self.r_b * self.b2
 
-            new_c_num = 2*A2 + 4*(A2/A0)**2 + \
-                        (4 + 2*A2 - A0**2)*r - \
-                        4*(A2/A0)*numpy.sqrt((1 + r)**2 + 2*A2*(1 + r) - r*A0**2)
+            new_c_num = 2 * A2 + 4 * (A2 / A0)**2 + \
+                        (4 + 2 * A2 - A0**2) * r - \
+                        4 * (A2 / A0) * numpy.sqrt((1 + r)**2 + 2 * A2 * (1 + r) - r * A0**2)
 
-            new_c_den = -4 + A0**2 - 4*A2 + 4*(A2/A0)**2
+            new_c_den = -4 + A0**2 - 4 * A2 + 4 * (A2 / A0)**2
 
-            new_c = numpy.sqrt(new_c_num/new_c_den)
+            new_c = numpy.sqrt(new_c_num / new_c_den)
 
             if self.new_c_flag == 1:
                 new_c = self.new_c_value
 
-            new_sin_alpha = (-m*self.k*newwavelength/(new_c**2 - 1)) + \
-                        numpy.sqrt(1 + (m*m*new_c*new_c*self.k*self.k*newwavelength*newwavelength)/((new_c**2 - 1)**2))
+            new_sin_alpha = (-m * self.k*newwavelength / (new_c**2 - 1)) + \
+                        numpy.sqrt(1 + (m * m * new_c * new_c * self.k * self.k * newwavelength * newwavelength) / ((new_c**2 - 1)**2))
 
             new_alpha =  numpy.arcsin(new_sin_alpha)
             new_beta  = numpy.arcsin(new_sin_alpha-m*self.k*newwavelength)
@@ -364,15 +338,16 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
             print("# RAY-TRACING PHASE")
             print("####################################################\n")
 
-            print("Ray-Tracing Wavelength:", newwavelength, self.workspace_units_label)
+            print("Ray-Tracing Wavelength [m]:", newwavelength)
+            print("Ray-Tracing Wavelength [A]:", newwavelength * 1e10)
             print("Ray-Tracing C         :", new_c)
             print("Ray-Tracing ALPHA     :", self.raytracing_alpha, "deg")
             print("Ray-Tracing BETA      :", self.raytracing_beta, "deg")
 
             gamma = (new_alpha + new_beta)/2
 
-            self.d_source_to_mirror  = self.r_a - (self.h/numpy.abs(numpy.tan(numpy.pi-2*gamma)))
-            self.d_mirror_to_grating = self.h/numpy.abs(numpy.sin(numpy.pi-2*gamma))
+            self.d_source_to_mirror  = self.r_a - (self.h / numpy.abs(numpy.tan(numpy.pi - 2 * gamma)))
+            self.d_mirror_to_grating = self.h / numpy.abs(numpy.sin(numpy.pi - 2 * gamma))
 
             r_a_first = self.d_source_to_mirror + self.d_mirror_to_grating
 
@@ -380,11 +355,11 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
             self.d_source_plane_to_mirror = round(self.d_source_to_mirror - self.last_element_distance, 3)
             self.d_mirror_to_grating = round(self.d_mirror_to_grating, 3)
 
-            print("\ngamma                         :", numpy.degrees(gamma), "deg")
-            print("Source to Mirror distance       :", self.d_source_to_mirror, self.workspace_units_label)
-            print("Source Plane to Mirror distance :", self.d_source_plane_to_mirror, self.workspace_units_label)
-            print("Mirror to Grating distance      :", self.d_mirror_to_grating, self.workspace_units_label)
-            print("R_a'                            :", r_a_first, self.workspace_units_label)
+            print("\ngamma [deg]                       :", numpy.degrees(gamma))
+            print("Source to Mirror distance [m]       :", self.d_source_to_mirror)
+            print("Source Plane to Mirror distance [m] :", self.d_source_plane_to_mirror)
+            print("Mirror to Grating distance [m]      :", self.d_mirror_to_grating)
+            print("R_a' [m]                            :", r_a_first)
 
             self.send("VLS-PGM PreProcessor Data", VlsPgmPreProcessorData(shadow_coeff_0 = self.shadow_coeff_0,
                                                                   shadow_coeff_1 = self.shadow_coeff_1,
@@ -427,8 +402,6 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = OWVlsPgmCoefficientsCalculator()
-    # w.workspace_units_to_m = 1.0
-    # w.workspace_units_label = "m"
     w.show()
     app.exec()
     w.saveSettings()

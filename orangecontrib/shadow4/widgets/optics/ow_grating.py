@@ -297,8 +297,8 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             self.surface_shape_type = 0
             self.surface_shape_tab_visibility()
 
-            self.source_plane_distance = data.d_mirror_to_grating/2 * 1e-3
-            self.image_plane_distance = data.d_grating_to_exit_slits * 1e-3
+            self.source_plane_distance = data.d_mirror_to_grating/2
+            self.image_plane_distance = data.d_grating_to_exit_slits
 
             self.angles_respect_to = 0
             self.incidence_angle_deg = data.alpha
@@ -310,10 +310,10 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             self.order = -1
 
             self.f_ruling = 1
-            self.ruling = data.shadow_coeff_0 * 1e3
-            self.ruling_coeff_linear = data.shadow_coeff_1 * 1e6
-            self.ruling_coeff_quadratic = data.shadow_coeff_2 * 1e9
-            self.ruling_coeff_cubic = data.shadow_coeff_3 * 1e12
+            self.ruling = data.shadow_coeff_0
+            self.ruling_coeff_linear = data.shadow_coeff_1
+            self.ruling_coeff_quadratic = data.shadow_coeff_2
+            self.ruling_coeff_cubic = data.shadow_coeff_3
             self.ruling_coeff_quartic = 0.0
             self.grating_diffraction_tab_visibility()
 
