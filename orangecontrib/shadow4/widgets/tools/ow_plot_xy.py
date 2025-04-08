@@ -14,6 +14,8 @@ from oasys.util.oasys_util import EmittingStream
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, ShadowPlot
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
+from orangecontrib.shadow4.util.python_script import PythonScript
+
 from shadow4.beam.s4_beam import S4Beam
 
 class PlotXY(AutomaticElement):
@@ -197,15 +199,19 @@ class PlotXY(AutomaticElement):
 
         self.set_autosave()
 
-
-
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
         plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots")
         out_tab = oasysgui.createTabPage(self.main_tabs, "Output")
+        script_tab = oasysgui.createTabPage(self.main_tabs, "Script")
 
         self.image_box = gui.widgetBox(plot_tab, "Plot Result", addSpace=True, orientation="vertical")
         self.image_box.setFixedHeight(self.IMAGE_HEIGHT)
         self.image_box.setFixedWidth(self.IMAGE_WIDTH)
+
+        self.shadow4_script = PythonScript()
+        self.shadow4_script.code_area.setFixedHeight(400)
+        script_box = gui.widgetBox(script_tab, "Python script", addSpace=True, orientation="horizontal")
+        script_box.layout().addWidget(self.shadow4_script)
 
         self.shadow_output = oasysgui.textArea(height=580, width=800)
 
@@ -354,6 +360,7 @@ class PlotXY(AutomaticElement):
         beam_to_plot = self.input_data.beam
         flux         = self.input_data.get_flux(nolost=self.rays)
 
+
         if self.image_plane == 1:
             new_shadow_beam = self.input_data.beam.duplicate()
             dist = self.image_plane_new_position
@@ -362,6 +369,71 @@ class PlotXY(AutomaticElement):
             beam_to_plot = new_shadow_beam
 
         x_range, y_range = self.get_ranges(beam_to_plot, var_x, var_y)
+
+
+        # script
+        if 1: # try:
+            beamline = self.input_data.beamline.duplicate()
+            script = beamline.to_python_code()
+
+            indented_script = '\n'.join('    ' + line for line in script.splitlines())
+
+            final_script = "def run_beamline():\n"
+            final_script += indented_script
+            final_script += "\n    return beam"
+            final_script += "\n\n"
+
+            dict = {"var_x"   : 1 + self.x_column_index,
+                    "var_y"   : 1 + self.y_column_index,
+                    "nbins_h" : self.number_of_bins_h,
+                    "nbins_v" : self.number_of_bins_v,
+                    "xrange"  : x_range,
+                    "yrange"  : y_range,
+                    "nolost"  : self.rays,
+                    "ref"     : self.weight_column_index,
+                    }
+
+
+            script_template = """#
+# main 
+#
+
+# WARNING: NO retrace, NO incremental result allowed!!"
+beam = run_beamline()
+
+ticket = beam.histo2({var_x}, {var_y}, nbins_h={nbins_h}, nbins_v={nbins_v}, xrange={xrange}, yrange={yrange}, nolost={nolost}, ref={ref})
+
+xx = ticket['bin_h_center']
+yy = ticket['bin_v_center']
+data_2D = ticket['histogram']
+
+if ticket['fwhm_h'] is not None: print("FWHM H: ", ticket['fwhm_h'])
+if ticket['fwhm_v'] is not None: print("FWHM V: ", ticket['fwhm_v'])
+
+if True:
+    from srxraylib.plot.gol import plot, plot_image, plot_image_with_histograms, plot_show
+    plot_image(data_2D, xx, yy, xtitle="column %d" % {var_x}, ytitle="column %d" % {var_y},
+        title="", figsize=(8,8), show=0)
+    plot_image_with_histograms(data_2D, xx, yy,
+        xtitle="column {var_x}", ytitle="column {var_y}", 
+        cmap=None, add_colorbar=True, figsize=(8,8), show=0)
+    plot(ticket['bin_h_center'], ticket['histogram_h'],
+        ticket['bin_v_center'], ticket['histogram_v'], 
+        xtitle="", ytitle="Intensity", legend=["column {var_x}", "column {var_y}"], figsize=(8,8), show=0)
+    plot_show()
+"""
+
+
+            final_script += script_template.format_map(dict)
+
+
+            self.shadow4_script.set_code(final_script)
+        # except:
+        #     script += "\n\n\n# cannot retrieve beamline data from shadow_data"
+        #     self.shadow4_script.set_code(script)
+
+
+
 
         self.replace_plot(beam_to_plot, var_x, var_y, title, xtitle, ytitle,
                           x_range=x_range,
