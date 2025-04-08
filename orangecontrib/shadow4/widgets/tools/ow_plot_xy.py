@@ -1,10 +1,8 @@
-import copy
 import sys
 import time
 import numpy
 
 from PyQt5.QtGui import QTextCursor
-from PyQt5.QtCore import QSettings
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
@@ -53,9 +51,9 @@ class PlotXY(AutomaticElement):
     y_range_min    = Setting(0.0)
     y_range_max    = Setting(0.0)
 
-    weight_column_index = Setting(22)
+    weight_column_index = Setting(23)
     rays                = Setting(1)
-    cartesian_axis      = Setting(1)
+    cartesian_axis      = Setting(0)
 
     number_of_bins_h = Setting(100)
     number_of_bins_v = Setting(100)
@@ -104,10 +102,7 @@ class PlotXY(AutomaticElement):
         self.image_plane_box = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
         self.image_plane_box_empty = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
 
-        oasysgui.lineEdit(self.image_plane_box, self, "image_plane_new_position", "Image Plane new Position", labelWidth=220, valueType=float, orientation="horizontal")
-
-        gui.comboBox(self.image_plane_box, self, "image_plane_rel_abs_position", label="Position Type", labelWidth=250,
-                     items=["Absolute", "Relative"], sendSelectedValue=False, orientation="horizontal")
+        oasysgui.lineEdit(self.image_plane_box, self, "image_plane_new_position", "New (Relative) Position [m]", labelWidth=220, valueType=float, orientation="horizontal")
 
         self.set_image_plane()
 
@@ -157,7 +152,7 @@ class PlotXY(AutomaticElement):
                                             "Lost Only"],
                                      sendSelectedValue=False, orientation="horizontal")
 
-        gui.comboBox(general_box, self, "cartesian_axis", label="Cartesian Axis",labelWidth=300,
+        gui.comboBox(general_box, self, "cartesian_axis", label="Same aspect ratio (Cartesian Axes)",labelWidth=300,
                                      items=["No",
                                             "Yes"],
                                      sendSelectedValue=False, orientation="horizontal")
@@ -361,29 +356,9 @@ class PlotXY(AutomaticElement):
 
         if self.image_plane == 1:
             new_shadow_beam = self.input_data.beam.duplicate()
-            dist = 0.0
-
-            if self.image_plane_rel_abs_position == 1:  # relative
-                dist = self.image_plane_new_position
-            else:  # absolute
-                if self.input_beam.historySize() == 0:
-                    historyItem = None
-                else:
-                    historyItem = self.input_beam.getOEHistory(oe_number=self.input_beam._oe_number)
-
-                if historyItem is None: image_plane = 0.0
-                elif self.input_beam._oe_number == 0: image_plane = 0.0
-                else:
-                    if self.input_data.beamline is None == 0: beamline_element = None
-                    else:                                     beamline_element = self.input_data.beamline.get_beamline_element_at(-1)
-
-                    if beamline_element is None: image_plane = 0.0
-                    else:                        image_plane = beamline_element.get_coordinates().q()
-
-                dist = self.image_plane_new_position - image_plane
-
+            dist = self.image_plane_new_position
+            if self.image_plane_rel_abs_position != 1: raise Exception("Deprecated option (retrace absolute distance)")
             self.retrace_beam(new_shadow_beam, dist)
-
             beam_to_plot = new_shadow_beam
 
         x_range, y_range = self.get_ranges(beam_to_plot, var_x, var_y)
@@ -399,52 +374,38 @@ class PlotXY(AutomaticElement):
                           flux=flux)
 
     def get_ranges(self, beam_to_plot, var_x, var_y):
-        x_range = None
-        y_range = None
         factor1 = ShadowPlot.get_factor(var_x)
         factor2 = ShadowPlot.get_factor(var_y)
 
-        if self.x_range == 0 and self.y_range == 0:
-            if self.cartesian_axis == 1:
-                x_max = 0
-                y_max = 0
-                x_min = 0
-                y_min = 0
-
-                x, y, good_only = beam_to_plot.get_columns((var_x, var_y, 10))
-
-                x_to_plot = copy.deepcopy(x)
-                y_to_plot = copy.deepcopy(y)
-
-                go = numpy.where(good_only == 1)
-                lo = numpy.where(good_only != 1)
-
-                if self.rays == 0:
-                    x_max = numpy.array(x_to_plot[0:], float).max()
-                    y_max = numpy.array(y_to_plot[0:], float).max()
-                    x_min = numpy.array(x_to_plot[0:], float).min()
-                    y_min = numpy.array(y_to_plot[0:], float).min()
-                elif self.rays == 1:
-                    x_max = numpy.array(x_to_plot[go], float).max()
-                    y_max = numpy.array(y_to_plot[go], float).max()
-                    x_min = numpy.array(x_to_plot[go], float).min()
-                    y_min = numpy.array(y_to_plot[go], float).min()
-                elif self.rays == 2:
-                    x_max = numpy.array(x_to_plot[lo], float).max()
-                    y_max = numpy.array(y_to_plot[lo], float).max()
-                    x_min = numpy.array(x_to_plot[lo], float).min()
-                    y_min = numpy.array(y_to_plot[lo], float).min()
-
-                x_range = [x_min, x_max]
-                y_range = [y_min, y_max]
+        if self.x_range == 1:
+            congruence.checkLessThan(self.x_range_min, self.x_range_max, "X range min", "X range max")
+            x_range = [self.x_range_min / factor1, self.x_range_max / factor1]
         else:
-            if self.x_range == 1:
-                congruence.checkLessThan(self.x_range_min, self.x_range_max, "X range min", "X range max")
-                x_range = [self.x_range_min / factor1, self.x_range_max / factor1]
+            x, y = beam_to_plot.get_columns((var_x, var_y), nolost=self.rays)
+            x_max = x.max()
+            x_min = x.min()
+            if numpy.abs(x_max - x_min) < 1e-10:
+                x_min -= 1e-10
+                x_max -= 1e-10
+            x_range = [x_min, x_max]
 
-            if self.y_range == 1:
-                congruence.checkLessThan(self.y_range_min, self.y_range_max, "Y range min", "Y range max")
-                y_range = [self.y_range_min / factor2, self.y_range_max / factor2]
+        if self.y_range == 1:
+            congruence.checkLessThan(self.y_range_min, self.y_range_max, "Y range min", "Y range max")
+            y_range = [self.y_range_min / factor2, self.y_range_max / factor2]
+        else:
+            x, y = beam_to_plot.get_columns((var_x, var_y), nolost=self.rays)
+            y_max = y.max()
+            y_min = y.min()
+            if numpy.abs(y_max - y_min) < 1e-10:
+                y_min -= 1e-10
+                y_max -= 1e-10
+            y_range = [y_min, y_max]
+
+        if self.cartesian_axis == 1:
+            x_range[0] = numpy.min((x_range[0], y_range[0]))
+            x_range[1] = numpy.max((x_range[1], y_range[1]))
+            y_range[0] = x_range[0]
+            y_range[1] = x_range[1]
 
         return x_range, y_range
 
@@ -534,3 +495,99 @@ class PlotXY(AutomaticElement):
 
     def is_conversion_active(self):
         return self.conversion_active == 1
+
+if __name__ == "__main__":
+    from PyQt5.QtWidgets import QApplication, QMessageBox
+
+
+    def get_beamline():
+        from shadow4.beamline.s4_beamline import S4Beamline
+
+        beamline = S4Beamline()
+
+        # electron beam
+        from shadow4.sources.s4_electron_beam import S4ElectronBeam
+        electron_beam = S4ElectronBeam(energy_in_GeV=6, energy_spread=0.001, current=0.2)
+        electron_beam.set_sigmas_all(sigma_x=3.01836e-05, sigma_y=4.36821e-06, sigma_xp=3.63641e-06,
+                                     sigma_yp=1.37498e-06)
+
+        # magnetic structure
+        from shadow4.sources.undulator.s4_undulator_gaussian import S4UndulatorGaussian
+        source = S4UndulatorGaussian(
+            period_length=0.042,  # syned Undulator parameter (length in m)
+            number_of_periods=38.571,  # syned Undulator parameter
+            photon_energy=5000.0,  # Photon energy (in eV)
+            delta_e=4.0,  # Photon energy width (in eV)
+            ng_e=100,  # Photon energy scan number of points
+            flag_emittance=1,  # when sampling rays: Use emittance (0=No, 1=Yes)
+            flag_energy_spread=0,  # when sampling rays: Use e- energy spread (0=No, 1=Yes)
+            harmonic_number=1,  # harmonic number
+            flag_autoset_flux_central_cone=1,  # value to set the flux peak
+            flux_central_cone=681709040139326.4,  # value to set the flux peak
+        )
+
+        # light source
+        from shadow4.sources.undulator.s4_undulator_gaussian_light_source import S4UndulatorGaussianLightSource
+        light_source = S4UndulatorGaussianLightSource(name='GaussianUndulator', electron_beam=electron_beam,
+                                                      magnetic_structure=source, nrays=15000, seed=5676561)
+        beam = light_source.get_beam()
+
+        beamline.set_light_source(light_source)
+
+        # optical element number XX
+        from syned.beamline.shape import Rectangle
+        boundary_shape = Rectangle(x_left=-0.001, x_right=0.001, y_bottom=-0.001, y_top=0.001)
+
+        from shadow4.beamline.optical_elements.absorbers.s4_screen import S4Screen
+        optical_element = S4Screen(name='Generic Beam Screen/Slit/Stopper/Attenuator', boundary_shape=boundary_shape,
+                                   i_abs=0,  # 0=No, 1=prerefl file_abs, 2=xraylib, 3=dabax
+                                   i_stop=0, thick=0, file_abs='<specify file name>', material='Au', density=19.3)
+
+        from syned.beamline.element_coordinates import ElementCoordinates
+        coordinates = ElementCoordinates(p=27.2, q=0, angle_radial=0, angle_azimuthal=0, angle_radial_out=3.141592654)
+        from shadow4.beamline.optical_elements.absorbers.s4_screen import S4ScreenElement
+        beamline_element = S4ScreenElement(optical_element=optical_element, coordinates=coordinates, input_beam=beam)
+
+        beam, footprint = beamline_element.trace_beam()
+
+        beamline.append_beamline_element(beamline_element)
+
+        # optical element number XX
+        boundary_shape = None
+
+        from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirror
+        optical_element = S4PlaneMirror(name='Plane Mirror', boundary_shape=boundary_shape,
+                                        f_reflec=1, f_refl=5, file_refl='<none>', refraction_index=0.99999 + 0.001j,
+                                        coating_material='Ni', coating_density=8.902, coating_roughness=0)
+
+        from syned.beamline.element_coordinates import ElementCoordinates
+        coordinates = ElementCoordinates(p=2.7, q=0, angle_radial=1.563796327, angle_azimuthal=1.570796327,
+                                         angle_radial_out=1.563796327)
+        movements = None
+        from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirrorElement
+        beamline_element = S4PlaneMirrorElement(optical_element=optical_element, coordinates=coordinates,
+                                                movements=movements, input_beam=beam)
+
+        beam, mirr = beamline_element.trace_beam()
+
+        beamline.append_beamline_element(beamline_element)
+
+        # test plot
+        if 0:
+            from srxraylib.plot.gol import plot_scatter
+            plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1),
+                         title='(Intensity,Photon Energy)', plot_histograms=0)
+            plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1),
+                         title='(X,Z) in microns')
+        return beam, footprint, beamline
+        ###############################
+
+
+    beam, footprint, beamline = get_beamline()
+
+    app = QApplication(sys.argv)
+    w = PlotXY()
+    w.set_shadow_data(ShadowData(beam=beam, footprint=footprint, number_of_rays=0, beamline=beamline))
+    w.show()
+    app.exec()
+    # w.saveSettings()
