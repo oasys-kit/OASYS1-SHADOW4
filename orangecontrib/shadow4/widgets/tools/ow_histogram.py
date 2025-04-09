@@ -1,10 +1,8 @@
 import sys
 import time
-import copy
 import numpy
 
 from PyQt5.QtGui import QTextCursor
-from PyQt5.QtCore import QSettings
 from orangewidget import gui
 from orangewidget.settings import Setting
 from oasys.widgets import gui as oasysgui
@@ -15,6 +13,7 @@ from oasys.util.oasys_util import EmittingStream
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, ShadowPlot
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
+from orangecontrib.shadow4.util.python_script import PythonScript
 from shadow4.beam.s4_beam import S4Beam
 
 class Histogram(AutomaticElement):
@@ -40,7 +39,7 @@ class Histogram(AutomaticElement):
 
     image_plane                  = Setting(0)
     image_plane_new_position     = Setting(10.0)
-    image_plane_rel_abs_position = Setting(0)
+    image_plane_rel_abs_position = Setting(0)   # not used anymore
 
     x_column_index = Setting(25)
 
@@ -48,7 +47,7 @@ class Histogram(AutomaticElement):
     x_range_min = Setting(0.0)
     x_range_max = Setting(0.0)
 
-    weight_column_index = Setting(22)
+    weight_column_index = Setting(23)
     rays                 = Setting(1)
 
     number_of_bins = Setting(100)
@@ -94,10 +93,8 @@ class Histogram(AutomaticElement):
         self.image_plane_box = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
         self.image_plane_box_empty = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
 
-        oasysgui.lineEdit(self.image_plane_box, self, "image_plane_new_position", "Image Plane new Position", labelWidth=220, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.image_plane_box, self, "image_plane_new_position", "New (Relative) Position [m]", labelWidth=220, valueType=float, orientation="horizontal")
 
-        gui.comboBox(self.image_plane_box, self, "image_plane_rel_abs_position", label="Position Type", labelWidth=250,
-                     items=["Absolute", "Relative"], sendSelectedValue=False, orientation="horizontal")
 
         self.set_image_plane()
 
@@ -166,10 +163,16 @@ class Histogram(AutomaticElement):
         self.main_tabs = oasysgui.tabWidget(self.mainArea)
         plot_tab = oasysgui.createTabPage(self.main_tabs, "Plots")
         out_tab = oasysgui.createTabPage(self.main_tabs, "Output")
+        script_tab = oasysgui.createTabPage(self.main_tabs, "Script")
 
         self.image_box = gui.widgetBox(plot_tab, "Plot Result", addSpace=True, orientation="vertical")
         self.image_box.setFixedHeight(self.IMAGE_HEIGHT)
         self.image_box.setFixedWidth(self.IMAGE_WIDTH)
+
+        self.shadow4_script = PythonScript()
+        self.shadow4_script.code_area.setFixedHeight(400)
+        script_box = gui.widgetBox(script_tab, "Python script", addSpace=True, orientation="horizontal")
+        script_box.layout().addWidget(self.shadow4_script)
 
         self.shadow_output = oasysgui.textArea(height=580, width=800)
 
@@ -285,61 +288,90 @@ class Histogram(AutomaticElement):
             else:
                 raise e
 
+    def set_script(self, x_range):
+
+        # script
+        try:
+            beamline = self.input_data.beamline.duplicate()
+            script = beamline.to_python_code()
+
+            indented_script = '\n'.join('    ' + line for line in script.splitlines())
+
+            final_script = "def run_beamline():\n"
+            final_script += indented_script
+            final_script += "\n    return beam"
+            final_script += "\n\n"
+
+            if self.image_plane > 0:
+                retrace = "beam.retrace(%f)" % self.image_plane_new_position
+            else:
+                retrace = ""
+
+            dict = {"var_x": 1 + self.x_column_index,
+                    "nbins": self.number_of_bins,
+                    "xrange": x_range,
+                    "nolost": self.rays,
+                    "ref": self.weight_column_index,
+                    "retrace": retrace,
+                    }
+
+            script_template = """#
+# main 
+#
+from srxraylib.plot.gol import plot, plot_show
+
+# WARNING: NO incremental result allowed!!"
+beam = run_beamline()
+{retrace}
+
+ticket = beam.histo1({var_x}, nbins={nbins}, xrange={xrange}, nolost={nolost}, ref={ref})
+
+title = "I: %.1f " % ticket['intensity']
+if ticket['fwhm'] is not None: title += "FWHM: %f " % ticket['fwhm']
+
+plot(ticket['bin_path'], ticket['histogram_path'],
+    title=title, xtitle="column {var_x}", show=1)
+"""
+
+            final_script += script_template.format_map(dict)
+
+            self.shadow4_script.set_code(final_script)
+        except:
+            final_script += "\n\n\n# cannot retrieve beamline data from shadow_data"
+
+        self.shadow4_script.set_code(final_script)
+
+
     def plot_histo(self, var_x, title, xtitle, ytitle, xum):
         beam_to_plot = self.input_data.beam
         flux         = self.input_data.get_flux(nolost=self.rays)
 
         if self.image_plane == 1:
             new_shadow_beam = self.input_data.beam.duplicate()
-            dist = 0.0
-
-            if self.image_plane_rel_abs_position == 1:  # relative
-                dist = self.image_plane_new_position
-            else:  # absolute
-                if self.input_data.beamline is None == 0: beamline_element = None
-                else:                                     beamline_element = self.input_data.beamline.get_beamline_element_at(-1)
-
-                if beamline_element is None: image_plane = 0.0
-                else:                        image_plane = beamline_element.get_coordinates().q()
-
-                dist = self.image_plane_new_position - image_plane
-
+            dist = self.image_plane_new_position
             self.retrace_beam(new_shadow_beam, dist)
-
             beam_to_plot = new_shadow_beam
 
         x_range = self.get_range(beam_to_plot, var_x)
 
+        self.set_script(x_range)
+
         self.replace_histo(beam_to_plot, var_x, x_range, title, xtitle, ytitle, xum, flux)
 
     def get_range(self, beam_to_plot : S4Beam, var_x):
-        if self.x_range == 0 :
-            x_max = 0
-            x_min = 0
+        factor1 = ShadowPlot.get_factor(var_x)
 
-            x, good_only = beam_to_plot.get_columns((var_x, 10))
-
-            x_to_plot = copy.deepcopy(x)
-
-            go = numpy.where(good_only == 1)
-            lo = numpy.where(good_only != 1)
-
-            if self.rays == 0:
-                x_max = numpy.array(x_to_plot[0:], float).max()
-                x_min = numpy.array(x_to_plot[0:], float).min()
-            elif self.rays == 1:
-                x_max = numpy.array(x_to_plot[go], float).max()
-                x_min = numpy.array(x_to_plot[go], float).min()
-            elif self.rays == 2:
-                x_max = numpy.array(x_to_plot[lo], float).max()
-                x_min = numpy.array(x_to_plot[lo], float).min()
-
-            x_range = [x_min, x_max]
-        else:
+        if self.x_range == 1:
             congruence.checkLessThan(self.x_range_min, self.x_range_max, "X range min", "X range max")
-
-            factor = ShadowPlot.get_factor(var_x)
-            x_range = [self.x_range_min / factor, self.x_range_max / factor]
+            x_range = [self.x_range_min / factor1, self.x_range_max / factor1]
+        else:
+            x = beam_to_plot.get_column(var_x, nolost=self.rays)
+            x_max = x.max()
+            x_min = x.min()
+            if numpy.abs(x_max - x_min) < 1e-10:
+                x_min -= 1e-10
+                x_max -= 1e-10
+            x_range = [x_min, x_max]
 
         return x_range
 
@@ -418,3 +450,99 @@ class Histogram(AutomaticElement):
 
     def is_conversion_active(self):
         return self.conversion_active == 1
+
+#######################################
+if __name__ == "__main__":
+    from PyQt5.QtWidgets import QApplication, QMessageBox
+
+
+    def get_beamline():
+        from shadow4.beamline.s4_beamline import S4Beamline
+
+        beamline = S4Beamline()
+
+        # electron beam
+        from shadow4.sources.s4_electron_beam import S4ElectronBeam
+        electron_beam = S4ElectronBeam(energy_in_GeV=6, energy_spread=0.001, current=0.2)
+        electron_beam.set_sigmas_all(sigma_x=3.01836e-05, sigma_y=4.36821e-06, sigma_xp=3.63641e-06,
+                                     sigma_yp=1.37498e-06)
+
+        # magnetic structure
+        from shadow4.sources.undulator.s4_undulator_gaussian import S4UndulatorGaussian
+        source = S4UndulatorGaussian(
+            period_length=0.042,  # syned Undulator parameter (length in m)
+            number_of_periods=38.571,  # syned Undulator parameter
+            photon_energy=5000.0,  # Photon energy (in eV)
+            delta_e=4.0,  # Photon energy width (in eV)
+            ng_e=100,  # Photon energy scan number of points
+            flag_emittance=1,  # when sampling rays: Use emittance (0=No, 1=Yes)
+            flag_energy_spread=0,  # when sampling rays: Use e- energy spread (0=No, 1=Yes)
+            harmonic_number=1,  # harmonic number
+            flag_autoset_flux_central_cone=1,  # value to set the flux peak
+            flux_central_cone=681709040139326.4,  # value to set the flux peak
+        )
+
+        # light source
+        from shadow4.sources.undulator.s4_undulator_gaussian_light_source import S4UndulatorGaussianLightSource
+        light_source = S4UndulatorGaussianLightSource(name='GaussianUndulator', electron_beam=electron_beam,
+                                                      magnetic_structure=source, nrays=15000, seed=5676561)
+        beam = light_source.get_beam()
+
+        beamline.set_light_source(light_source)
+
+        # optical element number XX
+        from syned.beamline.shape import Rectangle
+        boundary_shape = Rectangle(x_left=-0.001, x_right=0.001, y_bottom=-0.001, y_top=0.001)
+
+        from shadow4.beamline.optical_elements.absorbers.s4_screen import S4Screen
+        optical_element = S4Screen(name='Generic Beam Screen/Slit/Stopper/Attenuator', boundary_shape=boundary_shape,
+                                   i_abs=0,  # 0=No, 1=prerefl file_abs, 2=xraylib, 3=dabax
+                                   i_stop=0, thick=0, file_abs='<specify file name>', material='Au', density=19.3)
+
+        from syned.beamline.element_coordinates import ElementCoordinates
+        coordinates = ElementCoordinates(p=27.2, q=0, angle_radial=0, angle_azimuthal=0, angle_radial_out=3.141592654)
+        from shadow4.beamline.optical_elements.absorbers.s4_screen import S4ScreenElement
+        beamline_element = S4ScreenElement(optical_element=optical_element, coordinates=coordinates, input_beam=beam)
+
+        beam, footprint = beamline_element.trace_beam()
+
+        beamline.append_beamline_element(beamline_element)
+
+        # optical element number XX
+        boundary_shape = None
+
+        from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirror
+        optical_element = S4PlaneMirror(name='Plane Mirror', boundary_shape=boundary_shape,
+                                        f_reflec=1, f_refl=5, file_refl='<none>', refraction_index=0.99999 + 0.001j,
+                                        coating_material='Ni', coating_density=8.902, coating_roughness=0)
+
+        from syned.beamline.element_coordinates import ElementCoordinates
+        coordinates = ElementCoordinates(p=2.7, q=0, angle_radial=1.563796327, angle_azimuthal=1.570796327,
+                                         angle_radial_out=1.563796327)
+        movements = None
+        from shadow4.beamline.optical_elements.mirrors.s4_plane_mirror import S4PlaneMirrorElement
+        beamline_element = S4PlaneMirrorElement(optical_element=optical_element, coordinates=coordinates,
+                                                movements=movements, input_beam=beam)
+
+        beam, mirr = beamline_element.trace_beam()
+
+        beamline.append_beamline_element(beamline_element)
+
+        # test plot
+        if 0:
+            from srxraylib.plot.gol import plot_scatter
+            plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1),
+                         title='(Intensity,Photon Energy)', plot_histograms=0)
+            plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1),
+                         title='(X,Z) in microns')
+        return beam, footprint, beamline
+        ###############################
+
+
+    beam, footprint, beamline = get_beamline()
+
+    app = QApplication(sys.argv)
+    w = Histogram()
+    w.set_shadow_data(ShadowData(beam=beam, footprint=footprint, number_of_rays=0, beamline=beamline))
+    w.show()
+    app.exec()

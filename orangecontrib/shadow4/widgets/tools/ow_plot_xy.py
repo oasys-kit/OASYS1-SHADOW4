@@ -41,7 +41,7 @@ class PlotXY(AutomaticElement):
 
     image_plane                  = Setting(0)
     image_plane_new_position     = Setting(10.0)
-    image_plane_rel_abs_position = Setting(0)
+    image_plane_rel_abs_position = Setting(0)  # not used anymore
 
     x_column_index = Setting(0)
     x_range        = Setting(0)
@@ -355,24 +355,10 @@ class PlotXY(AutomaticElement):
                 raise Exception("Data not plottable: Bad content")
             else:
                 raise e
-
-    def plot_xy(self, var_x, var_y, title, xtitle, ytitle, xum, yum):
-        beam_to_plot = self.input_data.beam
-        flux         = self.input_data.get_flux(nolost=self.rays)
-
-
-        if self.image_plane == 1:
-            new_shadow_beam = self.input_data.beam.duplicate()
-            dist = self.image_plane_new_position
-            if self.image_plane_rel_abs_position != 1: raise Exception("Deprecated option (retrace absolute distance)")
-            self.retrace_beam(new_shadow_beam, dist)
-            beam_to_plot = new_shadow_beam
-
-        x_range, y_range = self.get_ranges(beam_to_plot, var_x, var_y)
-
+    def set_script(self, x_range, y_range):
 
         # script
-        if 1: # try:
+        try:
             beamline = self.input_data.beamline.duplicate()
             script = beamline.to_python_code()
 
@@ -383,57 +369,66 @@ class PlotXY(AutomaticElement):
             final_script += "\n    return beam"
             final_script += "\n\n"
 
-            dict = {"var_x"   : 1 + self.x_column_index,
-                    "var_y"   : 1 + self.y_column_index,
-                    "nbins_h" : self.number_of_bins_h,
-                    "nbins_v" : self.number_of_bins_v,
-                    "xrange"  : x_range,
-                    "yrange"  : y_range,
-                    "nolost"  : self.rays,
-                    "ref"     : self.weight_column_index,
-                    }
+            if self.image_plane > 0:
+                retrace = "beam.retrace(%f)" % self.image_plane_new_position
+            else:
+                retrace = ""
 
+            dict = {"var_x": 1 + self.x_column_index,
+                    "var_y": 1 + self.y_column_index,
+                    "nbins_h": self.number_of_bins_h,
+                    "nbins_v": self.number_of_bins_v,
+                    "xrange": x_range,
+                    "yrange": y_range,
+                    "nolost": self.rays,
+                    "ref": self.weight_column_index,
+                    "retrace": retrace,
+                    }
 
             script_template = """#
 # main 
 #
+from srxraylib.plot.gol import plot, plot_image, plot_image_with_histograms, plot_show
 
-# WARNING: NO retrace, NO incremental result allowed!!"
+# WARNING: NO incremental result allowed!!"
 beam = run_beamline()
+{retrace}
 
 ticket = beam.histo2({var_x}, {var_y}, nbins_h={nbins_h}, nbins_v={nbins_v}, xrange={xrange}, yrange={yrange}, nolost={nolost}, ref={ref})
 
-xx = ticket['bin_h_center']
-yy = ticket['bin_v_center']
-data_2D = ticket['histogram']
+title = "I: %.1f " % ticket['intensity']
+if ticket['fwhm_h'] is not None: title += "FWHM H: %f " % ticket['fwhm_h']
+if ticket['fwhm_v'] is not None: title += "FWHM V: %f " % ticket['fwhm_v']
 
-if ticket['fwhm_h'] is not None: print("FWHM H: ", ticket['fwhm_h'])
-if ticket['fwhm_v'] is not None: print("FWHM V: ", ticket['fwhm_v'])
-
-if True:
-    from srxraylib.plot.gol import plot, plot_image, plot_image_with_histograms, plot_show
-    plot_image(data_2D, xx, yy, xtitle="column %d" % {var_x}, ytitle="column %d" % {var_y},
-        title="", figsize=(8,8), show=0)
-    plot_image_with_histograms(data_2D, xx, yy,
-        xtitle="column {var_x}", ytitle="column {var_y}", 
-        cmap=None, add_colorbar=True, figsize=(8,8), show=0)
-    plot(ticket['bin_h_center'], ticket['histogram_h'],
-        ticket['bin_v_center'], ticket['histogram_v'], 
-        xtitle="", ytitle="Intensity", legend=["column {var_x}", "column {var_y}"], figsize=(8,8), show=0)
-    plot_show()
+plot_image_with_histograms(ticket['histogram'], ticket['bin_h_center'], ticket['bin_v_center'],
+    title=title, xtitle="column {var_x}", ytitle="column {var_y}",
+    cmap='jet', add_colorbar=True, figsize=(8, 8), histo_path_flag=1, show=1)
 """
-
 
             final_script += script_template.format_map(dict)
 
-
             self.shadow4_script.set_code(final_script)
-        # except:
-        #     script += "\n\n\n# cannot retrieve beamline data from shadow_data"
-        #     self.shadow4_script.set_code(script)
+        except:
+            final_script += "\n\n\n# cannot retrieve beamline data from shadow_data"
+
+        self.shadow4_script.set_code(final_script)
 
 
 
+    def plot_xy(self, var_x, var_y, title, xtitle, ytitle, xum, yum):
+        beam_to_plot = self.input_data.beam
+        flux         = self.input_data.get_flux(nolost=self.rays)
+
+
+        if self.image_plane == 1:
+            new_shadow_beam = self.input_data.beam.duplicate()
+            dist = self.image_plane_new_position
+            self.retrace_beam(new_shadow_beam, dist)
+            beam_to_plot = new_shadow_beam
+
+        x_range, y_range = self.get_ranges(beam_to_plot, var_x, var_y)
+
+        self.set_script(x_range, y_range)
 
         self.replace_plot(beam_to_plot, var_x, var_y, title, xtitle, ytitle,
                           x_range=x_range,
@@ -662,4 +657,4 @@ if __name__ == "__main__":
     w.set_shadow_data(ShadowData(beam=beam, footprint=footprint, number_of_rays=0, beamline=beamline))
     w.show()
     app.exec()
-    # w.saveSettings()
+
