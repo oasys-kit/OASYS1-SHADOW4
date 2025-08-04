@@ -156,8 +156,8 @@ class ShowSurfaceShapeDialog(QDialog):
             # label += "c[7]" + u"\u00B7" + "X" + " + c[8]" + u"\u00B7" + "Y" + " + c[9]" + u"\u00B7" + "Z" + " + c[10] = 0"
 
             label  = "c<sub>xx</sub> X<sup>2</sup>  + c<sub>yy</sub> Y<sup>2</sup> + c<sub>zz</sub> Z<sup>2</sup> + <br/>"
-            label += "c<sub>xy</sub> X Y + c<sub>yz</sub> Y Z+ c<sub>zz</sub> Z Z + <br/>"
-            label += "c<sub>x</sub> X + c<sub>y</sub> Y + c<sub>z</sub> X + c<sub>0</sub>= 0"
+            label += "c<sub>xy</sub> X Y + c<sub>yz</sub> Y Z+ c<sub>xz</sub> X Z + <br/>"
+            label += "c<sub>x</sub> X + c<sub>y</sub> Y + c<sub>z</sub> Z + c<sub>0</sub>= 0"
 
             gui.label(surface_box, self, label)
 
@@ -351,8 +351,8 @@ if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    # dialog = ShowSurfaceShapeDialog(ccc=[1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,-764,0.0], is_torus=0)
-    dialog = ShowSurfaceShapeDialog(is_torus=1, torus_major_radius=7499.954, torus_minor_radius = 0.046, f_torus=0,
-                 x_min=-0.04, x_max=0.04, y_min=-0.3, y_max=0.3,)
+    dialog = ShowSurfaceShapeDialog(ccc=[1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,-764,0.0], is_torus=0)
+    # dialog = ShowSurfaceShapeDialog(is_torus=1, torus_major_radius=7499.954, torus_minor_radius = 0.046, f_torus=0,
+    #              x_min=-0.04, x_max=0.04, y_min=-0.3, y_max=0.3,)
     dialog.show()
     app.exec()
