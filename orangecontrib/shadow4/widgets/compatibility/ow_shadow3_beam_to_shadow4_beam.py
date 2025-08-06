@@ -72,13 +72,19 @@ class OW_beam_converter_3_to_4(AutomaticWidget):
             if self.is_automatic_execution: self.convert_beam()
 
     def convert_beam(self):
-        beam3 = self.shadow_beam._beam
-        beam4 = ShadowData(beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
-        beam4.beam.rays[:, 0:3] *= self.workspace_units_to_m
-        beam4.beam.rays[:, 12]  *= self.workspace_units_to_m
+        if self.shadow_beam is None:
+            self.prompt_exception(ValueError("No Shadow3 input beam"))
+            return
 
-        print(beam4)
-        self.send("Shadow Data", beam4)
+        try:
+            beam3 = self.shadow_beam._beam
+            beam4 = ShadowData(beam=S4Beam(array=beam3.rays), beamline=S4Beamline())
+            beam4.beam.rays[:, 0:3] *= self.workspace_units_to_m
+            beam4.beam.rays[:, 12]  *= self.workspace_units_to_m
+
+            self.send("Shadow Data", beam4)
+        except Exception as exception:
+            self.prompt_exception(exception)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

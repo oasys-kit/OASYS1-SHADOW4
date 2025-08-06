@@ -256,18 +256,16 @@ class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
 
 
     def run_shadow4(self):
-
         if self.input_data is None:
-            self.prompt_exception("No input beam")
+            self.prompt_exception(ValueError("No input beam"))
             return
 
-        self.progressBarInit()
-        set_verbose()
-        self.shadow_output.setText("")
-
-        sys.stdout = EmittingStream(textWritten=self._write_stdout)
-
         try:
+            self.progressBarInit()
+            set_verbose()
+            self.shadow_output.setText("")
+
+            sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
             beamline = self.input_data.beamline.duplicate()
             element = self.get_beamline_element_instance()
@@ -313,8 +311,9 @@ class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
             self.send("Trigger", TriggerIn(new_object=True))
 
         except Exception as exception:
+            try:    self._initialize_tabs()
+            except: pass
             self.prompt_exception(exception)
-            self._initialize_tabs()
 
     def _post_trace_operations(self, output_beam, footprint, element, beamline): pass
     def _plot_additional_results(self, output_beam, footprint, element, beamline): pass

@@ -17,7 +17,6 @@ from orangecontrib.shadow4.util.python_script import PythonScript
 from shadow4.beam.s4_beam import S4Beam
 
 class Histogram(AutomaticElement):
-
     name = "Histogram"
     description = "Display Data Tools: Histogram"
     icon = "icons/histogram.png"
@@ -289,7 +288,6 @@ class Histogram(AutomaticElement):
                 raise e
 
     def set_script(self, x_range):
-
         # script
         try:
             beamline = self.input_data.beamline.duplicate()

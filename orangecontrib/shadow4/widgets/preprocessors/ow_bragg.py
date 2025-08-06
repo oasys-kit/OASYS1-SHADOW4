@@ -312,31 +312,36 @@ class OWBragg(OWWidget):
             self.box_plot_e0.setVisible(True)
 
     def compute(self):
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
-        self.checkFields()
+        try:
+            sys.stdout = EmittingStream(textWritten=self.writeStdOut)
 
-        if self.PREPROCESSOR_FILE_VERSION == 0:
-            descriptor=self.crystals_dabax[self.DESCRIPTOR_DABAX]
-            material_constants_library = DabaxDecorated(file_Crystals="Crystals.dat")
-        else:
-            descriptor = self.crystals_xrayserver[self.DESCRIPTOR_XRAYSERVER]
-            material_constants_library = DabaxDecorated(file_Crystals="Crystals_xrayserver.dat")
+            self.checkFields()
 
-        self.bragg_dict = create_bragg_preprocessor_file_v2(interactive=False,
-                                          DESCRIPTOR=descriptor,
-                                          H_MILLER_INDEX=self.H_MILLER_INDEX,
-                                          K_MILLER_INDEX=self.K_MILLER_INDEX,
-                                          L_MILLER_INDEX=self.L_MILLER_INDEX,
-                                          TEMPERATURE_FACTOR=self.TEMPERATURE_FACTOR,
-                                          E_MIN=self.E_MIN,
-                                          E_MAX=self.E_MAX,
-                                          E_STEP=self.E_STEP,
-                                          SHADOW_FILE=congruence.checkFileName(self.SHADOW_FILE),
-                                          material_constants_library=material_constants_library,
-                                          )
+            if self.PREPROCESSOR_FILE_VERSION == 0:
+                descriptor=self.crystals_dabax[self.DESCRIPTOR_DABAX]
+                material_constants_library = DabaxDecorated(file_Crystals="Crystals.dat")
+            else:
+                descriptor = self.crystals_xrayserver[self.DESCRIPTOR_XRAYSERVER]
+                material_constants_library = DabaxDecorated(file_Crystals="Crystals_xrayserver.dat")
 
-        self.send("BraggPreProcessorData", BraggPreProcessorData(bragg_data_file=self.SHADOW_FILE))
-        self.do_plots()
+            self.bragg_dict = create_bragg_preprocessor_file_v2(interactive=False,
+                                              DESCRIPTOR=descriptor,
+                                              H_MILLER_INDEX=self.H_MILLER_INDEX,
+                                              K_MILLER_INDEX=self.K_MILLER_INDEX,
+                                              L_MILLER_INDEX=self.L_MILLER_INDEX,
+                                              TEMPERATURE_FACTOR=self.TEMPERATURE_FACTOR,
+                                              E_MIN=self.E_MIN,
+                                              E_MAX=self.E_MAX,
+                                              E_STEP=self.E_STEP,
+                                              SHADOW_FILE=congruence.checkFileName(self.SHADOW_FILE),
+                                              material_constants_library=material_constants_library,
+                                              )
+
+            self.send("BraggPreProcessorData", BraggPreProcessorData(bragg_data_file=self.SHADOW_FILE))
+            self.do_plots()
+        except Exception as exception:
+            QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
+            if self.IS_DEVELOP: raise exception
 
     def checkFields(self):
         self.H_MILLER_INDEX = congruence.checkNumber(self.H_MILLER_INDEX, "H miller index")

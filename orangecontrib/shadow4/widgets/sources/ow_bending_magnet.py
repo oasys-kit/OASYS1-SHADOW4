@@ -201,57 +201,58 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
         return lightsource
 
     def run_shadow4(self):
-        set_verbose()
-        self.shadow_output.setText("")
-        sys.stdout = EmittingStream(textWritten=self._write_stdout)
+        try:
+            set_verbose()
+            self.shadow_output.setText("")
+            sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
-        self._set_plot_quality()
+            self._set_plot_quality()
 
-        self.progressBarInit()
+            self.progressBarInit()
 
-        light_source = self.get_lightsource()
-
-
-        #
-        # script
-        #
-        script = light_source.to_python_code()
-        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        script += "\nrays = beam.get_rays()"
-        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
-        self.shadow4_script.set_code(script)
+            light_source = self.get_lightsource()
 
 
-        self.progressBarSet(5)
+            #
+            # script
+            #
+            script = light_source.to_python_code()
+            script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+            script += "\nrays = beam.get_rays()"
+            script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+            self.shadow4_script.set_code(script)
 
+            self.progressBarSet(5)
 
-        # run shadow4
+            # run shadow4
 
-        t00 = time.time()
-        print("***** starting calculation...")
-        output_beam = light_source.get_beam()
-        photon_energy, flux, spectral_power = light_source.calculate_spectrum()
-        t11 = time.time() - t00
-        print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
+            t00 = time.time()
+            print("***** starting calculation...")
+            output_beam = light_source.get_beam()
+            photon_energy, flux, spectral_power = light_source.calculate_spectrum()
+            t11 = time.time() - t00
+            print("***** time for %d rays: %f s, %f min, " % (self.number_of_rays, t11, t11 / 60))
 
+            #
+            # beam plots
+            #
+            self._plot_results(output_beam, None, progressBarValue=80)
 
-        #
-        # beam plots
-        #
-        self._plot_results(output_beam, None, progressBarValue=80)
+            self.refresh_specific_bm_plots(light_source, photon_energy, flux, spectral_power)
 
-        self.refresh_specific_bm_plots(light_source, photon_energy, flux, spectral_power)
+            self.progressBarFinished()
 
-
-        self.progressBarFinished()
-
-        #
-        # send beam and trigger
-        #
-        self.send("Shadow Data", ShadowData(beam=output_beam,
-                                           number_of_rays=self.number_of_rays,
-                                           beamline=S4Beamline(light_source=light_source)))
-        self.send("Trigger", TriggerIn(new_object=True))
+            #
+            # send beam and trigger
+            #
+            self.send("Shadow Data", ShadowData(beam=output_beam,
+                                               number_of_rays=self.number_of_rays,
+                                               beamline=S4Beamline(light_source=light_source)))
+            self.send("Trigger", TriggerIn(new_object=True))
+        except Exception as exception:
+            try:    self._initialize_tabs()
+            except: pass
+            self.prompt_exception(exception)
 
     def receive_syned_data(self, data):
         if data is not None:

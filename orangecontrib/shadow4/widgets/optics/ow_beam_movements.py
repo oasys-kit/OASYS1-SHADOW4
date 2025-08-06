@@ -184,46 +184,49 @@ class OWBeamMovement(GenericElement, WidgetDecorator):
 
     def run_shadow4(self):
         if self.input_data is None:
-            self.prompt_exception("No input beam")
+            self.prompt_exception(ValueError("No input beam"))
             return
 
-        set_verbose()
-        self.shadow_output.setText("")
+        try:
+            self.progressBarInit()
+            set_verbose()
+            self.shadow_output.setText("")
 
-        sys.stdout = EmittingStream(textWritten=self._write_stdout)
+            sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
-        element = self.get_element_instance()
-        print(element.info())
+            element = self.get_element_instance()
+            print(element.info())
 
-        self.progressBarInit()
+            output_beam, _ = element.trace_beam()
 
-        output_beam, _ = element.trace_beam()
+            beamline = self.input_data.beamline.duplicate()
+            beamline.append_beamline_element(element)
 
-        beamline = self.input_data.beamline.duplicate()
-        beamline.append_beamline_element(element)
+            self._set_plot_quality()
 
-        self._set_plot_quality()
+            self._plot_results(output_beam, None, progressBarValue=80)
 
-        self._plot_results(output_beam, None, progressBarValue=80)
+            self.progressBarFinished()
 
-        self.progressBarFinished()
+            #
+            # script
+            #
+            script = beamline.to_python_code()
+            script += "\n\n\n# test plot"
+            script += "\nif True:"
+            script += "\n   from srxraylib.plot.gol import plot_scatter"
+            script += "\n   # plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
+            script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
+            self.shadow4_script.set_code(script)
 
-        #
-        # script
-        #
-        script = beamline.to_python_code()
-        script += "\n\n\n# test plot"
-        script += "\nif True:"
-        script += "\n   from srxraylib.plot.gol import plot_scatter"
-        script += "\n   # plot_scatter(beam.get_photon_energy_eV(nolost=1), beam.get_column(23, nolost=1), title='(Intensity,Photon Energy)', plot_histograms=0)"
-        script += "\n   plot_scatter(1e6 * beam.get_column(1, nolost=1), 1e6 * beam.get_column(3, nolost=1), title='(X,Z) in microns')"
-        self.shadow4_script.set_code(script)
-
-        #
-        # send beam
-        #
-        self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline))
-
+            #
+            # send beam
+            #
+            self.send("Shadow Data", ShadowData(beam=output_beam, beamline=beamline))
+        except Exception as exception:
+            try:    self._initialize_tabs()
+            except: pass
+            self.prompt_exception(exception)
 
 if __name__ == "__main__":
     from shadow4.beamline.s4_beamline import S4Beamline

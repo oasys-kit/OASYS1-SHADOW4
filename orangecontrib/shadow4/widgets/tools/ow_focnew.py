@@ -136,19 +136,19 @@ class FocNew(AutomaticElement):
                                            QtWidgets.QMessageBox.Ok)
 
     def calculate(self):
-        set_verbose(0)
-        sys.stdout = EmittingStream(textWritten=self.write_stdout)
-
-        self.shadow_output.setText("")
-        self.focnewInfo.setText("")
-        if self.plot_canvas_x is not None: self.image_box.layout().removeItem(self.image_box.layout().itemAt(0))
-        if self.plot_canvas_bl is not None: self.beamline_box.layout().removeItem(self.beamline_box.layout().itemAt(0))
-
         if self.input_data is None:
-            print("*** Error *** Missing beam")
+            self.prompt_exception(ValueError("No input beam"))
             return
 
         try:
+            set_verbose(0)
+            sys.stdout = EmittingStream(textWritten=self.write_stdout)
+
+            self.shadow_output.setText("")
+            self.focnewInfo.setText("")
+            if self.plot_canvas_x is not None: self.image_box.layout().removeItem(self.image_box.layout().itemAt(0))
+            if self.plot_canvas_bl is not None: self.beamline_box.layout().removeItem(self.beamline_box.layout().itemAt(0))
+
             ticket = focnew(beam=self.input_data.beam, nolost=1, mode=self.mode, center=[self.center_x, self.center_z])
             self.focnewInfo.setText(ticket['text'])
             self.do_plot_focnew(ticket)
@@ -178,8 +178,7 @@ class FocNew(AutomaticElement):
             print("########################################################################")
 
         except Exception as exception:
-            QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
-            if self.IS_DEVELOP: raise exception
+            self.prompt_exception(exception)
 
 
     def do_plot_focnew(self, ticket):

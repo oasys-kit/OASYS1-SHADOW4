@@ -5,7 +5,7 @@ from scipy.optimize import root
 from PyQt5.QtWidgets import QDialog, QGridLayout, QWidget, QDialogButtonBox, QFileDialog
 
 from matplotlib import cm
-from oasys.widgets.gui import FigureCanvas3D
+from oasys.widgets.gui import FigureCanvas3D, MessageDialog
 from matplotlib.figure import Figure
 try:    from mpl_toolkits.mplot3d import Axes3D  # plot 3D
 except: pass
@@ -341,10 +341,10 @@ class ShowSurfaceShapeDialog(QDialog):
 
                 write_surface_file(self.zz.T, self.xx, self.yy, file_path)
         except Exception as exception:
-            if self.parent is not None:
-                self.parent.prompt_exception(exception)
+            if self.parent is not None: self.parent.prompt_exception(exception)
             else:
-                raise Exception(exception)
+                MessageDialog.message(self, str(exception), "Exception occured in OASYS", "critical")
+                if self.IS_DEVELOP: raise exception
 
 
 if __name__ == "__main__":

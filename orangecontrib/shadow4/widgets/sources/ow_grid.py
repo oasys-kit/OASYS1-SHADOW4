@@ -289,47 +289,52 @@ class OWGrid(GenericElement, WidgetDecorator, TriggerToolsDecorator):
         return gs
 
     def run_shadow4(self):
-        set_verbose()
-        self.shadow_output.setText("")
-        sys.stdout = EmittingStream(textWritten=self._write_stdout)
+        try:
+            set_verbose()
+            self.shadow_output.setText("")
+            sys.stdout = EmittingStream(textWritten=self._write_stdout)
 
-        self._set_plot_quality()
+            self._set_plot_quality()
 
-        self.progressBarInit()
+            self.progressBarInit()
 
-        light_source = self.get_lightsource()
+            light_source = self.get_lightsource()
 
-        self.progressBarSet(5)
+            self.progressBarSet(5)
 
-        # run shadow4
+            # run shadow4
 
-        output_beam = light_source.get_beam()
+            output_beam = light_source.get_beam()
 
-        #
-        # beam plots
-        #
-        self._plot_results(output_beam, None, progressBarValue=80)
+            #
+            # beam plots
+            #
+            self._plot_results(output_beam, None, progressBarValue=80)
 
-        #
-        # script
-        #
-        script = light_source.to_python_code()
+            #
+            # script
+            #
+            script = light_source.to_python_code()
 
-        script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
-        script += "\nrays = beam.get_rays()"
-        script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
+            script += "\n\n# test plot\nfrom srxraylib.plot.gol import plot_scatter"
+            script += "\nrays = beam.get_rays()"
+            script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
 
-        self.shadow4_script.set_code(script)
+            self.shadow4_script.set_code(script)
 
-        self.progressBarFinished()
+            self.progressBarFinished()
 
-        #
-        # send beam and trigger
-        #
-        self.send("Shadow Data", ShadowData(beam=output_beam,
-                                           number_of_rays=output_beam.get_number_of_rays(),
-                                           beamline=S4Beamline(light_source=light_source)))
-        self.send("Trigger", TriggerIn(new_object=True))
+            #
+            # send beam and trigger
+            #
+            self.send("Shadow Data", ShadowData(beam=output_beam,
+                                               number_of_rays=output_beam.get_number_of_rays(),
+                                               beamline=S4Beamline(light_source=light_source)))
+            self.send("Trigger", TriggerIn(new_object=True))
+        except Exception as exception:
+            try:    self._initialize_tabs()
+            except: pass
+            self.prompt_exception(exception)
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication

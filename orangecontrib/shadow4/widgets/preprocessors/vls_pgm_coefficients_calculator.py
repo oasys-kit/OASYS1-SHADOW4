@@ -560,9 +560,8 @@ class OWVlsPgmCoefficientsCalculator(OWWidget):
                                                                           beta=self.raytracing_beta))
 
         except Exception as exception:
-            QMessageBox.critical(self, "Error",
-                                 str(exception),
-                                 QMessageBox.Ok)
+            QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
+            if self.IS_DEVELOP: raise exception
 
     def checkFields(self):
         self.r_a = congruence.checkPositiveNumber(self.r_a, "Distance Source-Grating")

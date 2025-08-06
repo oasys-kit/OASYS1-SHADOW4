@@ -286,9 +286,8 @@ class OWPrerefl(OWWidget):
             self.prerefl_instance.preprocessor_info()
             self.do_plots()
         except Exception as exception:
-            QMessageBox.critical(self, "Error",
-                                 str(exception),
-                                 QMessageBox.Ok)
+            QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
+            if self.IS_DEVELOP: raise exception
 
     def checkFields(self):
         self.symbol = ShadowPhysics.checkCompoundName(self.symbol)

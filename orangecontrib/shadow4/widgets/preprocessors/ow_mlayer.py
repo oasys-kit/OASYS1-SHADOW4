@@ -492,9 +492,8 @@ class OWMLayer(OWWidget):
 
             self.send("MLayerPreProcessorData", MLayerPreProcessorData(mlayer_data_file=self.FILE))
         except Exception as exception:
-            QMessageBox.critical(self, "Error",
-                                 str(exception),
-                                 QMessageBox.Ok)
+            QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
+            if self.IS_DEVELOP: raise exception
 
     def checkFields(self):
         congruence.checkDir(self.FILE)

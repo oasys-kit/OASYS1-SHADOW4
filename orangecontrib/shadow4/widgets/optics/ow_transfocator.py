@@ -53,10 +53,7 @@ class OWTransfocator(OWOpticalElement):
     radius = Setting([0.1, 0.2])
     thickness = Setting([0.03, 0.03])
 
-
     input_data = None
-    is_automatic_run = 1
-
 
     inputs = copy.deepcopy(OWOpticalElement.inputs)
     inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
@@ -79,7 +76,6 @@ class OWTransfocator(OWOpticalElement):
         return oasysgui.createTabPage(tabs_basic_settings, "Transfocator")  # to be populated
 
     def populate_basic_setting_subtabs(self, basic_setting_subtabs):
-
         tabs_button_box = oasysgui.widgetBox(basic_setting_subtabs, "", addSpace=False, orientation="horizontal")
         btns = [gui.button(tabs_button_box, self, "Insert CRL Before", callback=self.crl_insert_before),
                 gui.button(tabs_button_box, self, "Insert CRL After", callback=self.crl_insert_after),

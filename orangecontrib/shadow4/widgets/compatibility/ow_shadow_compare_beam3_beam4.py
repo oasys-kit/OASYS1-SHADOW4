@@ -313,52 +313,54 @@ class OWShadowCompareBeam3Beam4(widget.OWWidget):
         self.shadow_output.ensureCursorVisible()
 
     def compare_beams(self):
-        self.shadow_output.setText("")
-        sys.stdout = EmittingStream(textWritten=self.writeStdOut)
+        if self.input_beam is None:
+            self.prompt_exception(ValueError("No Shadow3 input beam"))
+            return
 
-        print("***** comparing shadow3 and shadow4 beams")
+        if self.input_data is None:
+            self.prompt_exception(ValueError("No Shadow4 input beam"))
+            return
 
-        fail = 0
         try:
-            beam3 = self.input_beam._beam.duplicate()
-        except:
-            print(">>> Error retrieving beam3")
-            fail = 1
-        try:
-            beam4 = self.input_data.beam
-        except:
-            print(">>> Error retrieving beam4")
-            fail = 1
 
-        if not fail:
-            # pass to SI
-            beam3.rays[:, 0:3] *= self.workspace_units_to_m
-            beam3.rays[:, 12]  *= self.workspace_units_to_m
+            self.shadow_output.setText("")
+            sys.stdout = EmittingStream(textWritten=self.writeStdOut)
 
-            if self.columns_6_flag:
-                print("\n\n***** comparing mean and stdev of 6 first columns")
-                check_six_columns_mean_and_std(beam3, beam4, do_assert=self.columns_6_assert, do_plot=self.columns_6_plot)
+            print("***** comparing shadow3 and shadow4 beams")
 
-            if self.columns_18_flag:
-                print("\n\n***** comparing columns of all 18 columns")
-                if self.columns_18_skip_columns.strip() == "":
-                    columns_18_skip_columns = "[]"
-                else:
-                    columns_18_skip_columns = self.columns_18_skip_columns
-                skip_columns = eval(columns_18_skip_columns)
+            fail = 0
+            try:    beam3 = self.input_beam._beam.duplicate()
+            except: print(">>> Error retrieving beam3"); fail = 1
+            try:    beam4 = self.input_data.beam
+            except: print(">>> Error retrieving beam4"); fail = 1
 
-                check_almost_equal(beam3, beam4,
-                                   do_assert=self.columns_18_assert,
-                                   level=self.columns_18_level,
-                                   skip_columns=skip_columns,
-                                   display_ray_number=self.columns_18_ray_index,
-                                   good_only=self.columns_18_good_only)
+            if not fail:
+                # pass to SI
+                beam3.rays[:, 0:3] *= self.workspace_units_to_m
+                beam3.rays[:, 12]  *= self.workspace_units_to_m
 
+                if self.columns_6_flag:
+                    print("\n\n***** comparing mean and stdev of 6 first columns")
+                    check_six_columns_mean_and_std(beam3, beam4, do_assert=self.columns_6_assert, do_plot=self.columns_6_plot)
 
-        for i in range(20): # needed to display correctly the full  text. Why?
-            print("")
+                if self.columns_18_flag:
+                    print("\n\n***** comparing columns of all 18 columns")
+                    if self.columns_18_skip_columns.strip() == "":
+                        columns_18_skip_columns = "[]"
+                    else:
+                        columns_18_skip_columns = self.columns_18_skip_columns
+                    skip_columns = eval(columns_18_skip_columns)
 
+                    check_almost_equal(beam3, beam4,
+                                       do_assert=self.columns_18_assert,
+                                       level=self.columns_18_level,
+                                       skip_columns=skip_columns,
+                                       display_ray_number=self.columns_18_ray_index,
+                                       good_only=self.columns_18_good_only)
 
+            for i in range(20): print("") # needed to display correctly the full  text. Why?
+        except Exception as exception:
+            self.prompt_exception(exception)
 
 if __name__ == "__main__":
     import sys
