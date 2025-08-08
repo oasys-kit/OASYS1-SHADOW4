@@ -691,7 +691,7 @@ class CRLBox(QWidget):
         oasysgui.lineEdit(self.calculation_mode_1, self, "refraction_index", "Refraction index", tooltip="refraction_index[i]",
                           labelWidth=260, valueType=float, orientation="horizontal",
                           callback=self.transfocator.dump_refraction_index)
-        oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [cm-1]", labelWidth=260, valueType=float,
+        oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [m-1]", labelWidth=260, valueType=float,
                            orientation="horizontal", callback=self.transfocator.dump_attenuation_coefficient)
 
         self.calculation_mode_2 = oasysgui.widgetBox(crl_box, "", addSpace=False, orientation="vertical")

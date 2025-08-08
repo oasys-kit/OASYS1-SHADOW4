@@ -105,7 +105,7 @@ class OWAbstractLens(OWOpticalElement):
         self.calculation_mode_1 = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
         oasysgui.lineEdit(self.calculation_mode_1, self, "refraction_index", "Refraction index",
                           tooltip="refraction_index", labelWidth=260, valueType=float, orientation="horizontal")
-        oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [cm-1]",
+        oasysgui.lineEdit(self.calculation_mode_1, self, "attenuation_coefficient", "Attenuation coefficient [m-1]",
                           tooltip="attenuation_coefficient", labelWidth=260, valueType=float, orientation="horizontal")
 
         self.calculation_mode_2 = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
