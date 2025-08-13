@@ -1,6 +1,7 @@
 import sys
 import time
 import numpy
+import copy
 
 from PyQt5.QtGui import QTextCursor
 from orangewidget import gui
@@ -18,14 +19,10 @@ from orangecontrib.shadow4.util.python_script import PythonScript
 
 from shadow4.beam.s4_beam import S4Beam
 
-class PlotXY(AutomaticElement):
+class _PlotXY(AutomaticElement):
 
-    name = "Plot XY"
-    description = "Display Data Tools: Plot XY"
-    icon = "icons/plot_xy.png"
     maintainer = "Luca Rebuffi"
     maintainer_email = "lrebuffi(@at@)anl.gov"
-    priority = 1.1
     category = "Display Data Tools"
     keywords = ["data", "file", "load", "read"]
 
@@ -39,16 +36,10 @@ class PlotXY(AutomaticElement):
     plot_canvas = None
     input_beam  = None
 
-    image_plane                  = Setting(0)
-    image_plane_new_position     = Setting(10.0)
-    image_plane_rel_abs_position = Setting(0)  # not used anymore
-
-    x_column_index = Setting(0)
     x_range        = Setting(0)
     x_range_min    = Setting(0.0)
     x_range_max    = Setting(0.0)
 
-    y_column_index = Setting(2)
     y_range        = Setting(0)
     y_range_min    = Setting(0.0)
     y_range_max    = Setting(0.0)
@@ -63,7 +54,7 @@ class PlotXY(AutomaticElement):
     flip_h = Setting(0)
     flip_v = Setting(0)
 
-    title = Setting("X,Z")
+    title = Setting("")
 
     autosave           = Setting(0)
     autosave_file_name = Setting("autosave_xy_plot.hdf5")
@@ -71,14 +62,12 @@ class PlotXY(AutomaticElement):
     keep_result              = Setting(0)
     autosave_partial_results = Setting(0)
 
-    conversion_active = Setting(1)
-
     cumulated_ticket = None
     plotted_ticket   = None
     autosave_file    = None
     autosave_prog_id = 0
 
-    def __init__(self):
+    def __init__(self, allow_retrace=True):
         super().__init__()
 
         button_box = oasysgui.widgetBox(self.controlArea, "", addSpace=False, orientation="horizontal")
@@ -95,18 +84,19 @@ class PlotXY(AutomaticElement):
         tab_set = oasysgui.createTabPage(self.tabs_setting, "Plot Settings")
         tab_gen = oasysgui.createTabPage(self.tabs_setting, "Histogram Settings")
 
-        screen_box = oasysgui.widgetBox(tab_set, "Screen Position Settings", addSpace=True, orientation="vertical", height=120)
+        if allow_retrace:
+            screen_box = oasysgui.widgetBox(tab_set, "Screen Position Settings", addSpace=True, orientation="vertical", height=120)
 
-        self.image_plane_combo = gui.comboBox(screen_box, self, "image_plane", label="Position of the Image",
-                                              items=["On Image Plane", "Retraced"], labelWidth=260,
-                                              callback=self.set_image_plane, sendSelectedValue=False, orientation="horizontal")
+            self.image_plane_combo = gui.comboBox(screen_box, self, "image_plane", label="Position of the Image",
+                                                  items=["On Image Plane", "Retraced"], labelWidth=260,
+                                                  callback=self.set_image_plane, sendSelectedValue=False, orientation="horizontal")
 
-        self.image_plane_box = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
-        self.image_plane_box_empty = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
+            self.image_plane_box = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
+            self.image_plane_box_empty = oasysgui.widgetBox(screen_box, "", addSpace=False, orientation="vertical", height=50)
 
-        oasysgui.lineEdit(self.image_plane_box, self, "image_plane_new_position", "New (Relative) Position [m]", labelWidth=220, valueType=float, orientation="horizontal")
+            oasysgui.lineEdit(self.image_plane_box, self, "image_plane_new_position", "New (relative) position [m]", labelWidth=220, valueType=float, orientation="horizontal")
 
-        self.set_image_plane()
+            self.set_image_plane()
 
         general_box = oasysgui.widgetBox(tab_set, "Variables Settings", addSpace=True, orientation="vertical", height=350)
 
@@ -366,15 +356,16 @@ class PlotXY(AutomaticElement):
 
             final_script = "def run_beamline():\n"
             final_script += indented_script
-            final_script += "\n    return beam"
+            final_script += "\n    return beam, footprint"
             final_script += "\n\n"
 
             if self.image_plane > 0:
-                retrace = "beam.retrace(%f)" % self.image_plane_new_position
+                retrace = "%s.retrace(%f)" % (self.get_beam_to_plot(return_str=True), self.image_plane_new_position)
             else:
                 retrace = ""
 
-            dict = {"var_x": 1 + self.x_column_index,
+            dict = {"beam_str": self.get_beam_to_plot(return_str=True),
+                    "var_x": 1 + self.x_column_index,
                     "var_y": 1 + self.y_column_index,
                     "nbins_h": self.number_of_bins_h,
                     "nbins_v": self.number_of_bins_v,
@@ -391,10 +382,10 @@ class PlotXY(AutomaticElement):
 from srxraylib.plot.gol import plot, plot_image, plot_image_with_histograms, plot_show
 
 # WARNING: NO incremental result allowed!!"
-beam = run_beamline()
+beam, footprint = run_beamline()
 {retrace}
 
-ticket = beam.histo2({var_x}, {var_y}, nbins_h={nbins_h}, nbins_v={nbins_v}, xrange={xrange}, yrange={yrange}, nolost={nolost}, ref={ref})
+ticket = {beam_str}.histo2({var_x}, {var_y}, nbins_h={nbins_h}, nbins_v={nbins_v}, xrange={xrange}, yrange={yrange}, nolost={nolost}, ref={ref})
 
 title = "I: %.1f " % ticket['intensity']
 if ticket['fwhm_h'] is not None: title += "FWHM H: %f " % ticket['fwhm_h']
@@ -414,14 +405,13 @@ plot_image_with_histograms(ticket['histogram'], ticket['bin_h_center'], ticket['
         self.shadow4_script.set_code(final_script)
 
 
-
     def plot_xy(self, var_x, var_y, title, xtitle, ytitle, xum, yum):
-        beam_to_plot = self.input_data.beam
+        beam_to_plot = self.get_beam_to_plot()
         flux         = self.input_data.get_flux(nolost=self.rays)
 
 
         if self.image_plane == 1:
-            new_shadow_beam = self.input_data.beam.duplicate()
+            new_shadow_beam = beam_to_plot.duplicate()
             dist = self.image_plane_new_position
             self.retrace_beam(new_shadow_beam, dist)
             beam_to_plot = new_shadow_beam
@@ -542,14 +532,6 @@ plot_image_with_histograms(ticket['histogram'], ticket['bin_h_center'], ticket['
 
         return x, y, auto_x_title, auto_y_title, xum, yum
 
-    def set_shadow_data(self, shadow_data : ShadowData):
-        if ShadowCongruence.check_empty_data(shadow_data):
-            if ShadowCongruence.check_empty_beam(shadow_data.beam):
-                self.input_data = shadow_data
-                if self.is_automatic_run: self.plot_results()
-            else:
-                MessageDialog.message(self, "Data not displayable: bad content", "Error", "critical")
-
     def writeStdOut(self, text):
         cursor = self.shadow_output.textCursor()
         cursor.movePosition(QTextCursor.End)
@@ -562,6 +544,37 @@ plot_image_with_histograms(ticket['histogram'], ticket['bin_h_center'], ticket['
 
     def is_conversion_active(self):
         return self.conversion_active == 1
+
+class PlotXY(_PlotXY):
+    name = "Plot XY"
+    description = "Display Data Tools: Plot XY"
+    icon = "icons/plot_xy.png"
+    priority = 1.1
+    inputs = copy.deepcopy(_PlotXY.inputs)
+
+    x_column_index = Setting(0)
+    y_column_index = Setting(2)
+    conversion_active = Setting(1)
+    image_plane              = Setting(0)
+    image_plane_new_position = Setting(10.0)
+
+    def __init__(self):
+        super().__init__(allow_retrace=True)
+
+    def set_shadow_data(self, shadow_data : ShadowData):
+        if ShadowCongruence.check_empty_data(shadow_data):
+            if ShadowCongruence.check_empty_beam(shadow_data.beam):
+                self.input_data = shadow_data
+                if self.is_automatic_run: self.plot_results()
+            else:
+                MessageDialog.message(self, "Data not displayable: bad content", "Error", "critical")
+
+    def get_beam_to_plot(self, return_str=False):
+        if return_str:
+            return "beam"
+        else:
+            return self.input_data.beam
+
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication, QMessageBox
