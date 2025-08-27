@@ -34,7 +34,7 @@ class OWAbstractLens(OWOpticalElement):
 
 
     def __init__(self):
-        super().__init__(has_footprint=False)
+        super().__init__(has_footprint=False, show_tab_advanced_settings=False, show_tab_help=True)
 
     def populate_tab_position(self, tab_position):
         self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True,
@@ -61,7 +61,7 @@ class OWAbstractLens(OWOpticalElement):
         self.diameter_box = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
         self.diameter_box_empty = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=24)
 
-        oasysgui.lineEdit(self.diameter_box, self, "diameter", "Lens Aperture Value [\u03bcm]", tooltip= "diameter",
+        oasysgui.lineEdit(self.diameter_box, self, "diameter", "Physical Aperture 'A' [\u03bcm]", tooltip= "diameter",
                           labelWidth=260, valueType=float, orientation="horizontal")
 
         self.set_diameter()
@@ -73,12 +73,12 @@ class OWAbstractLens(OWOpticalElement):
         self.surface_shape_box = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical")
         self.surface_shape_box_empty = oasysgui.widgetBox(lens_box, "", addSpace=False, orientation="vertical", height=24)
 
-        oasysgui.lineEdit(self.surface_shape_box, self, "radius", "Curvature Radius [\u03bcm]", tooltip="radius",
+        oasysgui.lineEdit(self.surface_shape_box, self, "radius", "Curvature Radius 'R' [\u03bcm]", tooltip="radius",
                           labelWidth=260, valueType=float, orientation="horizontal")
 
         self.set_surface_shape()
 
-        oasysgui.lineEdit(lens_box, self, "interthickness", "Lens Thickness [\u03bcm]", tooltip="interthickness",
+        oasysgui.lineEdit(lens_box, self, "interthickness", "Apex Thickness 'at' [\u03bcm]", tooltip="interthickness",
                           labelWidth=260, valueType=float, orientation="horizontal")
 
         gui.comboBox(lens_box, self, "convex_to_the_beam", label="1st interface exposed to the beam",

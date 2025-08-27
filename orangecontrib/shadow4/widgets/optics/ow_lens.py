@@ -1,12 +1,19 @@
-from syned.beamline.shape import Circle
-from shadow4.beamline.optical_elements.refractors.s4_lens import S4Lens, S4LensElement
+import os
+
 from orangecontrib.shadow4.widgets.gui.ow_abstract_lens import OWAbstractLens
+import orangecanvas.resources as resources
+
+from syned.beamline.shape import Circle, Rectangle
+from shadow4.beamline.optical_elements.refractors.s4_lens import S4Lens, S4LensElement
+
 
 class OWLens(OWAbstractLens):
     name = "Refractive Lens"
     description = "Shadow Refractive Lens"
     icon = "icons/lens.png"
     priority = 2.1
+
+    help_path = os.path.join(resources.package_dirname("orangecontrib.shadow4.widgets.gui"), "misc", "lens_help.png")
 
     def __init__(self):
         super().__init__()
@@ -20,10 +27,19 @@ class OWLens(OWAbstractLens):
 
         um_to_si = 1e-6
 
-        if self.has_finite_diameter == 0: boundary_shape = Circle(radius=um_to_si*self.diameter*0.5)
-        else:                             boundary_shape = None
-        if self.is_cylinder == 1: cylinder_angle = self.cylinder_angle + 1
-        else:                     cylinder_angle = 0
+        if self.has_finite_diameter == 0:
+            boundary_shape = None
+        elif self.has_finite_diameter == 1:
+            boundary_shape = Circle(radius=um_to_si * self.diameter * 0.5)
+        else:
+            half_aperture = um_to_si * self.diameter * 0.5
+            boundary_shape = Rectangle(x_left = -half_aperture, x_right = half_aperture,
+                                       y_bottom = -half_aperture, y_top = half_aperture)
+
+        if self.is_cylinder == 1:
+            cylinder_angle = self.cylinder_angle + 1
+        else:
+            cylinder_angle = 0
 
         return S4Lens(name=name,
                       boundary_shape=boundary_shape,

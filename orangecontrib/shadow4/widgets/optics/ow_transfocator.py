@@ -1,4 +1,4 @@
-import numpy, copy
+import numpy, copy, os
 
 from PyQt5.QtWidgets import QWidget, QMessageBox, QVBoxLayout
 from PyQt5.QtCore import Qt
@@ -9,6 +9,7 @@ from oasys.widgets import gui as oasysgui
 from oasys.widgets import congruence
 from oasys.widgets.gui import ConfirmDialog
 from orangecontrib.shadow4.util.shadow4_util import ShadowPhysics
+import orangecanvas.resources as resources
 
 from syned.beamline.shape import Circle, Rectangle
 from syned.beamline.element_coordinates import ElementCoordinates
@@ -18,7 +19,6 @@ from shadow4.beamline.optical_elements.refractors.s4_transfocator import S4Trans
 from orangecontrib.shadow.util.shadow_objects import ShadowPreProcessorData # TODO: remove
 from orangecontrib.shadow4.util.shadow4_objects import PreReflPreProcessorData
 from orangecontrib.shadow4.widgets.gui.ow_optical_element import OWOpticalElement
-
 
 
 class OWTransfocator(OWOpticalElement):
@@ -50,16 +50,18 @@ class OWTransfocator(OWOpticalElement):
     material = Setting(["Be", "Al"])
     density =  Setting([1.848, 2.7])
 
-    radius = Setting([0.1, 0.2])
-    thickness = Setting([0.03, 0.03])
+    radius = Setting([100.0, 200.0])
+    thickness = Setting([30.0, 30.0])
 
     input_data = None
 
     inputs = copy.deepcopy(OWOpticalElement.inputs)
     inputs.append(("PreRefl PreProcessor Data", PreReflPreProcessorData, "set_PreReflPreProcessorData"))
 
+    help_path = os.path.join(resources.package_dirname("orangecontrib.shadow4.widgets.gui"), "misc", "crl_help.png")
+
     def __init__(self):
-        super().__init__(has_footprint=False)
+        super().__init__(has_footprint=False, show_tab_advanced_settings=False, show_tab_help=True)
 
     def populate_tab_position(self, tab_position):
         self.orientation_box = oasysgui.widgetBox(tab_position, "Optical Element Orientation", addSpace=True,
@@ -728,7 +730,7 @@ class CRLBox(QWidget):
         self.diameter_box = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical")
         self.diameter_box_empty = oasysgui.widgetBox(diameter_box_outer, "", addSpace=False, orientation="vertical", height=20)
 
-        self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " Value [\u03bcm]", tooltip="diameter[i]",
+        self.le_diameter = oasysgui.lineEdit(self.diameter_box, self, "diameter", " 'A' [\u03bcm]", tooltip="diameter[i]",
                                              labelWidth=80, #labelWidth=260,
                                              valueType=float, orientation="horizontal", callback=self.transfocator.dump_diameter)
 
@@ -744,17 +746,17 @@ class CRLBox(QWidget):
         self.surface_shape_box = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
         self.surface_shape_box_empty = oasysgui.widgetBox(surface_shape_box_outer, "", addSpace=False, orientation="vertical")
 
-        self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " Radius [\u03bcm]", tooltip="radius[i]",
+        self.le_radius = oasysgui.lineEdit(self.surface_shape_box, self, "radius", " 'R' [\u03bcm]", tooltip="radius[i]",
                                            labelWidth=80, #labelWidth=260,
                                            valueType=float, orientation="horizontal", callback=self.transfocator.dump_radius)
 
         self.set_surface_shape()
 
-        self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Lens Thickness [\u03bcm]", labelWidth=260,
+        self.le_thickness = oasysgui.lineEdit(lens_box, self, "thickness", "Apex Thickness 'at' [\u03bcm]", labelWidth=260,
                                                    valueType=float, orientation="horizontal", tooltip="thickness[i]",
                                                    callback=self.transfocator.dump_thickness)
 
-        self.le_piling_thickness = oasysgui.lineEdit(lens_box, self, "piling_thickness", "Piling thickness [mm]", labelWidth=260,
+        self.le_piling_thickness = oasysgui.lineEdit(lens_box, self, "piling_thickness", "Piling thickness 'pt' [mm]", labelWidth=260,
                                               valueType=float, orientation="horizontal", tooltip="piling_thickness[i]",
                                               callback=self.transfocator.dump_piling_thickness)
 

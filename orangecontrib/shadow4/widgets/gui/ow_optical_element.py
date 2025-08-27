@@ -1,6 +1,9 @@
 import numpy
 import sys
 
+from PyQt5.QtWidgets import QLabel, QMessageBox, QSizePolicy
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor, QFont
 
 from orangewidget import widget
@@ -47,8 +50,10 @@ class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
     oe_orientation_angle            = Setting(0)
     oe_orientation_angle_user_value = Setting(0.0)
 
-    def __init__(self, show_automatic_box=True, has_footprint=False):
-        super().__init__(show_automatic_box=show_automatic_box, has_footprint=has_footprint)
+    def __init__(self, show_automatic_box=True, has_footprint=False, show_tab_advanced_settings=True, show_tab_help=False):
+        super().__init__(show_automatic_box=show_automatic_box,
+                         has_footprint=has_footprint,
+                         )
 
         #
         # main buttons
@@ -87,14 +92,17 @@ class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
 
         self.tab_position          = oasysgui.createTabPage(self.tabs_control_area, "Position")           # to be populated
         self.tab_basic_settings    = oasysgui.createTabPage(self.tabs_control_area, "Basic Settings")
-        self.tab_advanced_settings = oasysgui.createTabPage(self.tabs_control_area, "Advanced Settings")
+        if show_tab_advanced_settings:
+            self.tab_advanced_settings = oasysgui.createTabPage(self.tabs_control_area, "Advanced Settings")
+        if show_tab_help:
+            self.tab_help = oasysgui.createTabPage(self.tabs_control_area, "Help")
 
         self.tabs_basic_settings   = oasysgui.tabWidget(self.tab_basic_settings)
         basic_setting_subtabs      = self.create_basic_settings_subtabs(self.tabs_basic_settings)
 
-        self.tabs_advanced_settings   = oasysgui.tabWidget(self.tab_advanced_settings)
-
-        advanced_setting_subtabs = self.create_advanced_settings_subtabs(self.tabs_advanced_settings)
+        if show_tab_advanced_settings:
+            self.tabs_advanced_settings   = oasysgui.tabWidget(self.tab_advanced_settings)
+            advanced_setting_subtabs = self.create_advanced_settings_subtabs(self.tabs_advanced_settings)
 
         #########################################################
         # Position
@@ -110,7 +118,27 @@ class OWOpticalElement(GenericElement, WidgetDecorator, TriggerToolsDecorator):
         #########################################################
         # Advanced Settings
         #########################################################
-        self.populate_advanced_setting_subtabs(advanced_setting_subtabs)
+        if show_tab_advanced_settings:
+            self.populate_advanced_setting_subtabs(advanced_setting_subtabs)
+
+
+        #########################################################
+        # Help
+        #########################################################
+        if show_tab_help:
+            self.tab_help.setStyleSheet("background-color: white;")
+            help_box = oasysgui.widgetBox(self.tab_help, "", addSpace=True, orientation="horizontal")
+
+            label = QLabel("")
+            label.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+            label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            label.setPixmap(QPixmap(self.help_path).scaledToWidth(self.CONTROL_AREA_WIDTH-20))
+
+            help_box.layout().addWidget(label)
+
+
+
+
 
         gui.rubber(self.controlArea)
         gui.rubber(self.mainArea)

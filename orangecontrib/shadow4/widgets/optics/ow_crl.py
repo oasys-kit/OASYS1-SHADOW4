@@ -1,8 +1,13 @@
+import os
 from orangewidget.settings import Setting
+from orangecontrib.shadow4.widgets.gui.ow_abstract_lens import OWAbstractLens
+import orangecanvas.resources as resources
+
 from oasys.widgets import gui as oasysgui
+
 from syned.beamline.shape import Circle, Rectangle
 from shadow4.beamline.optical_elements.refractors.s4_crl import S4CRL, S4CRLElement
-from orangecontrib.shadow4.widgets.gui.ow_abstract_lens import OWAbstractLens
+
 
 class OWCRL(OWAbstractLens):
     name = "Compound Refractive Lens"
@@ -12,6 +17,8 @@ class OWCRL(OWAbstractLens):
 
     n_lens                  = Setting(10)
     piling_thickness        = Setting(2.5)
+
+    help_path = os.path.join(resources.package_dirname("orangecontrib.shadow4.widgets.gui"), "misc", "crl_help.png")
 
     def __init__(self):
         super().__init__()
@@ -23,7 +30,7 @@ class OWCRL(OWAbstractLens):
         crl_box = oasysgui.widgetBox(basic_setting_subtabs, "CRL Parameters", addSpace=False, orientation="vertical", height=90)
 
         oasysgui.lineEdit(crl_box, self, "n_lens", "Number of lenses", tooltip="n_lens", labelWidth=260, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(crl_box, self, "piling_thickness", "Piling thickness [mm]", tooltip="piling_thickness", labelWidth=260, valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(crl_box, self, "piling_thickness", "Piling thickness 'pt' [mm]", tooltip="piling_thickness", labelWidth=260, valueType=float, orientation="horizontal")
 
         super(OWCRL, self).populate_basic_setting_subtabs(basic_setting_subtabs)
 
@@ -40,7 +47,7 @@ class OWCRL(OWAbstractLens):
             boundary_shape = Circle(radius=um_to_si * self.diameter * 0.5)
         elif self.has_finite_diameter == 2:
             rr = um_to_si * self.diameter * 0.5
-            boundary_shape = Rectangle() (x_left=-rr, x_right=rr, y_bottom=-rr, y_top=rr)
+            boundary_shape = Rectangle(x_left=-rr, x_right=rr, y_bottom=-rr, y_top=rr)
 
         if self.is_cylinder == 1: cylinder_angle = self.cylinder_angle + 1
         else:                     cylinder_angle = 0
