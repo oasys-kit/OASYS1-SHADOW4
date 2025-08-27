@@ -297,7 +297,10 @@ class OWUndulator(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
             )
 
         # S4undulatorLightSource
-        lightsource = S4UndulatorLightSource(name='undulator',
+        try:    name = self.getNode().title
+        except: name = "Undulator Light Source"
+
+        lightsource = S4UndulatorLightSource(name=name,
                                            electron_beam=electron_beam,
                                            magnetic_structure=sourceundulator,
                                            nrays=self.number_of_rays,

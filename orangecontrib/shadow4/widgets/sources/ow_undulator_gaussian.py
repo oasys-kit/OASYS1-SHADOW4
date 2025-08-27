@@ -257,7 +257,10 @@ class OWUndulatorGaussian(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator
         )
 
         # S4UndulatorLightSource
-        lightsource = S4UndulatorGaussianLightSource(name='GaussianUndulator',
+        try:    name = self.getNode().title
+        except: name = "Undulator gaussian"
+
+        lightsource = S4UndulatorGaussianLightSource(name=name,
                                              electron_beam=electron_beam,
                                              magnetic_structure=sourceundulator,
                                              nrays=self.number_of_rays,

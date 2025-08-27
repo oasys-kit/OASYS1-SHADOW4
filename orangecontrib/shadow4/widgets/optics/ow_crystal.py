@@ -432,10 +432,12 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
         if self.surface_shape_type > 0 and self.surface_shape_parameters == 0:
             raise ValueError("Curved crystal with internal calculation not allowed.")
 
+        try:    name = self.getNode().title
+        except: name = "Crystal"
 
         if self.surface_shape_type == 0:
             crystal = S4PlaneCrystal(
-                name="Plane Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,  #todo: check if this is needed if material_constants_library_flag in (2,3)
@@ -459,7 +461,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
             print("FOCUSING DISTANCES: radius:  ", self.spherical_radius)
 
             crystal = S4SphereCrystal(
-                name="Sphere Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,
@@ -482,7 +484,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 2:
             crystal = S4EllipsoidCrystal(
-                name="Ellipsoid Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,
@@ -507,7 +509,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 3:
             crystal = S4HyperboloidCrystal(
-                name="Hyperboloid Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,
@@ -532,7 +534,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 4:
             crystal = S4ParaboloidCrystal(
-                name="Paraboloid Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,
@@ -557,7 +559,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 5:
             crystal = S4ToroidCrystal(
-                name="Toroid Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,
@@ -582,7 +584,7 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 6:
             crystal = S4ConicCrystal(
-                name="Conic Crystal",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 material=self.CRYSTALS[self.user_defined_crystal],
                 miller_index_h=self.user_defined_h,
@@ -608,13 +610,11 @@ class _OWCrystal(OWOpticalElementWithSurfaceShape):
         # if error is selected...
 
         if self.modified_surface:
-            return S4AdditionalNumericalMeshCrystal(name="ideal + error Mirror",
+            return S4AdditionalNumericalMeshCrystal(name=name,
                         ideal_crystal=crystal,
                         numerical_mesh_crystal=S4NumericalMeshCrystal(
                             surface_data_file=self.ms_defect_file_name,
                             boundary_shape=None,
-                            name="Sphere Crystal",
-                            # boundary_shape=self.get_boundary_shape(),
                             material=self.CRYSTALS[self.user_defined_crystal],
                             miller_index_h=self.user_defined_h,
                             miller_index_k=self.user_defined_k,

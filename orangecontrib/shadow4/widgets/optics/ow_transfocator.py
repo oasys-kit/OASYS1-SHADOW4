@@ -141,7 +141,10 @@ class OWTransfocator(OWOpticalElement):
             piling_thickness[i] = self.piling_thickness[i] * mm_to_si
             radius[i] = self.radius[i] * um_to_si
 
-        optical_element = S4Transfocator(name='TF',
+        try:    name = self.getNode().title
+        except: name = "Transfocator"
+
+        optical_element = S4Transfocator(name=name,
                                         n_lens=self.n_lenses,
                                         thickness=thickness,  # syned stuff
                                         boundary_shape=boundary_shape,

@@ -288,7 +288,10 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
         print("***** \n\n S4Wiggler get_info: \n", sourcewiggler.get_info())
 
         # S4WigglerLightSource
-        lightsource = S4WigglerLightSource(name='wiggler',
+        try:    name = self.getNode().title
+        except: name = "Wiggler Light Source"
+
+        lightsource = S4WigglerLightSource(name=name,
                                            electron_beam=electron_beam,
                                            magnetic_structure=sourcewiggler,
                                            nrays=self.number_of_rays,

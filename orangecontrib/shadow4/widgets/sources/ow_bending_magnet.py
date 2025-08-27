@@ -190,7 +190,10 @@ class OWBendingMagnet(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
 
         # S4UndulatorLightSource
-        lightsource = S4BendingMagnetLightSource(name='BendingMagnet',
+        try:    name = self.getNode().title
+        except: name = "Bending Magnet"
+
+        lightsource = S4BendingMagnetLightSource(name=name,
                                              electron_beam=electron_beam,
                                              magnetic_structure=bm,
                                              nrays=self.number_of_rays,

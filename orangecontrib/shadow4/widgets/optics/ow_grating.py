@@ -156,9 +156,12 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
         if self.surface_shape_type > 0 and self.surface_shape_parameters == 0:
             raise ValueError("Curved grating with internal calculation not allowed.")
 
+        try:    name = self.getNode().title
+        except: name = "Grating"
+
         if self.surface_shape_type == 0:
             grating = S4PlaneGrating(
-                name="Plane Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -176,7 +179,7 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             print("FOCUSING DISTANCES: radius:  ", self.spherical_radius)
 
             grating = S4SphereGrating(
-                name="Sphere Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -196,7 +199,7 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 2:
             grating = S4EllipsoidGrating(
-                name="Ellipsoid Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -216,7 +219,7 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 3:
             grating = S4HyperboloidGrating(
-                name="Hyperboloid Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -236,7 +239,7 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 4:
             grating = S4ParaboloidGrating(
-                name="Paraboloid Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -256,7 +259,7 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 5:
             grating = S4ToroidGrating(
-                name="Toroid Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -274,7 +277,7 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 6:
             grating = S4ConicGrating(
-                name="Conic Grating",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 ruling=self.ruling,
                 ruling_coeff_linear=self.ruling_coeff_linear,
@@ -295,13 +298,11 @@ class _OWGrating(OWOpticalElementWithSurfaceShape):
             raise NotImplementedError("surface_shape_type=%d not implemented " % self.surface_shape_type)
 
         if self.modified_surface:
-            return S4AdditionalNumericalMeshGrating(name="ideal + error Grating",
+            return S4AdditionalNumericalMeshGrating(name=name,
                         ideal_grating=grating,
                         numerical_mesh_grating=S4NumericalMeshGrating(
                             surface_data_file=self.ms_defect_file_name,
                             boundary_shape=None,
-                            name="Sphere Grating",
-                            # boundary_shape=self.get_boundary_shape(),
                             ruling=self.ruling,
                             ruling_coeff_linear=self.ruling_coeff_linear,
                             ruling_coeff_quadratic=self.ruling_coeff_quadratic,

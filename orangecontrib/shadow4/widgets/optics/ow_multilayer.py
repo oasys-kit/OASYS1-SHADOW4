@@ -126,9 +126,12 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
         #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
         #  Side:  SOURCE = 0  IMAGE = 1
 
+        try:    name = self.getNode().title
+        except: name = "Multilayer"
+
         if self.surface_shape_type == 0:
             multilayer = S4PlaneMultilayer(
-                name="Plane Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 f_refl=self.reflectivity_source,
                 file_refl=self.file_refl,  # preprocessor file fir f_refl=0,2,3,4
@@ -145,7 +148,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
             print("FOCUSING DISTANCES: grazing angle:  ", self.get_focusing_grazing_angle())
 
             multilayer = S4SphereMultilayer(
-                name="Sphere Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -164,7 +167,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 2:
             multilayer = S4EllipsoidMultilayer(
-                name="Ellipsoid Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -185,7 +188,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 3:
             multilayer = S4HyperboloidMultilayer(
-                name="Hyperboloid Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -206,7 +209,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 4:
             multilayer = S4ParaboloidMultilayer(
-                name="Paraboloid Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -227,7 +230,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 5:
             multilayer = S4ToroidMultilayer(
-                name="Toroid Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 min_radius=self.torus_minor_radius,
@@ -245,7 +248,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 6:
             multilayer = S4ConicMultilayer(
-                name="Conic coefficients Multilayer",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 conic_coefficients=[
                      self.conic_coefficient_0,self.conic_coefficient_1,self.conic_coefficient_2,
@@ -263,7 +266,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
         # if error is selected...
 
         if self.modified_surface:
-            return S4AdditionalNumericalMeshMultilayer(name="ideal + error Multilayer",
+            return S4AdditionalNumericalMeshMultilayer(name=name,
                                                    ideal_multilayer=multilayer,
                                                    numerical_mesh_multilayer=S4NumericalMeshMultilayer(
                                                        surface_data_file=self.ms_defect_file_name,

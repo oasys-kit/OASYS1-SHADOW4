@@ -187,9 +187,12 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
         #  Direction:  TANGENTIAL = 0  SAGITTAL = 1
         #  Side:  SOURCE = 0  IMAGE = 1
 
+        try:    name = self.getNode().title
+        except: name = "Mirror"
+
         if self.surface_shape_type == 0:
             mirror = S4PlaneMirror(
-                name="Plane Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 # inputs related to mirror reflectivity
                 f_reflec=self.reflectivity_flag,  # reflectivity of surface: 0=no reflectivity, 1=full polarization
@@ -215,7 +218,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             print("FOCUSING DISTANCES: grazing angle:  ", self.get_focusing_grazing_angle())
 
             mirror = S4SphereMirror(
-                name="Sphere Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -243,7 +246,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 2:
             mirror = S4EllipsoidMirror(
-                name="Ellipsoid Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -273,7 +276,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 3:
             mirror = S4HyperboloidMirror(
-                name="Hyperboloid Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -303,7 +306,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 4:
             mirror = S4ParaboloidMirror(
-                name="Paraboloid Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 is_cylinder=self.is_cylinder,
@@ -333,7 +336,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 5:
             mirror = S4ToroidMirror(
-                name="Toroid Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 min_radius=self.torus_minor_radius,
@@ -360,7 +363,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
             )
         elif self.surface_shape_type == 6:
             mirror = S4ConicMirror(
-                name="Conic coefficients Mirror",
+                name=name,
                 boundary_shape=self.get_boundary_shape(),
                 conic_coefficients=[
                      self.conic_coefficient_0,self.conic_coefficient_1,self.conic_coefficient_2,
@@ -387,7 +390,7 @@ class _OWMirror(OWOpticalElementWithSurfaceShape):
         # if error is selected...
 
         if self.modified_surface:
-            return S4AdditionalNumericalMeshMirror(name="ideal + error Mirror",
+            return S4AdditionalNumericalMeshMirror(name=name,
                                                    ideal_mirror=mirror,
                                                    numerical_mesh_mirror=S4NumericalMeshMirror(
                                                        surface_data_file=self.ms_defect_file_name,

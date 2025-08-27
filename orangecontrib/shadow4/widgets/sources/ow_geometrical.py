@@ -618,7 +618,10 @@ class OWGeometrical(GenericElement, WidgetDecorator, TriggerToolsDecorator):
 
     def get_lightsource(self):
 
-        gs = SourceGeometrical(name="SourceGeometrical", nrays=self.number_of_rays, seed=self.seed)
+        try:    name = self.getNode().title
+        except: name = "Geometrcal Source"
+
+        gs = SourceGeometrical(name=name, nrays=self.number_of_rays, seed=self.seed)
 
         if self.spatial_type == 0: # point
             gs.set_spatial_type_point()

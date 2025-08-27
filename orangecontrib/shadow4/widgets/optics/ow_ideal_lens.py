@@ -84,12 +84,15 @@ class OWIdealLens(OWOpticalElement):
         return optical_element
 
     def get_oe_instance(self):
+        try:    name = self.getNode().title
+        except: name = "Ideal Lens"
+
         if self.ideal_lens_type == 0:
             return S4IdealLens(
-                name='Ideal Lens TF', focal_x=self.focal_x, focal_y=self.focal_z)
+                name=name, focal_x=self.focal_x, focal_y=self.focal_z)
         else:
             return S4SuperIdealLens(
-                name='Ideal Lens TF', focal_x=self.focal_x, focal_y=self.focal_z)
+                name=name, focal_x=self.focal_x, focal_y=self.focal_z)
 
     def set_ideal_lens_type(self):
         self.box_focal_distances.setVisible(self.ideal_lens_type == 0)
