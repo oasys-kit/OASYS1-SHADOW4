@@ -1,6 +1,7 @@
-import sys
+import sys, time
 import numpy
-from PyQt5 import QtGui, QtWidgets
+
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from orangewidget import gui
@@ -11,7 +12,8 @@ from oasys.util.oasys_util import EmittingStream
 from orangecontrib.shadow4.widgets.gui.ow_automatic_element import AutomaticElement
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
-from orangecontrib.shadow4.widgets.gui.plots import plot_data1D, plot_data2D, plot_data3D, plot_multi_data1D
+from orangecontrib.shadow4.widgets.gui.plots import plot_multi_data1D
+from orangecontrib.shadow4.util.python_script import PythonScript
 
 from shadow4.tools.beamline_tools import focnew, focnew_scan, focnew_scan_full_beamline
 from shadow4.tools.logger import set_verbose
@@ -39,15 +41,15 @@ class FocNew(AutomaticElement):
     center_x = Setting(0.0)
     center_z = Setting(0.0)
 
-    # y_range=Setting(0)
     y_range_min=Setting(-10.0)
     y_range_max=Setting(10.0)
     y_npoints=Setting(1001)
+
+    plot_beamline = Setting(1)
     npoints_beamline=Setting(11)
 
     plot_canvas_x = None
     plot_canvas_bl = None
-
 
     input_data = None
 
@@ -56,32 +58,34 @@ class FocNew(AutomaticElement):
 
         gui.button(self.controlArea, self, "Calculate", callback=self.calculate, height=45)
 
-        general_box = oasysgui.widgetBox(self.controlArea, "General Settings", addSpace=True, orientation="vertical") # , width=self.CONTROL_AREA_WIDTH-8, height=220)
+        general_box = oasysgui.widgetBox(self.controlArea, "General Settings", addSpace=True, orientation="vertical")
 
-        gui.comboBox(general_box, self, "mode", label="Mode", labelWidth=250,
+
+        general_box1 = oasysgui.widgetBox(general_box, "Center", addSpace=True, orientation="vertical")
+        gui.comboBox(general_box1, self, "mode", label="Mode", labelWidth=250,
                                      items=["Center at Origin",
                                             "Center at Barycenter",
                                             "External"],
-                                     callback=self.set_Center, sendSelectedValue=False, orientation="horizontal")
-
-        self.center_box = oasysgui.widgetBox(general_box, "", addSpace=False, orientation="vertical", height=50)
-        self.center_box_empty = oasysgui.widgetBox(general_box, "", addSpace=False, orientation="vertical", height=50)
-
+                                     callback=self.set_visibility, sendSelectedValue=False, orientation="horizontal")
+        self.center_box = oasysgui.widgetBox(general_box1, "", addSpace=False, orientation="vertical", height=50)
         self.le_center_x = oasysgui.lineEdit(self.center_box, self, "center_x", "Center X [m]", labelWidth=260, valueType=float, orientation="horizontal")
         self.le_center_z = oasysgui.lineEdit(self.center_box, self, "center_z", "Center Z [m]", labelWidth=260, valueType=float, orientation="horizontal")
 
-        # gui.comboBox(general_box, self, "y_range", label="Y Range",labelWidth=250,
-        #                              items=["<Default>",
-        #                                     "Set.."],
-        #                              callback=self.set_YRange, sendSelectedValue=False, orientation="horizontal")
 
-        self.yrange_box = oasysgui.widgetBox(general_box, "", addSpace=False, orientation="vertical", height=100)
-        self.yrange_box_empty = oasysgui.widgetBox(general_box, "", addSpace=False, orientation="vertical",  height=100)
-
+        general_box1 = oasysgui.widgetBox(general_box, "Scan range", addSpace=True, orientation="vertical")
+        self.yrange_box = oasysgui.widgetBox(general_box1, "", addSpace=False, orientation="vertical", height=100)
         self.le_y_range_min = oasysgui.lineEdit(self.yrange_box, self, "y_range_min", "Y min [m]", labelWidth=250, valueType=float, orientation="horizontal")
         self.le_y_range_max = oasysgui.lineEdit(self.yrange_box, self, "y_range_max", "Y max [m]", labelWidth=250, valueType=float, orientation="horizontal")
         oasysgui.lineEdit(self.yrange_box, self, "y_npoints", "Points (for focnew scan)", labelWidth=300, valueType=int, orientation="horizontal")
-        oasysgui.lineEdit(self.yrange_box, self, "npoints_beamline", "Points inter o.e. (for focnew full beamline)", labelWidth=300, valueType=int, orientation="horizontal")
+
+
+        general_box1 = oasysgui.widgetBox(general_box, "Beamline", addSpace=True, orientation="vertical")
+        gui.comboBox(general_box1, self, "plot_beamline", label="Full beamline plot", labelWidth=250,
+                                     items=["No", "Yes"],
+                                     callback=self.set_visibility, sendSelectedValue=False, orientation="horizontal")
+        self.flag_beamline_box = oasysgui.widgetBox(general_box1, "", addSpace=False, orientation="vertical", height=100)
+        oasysgui.lineEdit(self.flag_beamline_box, self, "npoints_beamline", "Points inter o.e. (for focnew full beamline)", labelWidth=300, valueType=int, orientation="horizontal")
+
 
         gui.separator(self.controlArea, height=200)
 
@@ -92,8 +96,8 @@ class FocNew(AutomaticElement):
         tab_info = oasysgui.createTabPage(tabs_setting, "Focnew Info")
         tab_scan = oasysgui.createTabPage(tabs_setting, "Focnew Scan")
         tab_beamline = oasysgui.createTabPage(tabs_setting, "Focnew Full Beamline")
-        # tab_scan_old = oasysgui.createTabPage(tabs_setting, "Focnew Scan Old")
         tab_out = oasysgui.createTabPage(tabs_setting, "System Output")
+        tab_script = oasysgui.createTabPage(tabs_setting, "Script")
 
         self.focnewInfo = oasysgui.textArea(height=self.IMAGE_HEIGHT-35)
         info_box = oasysgui.widgetBox(tab_info, "", addSpace=True, orientation="horizontal", width = self.IMAGE_WIDTH-20, ) # height = self.IMAGE_HEIGHT-20)
@@ -103,37 +107,28 @@ class FocNew(AutomaticElement):
         self.image_box.setFixedHeight(self.IMAGE_HEIGHT-30)
         self.image_box.setFixedWidth(self.IMAGE_WIDTH-20)
 
-        self.beamline_box = gui.widgetBox(tab_beamline, "Scan", addSpace=True, orientation="vertical")
+        self.beamline_box = gui.widgetBox(tab_beamline, "Beamline", addSpace=True, orientation="vertical")
         self.beamline_box.setFixedHeight(self.IMAGE_HEIGHT-30)
         self.beamline_box.setFixedWidth(self.IMAGE_WIDTH-20)
+
+        self.shadow4_script = PythonScript()
+        self.shadow4_script.code_area.setFixedHeight(400)
+        script_box = gui.widgetBox(tab_script, "Python script", addSpace=True, orientation="horizontal")
+        script_box.layout().addWidget(self.shadow4_script)
 
         self.shadow_output = oasysgui.textArea(height=self.IMAGE_HEIGHT-35)
         out_box = oasysgui.widgetBox(tab_out, "System Output", addSpace=True, orientation="horizontal", width = self.IMAGE_WIDTH-20, ) # height = self.IMAGE_HEIGHT-20)
         out_box.layout().addWidget(self.shadow_output)
 
-        self.set_Center()
-        # self.set_YRange()
+        self.set_visibility()
 
 
-    def set_Center(self):
+    def set_visibility(self):
+        self.center_box.setVisible(False)
         self.center_box.setVisible(self.mode == 2)
-        self.center_box_empty.setVisible(self.mode < 2)
 
-    # def set_YRange(self):
-    #     self.yrange_box.setVisible(self.y_range == 1)
-    #     self.yrange_box_empty.setVisible(self.y_range == 0)
-
-
-    def setBeam(self, shadow_data):
-        if ShadowCongruence.checkEmptyBeam(shadow_data):
-            if ShadowCongruence.checkGoodBeam(shadow_data):
-                self.input_data = shadow_data
-                if self.is_automatic_run:
-                    self.calculate()
-            else:
-                QtWidgets.QMessageBox.critical(self, "Error",
-                                           "Data not displayable: No good rays or bad content",
-                                           QtWidgets.QMessageBox.Ok)
+        self.flag_beamline_box.setVisible(False)
+        self.flag_beamline_box.setVisible(self.plot_beamline == 1)
 
     def calculate(self):
         if self.input_data is None:
@@ -146,47 +141,41 @@ class FocNew(AutomaticElement):
 
             self.shadow_output.setText("")
             self.focnewInfo.setText("")
-            if self.plot_canvas_x is not None: self.image_box.layout().removeItem(self.image_box.layout().itemAt(0))
-            if self.plot_canvas_bl is not None: self.beamline_box.layout().removeItem(self.beamline_box.layout().itemAt(0))
 
-            ticket = focnew(beam=self.input_data.beam, nolost=1, mode=self.mode, center=[self.center_x, self.center_z])
-            self.focnewInfo.setText(ticket['text'])
-            self.do_plot_focnew(ticket)
-            self.do_plot_beamline()
+            if self.plot_canvas_x is not None:
+                self.image_box.layout().removeItem(self.image_box.layout().itemAt(0))
+                self.plot_canvas_x.hide()
+                self.plot_canvas_x = None
 
-            print("list of 6 coeffs: <d**2>, <x d>, <x**2>, <x>**2, <x><d>, <d>**2: ")
-            print("AX coeffs: ", ticket["AX"])
-            print("AZ coeffs: ", ticket["AZ"])
-            print("AT coeffs: ", ticket["AT"])
+            if self.plot_canvas_bl is not None:
+                self.beamline_box.layout().removeItem(self.beamline_box.layout().itemAt(0))
+                self.plot_canvas_bl.hide()
+                self.plot_canvas_bl = None
 
-            print("\n\nYou can retrieve the data in a script like this:")
-            print("########################################################################")
-            print("import numpy")
-            print("from shadow4.tools.beamline_tools import focnew, focnew_scan, focnew_scan_full_beamline")
-            print("beam = in_object_1.beam         # define your beam")
-            print("beamline = in_object_1.beamline # define your beamline")
-            print("ticket1 = focnew(beam=beam, nolost=1, mode=%d, center=[%g, %g])" % (self.mode, self.center_x, self.center_z))
-            print("y = numpy.linspace(%f, %f, %d)" % (self.y_range_min, self.y_range_max, int(self.y_npoints)))
-            print("x = focnew_scan(ticket1['AX'], y) * 1e6")
-            print("z = focnew_scan(ticket1['AZ'], y) * 1e6")
-            print("t = focnew_scan(ticket1['AT'], y) * 1e6")
-            print("from srxraylib.plot.gol import plot")
-            print("plot(y, x, y, z, xtitle='Y [m]', ytitle='<x> or <z> [um]', legend=['x','z'])")
 
-            print("\nticket2 = focnew_scan_full_beamline(beamline, npoints=%d)" % self.npoints_beamline)
-            print("plot(ticket2['y'], ticket2['x'], ticket2['y'], ticket2['z'], xtitle='Y [m]', ytitle='<H> or <V> [um]', legend=['H','V'])")
-            print("########################################################################")
+            self.set_script()
+
+            self.do_plot_focnew()
+            if self.plot_beamline: self.do_plot_beamline()
+
+
 
         except Exception as exception:
             self.prompt_exception(exception)
 
 
-    def do_plot_focnew(self, ticket):
-        # if self.y_range == 0:
-        #     y = numpy.linspace(-10.0, 10.0, 1001)
-        # else:
-        #     y = numpy.linspace(self.y_range_min, self.y_range_max, int(self.y_npoints))
+    def do_plot_focnew(self):
 
+        ticket = focnew(beam=self.input_data.beam, nolost=1, mode=self.mode, center=[self.center_x, self.center_z])
+
+        # info...
+        self.focnewInfo.setText(ticket['text'])
+        print("list of 6 coeffs: <d**2>, <x d>, <x**2>, <x>**2, <x><d>, <d>**2: ")
+        print("AX coeffs: ", ticket["AX"])
+        print("AZ coeffs: ", ticket["AZ"])
+        print("AT coeffs: ", ticket["AT"])
+
+        # scan...
         y = numpy.linspace(self.y_range_min, self.y_range_max, int(self.y_npoints))
 
         ylist = [focnew_scan(ticket["AX"], y) * 1e6,
@@ -211,7 +200,8 @@ class FocNew(AutomaticElement):
                                                 xtitle="Y [m]",
                                                 ytitle="<H> or <V> [$\mu$m]",
                                                 ytitles=ticket['list_x_label'] + ticket['list_z_label'],
-                                                flag_common_abscissas=0)  # , xrange=[0, yy_multi[-1][-1]])
+                                                flag_common_abscissas=0)
+
 
         self.beamline_box.layout().addWidget(self.plot_canvas_bl)
 
@@ -227,6 +217,63 @@ class FocNew(AutomaticElement):
         cursor.insertText(text)
         self.shadow_output.setTextCursor(cursor)
         self.shadow_output.ensureCursorVisible()
+
+    def set_script(self):
+
+        # script
+        try:
+            beamline = self.input_data.beamline.duplicate()
+            script = beamline.to_python_code()
+
+            indented_script = '\n'.join('    ' + line for line in script.splitlines())
+
+            final_script = "def run_beamline():\n"
+            final_script += indented_script
+            final_script += "\n    return beam, footprint, beamline"
+            final_script += "\n\n"
+
+            dict = {
+                    "mode": self.mode,
+                    "center_x": self.center_x,
+                    "center_z": self.center_z,
+                    "y_range_min": self.y_range_min,
+                    "y_range_max": self.y_range_max,
+                    "y_npoints": int(self.y_npoints),
+                    "npoints_beamline": int(self.npoints_beamline),
+                    "plot_beamline": self.plot_beamline,
+                    }
+
+            script_template = """#
+# main
+#
+import numpy
+from shadow4.tools.beamline_tools import focnew, focnew_scan, focnew_scan_full_beamline
+from srxraylib.plot.gol import plot, plot_image, plot_image_with_histograms, plot_show
+
+beam, footprint, beamline = run_beamline()
+
+ticket1 = focnew(beam=beam, nolost=1, mode={mode}, center=[{center_x}, {center_z}])
+print(ticket1['text'])
+
+y = numpy.linspace({y_range_min}, {y_range_max}, {y_npoints})
+x = focnew_scan(ticket1['AX'], y) * 1e6
+z = focnew_scan(ticket1['AZ'], y) * 1e6
+t = focnew_scan(ticket1['AT'], y) * 1e6
+plot(y, x, y, z, y, t, xtitle='Y [m]', ytitle='<x> or <z> [um]', title='at specific optical element', legend=['x','z','combined'])
+
+if {plot_beamline}:
+    ticket2 = focnew_scan_full_beamline(beamline, npoints={npoints_beamline})
+    plot(ticket2['y'], ticket2['x'], ticket2['y'], ticket2['z'], xtitle='Y [m]', ytitle='<H> or <V> [um]', title='Full beamline', legend=['H','V'])
+
+"""
+
+            final_script += script_template.format_map(dict)
+
+            self.shadow4_script.set_code(final_script)
+        except:
+            final_script += "\n\n\n# cannot retrieve beamline data from shadow_data"
+
+        self.shadow4_script.set_code(final_script)
 
 if __name__ == "__main__":
     def get_beamline():
