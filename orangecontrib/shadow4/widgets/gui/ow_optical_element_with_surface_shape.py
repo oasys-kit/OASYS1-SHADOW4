@@ -621,11 +621,19 @@ class OWOpticalElementWithSurfaceShape(OWOpticalElement):
 
         if not os.path.isfile(surface_data_file): raise Exception("File %s not found." % surface_data_file)
 
-        ask_for_fix = self.is_infinite == 1 or self.oe_shape != 0
+        if xx is None or yy is None or zz is None: xx, yy, zz = read_surface_file(surface_data_file)
+
+        ask_for_fix = 0
+        if self.is_infinite: ask_for_fix = 1
+        if self.oe_shape != 0: ask_for_fix = 1
+        if (xx.min() > -self.dim_x_minus) or \
+                (xx.max() > self.dim_x_plus) or \
+                (yy.min() > -self.dim_y_minus) or \
+                (yy.max() > self.dim_y_plus):
+            ask_for_fix = 1
+
 
         if ask_for_fix:
-            if xx is None or yy is None or zz is None: xx, yy, zz = read_surface_file(surface_data_file)
-
             print(">> File limits: ", xx.min(), xx.max(), yy.min(), yy.max())
             print(">> Current limits: ", self.dim_x_minus, self.dim_x_plus, self.dim_y_minus, self.dim_x_plus)
 
