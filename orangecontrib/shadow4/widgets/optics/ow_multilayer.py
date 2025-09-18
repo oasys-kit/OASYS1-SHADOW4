@@ -235,7 +235,7 @@ class _OWMultilayer(OWOpticalElementWithSurfaceShape):
                 surface_calculation=self.surface_shape_parameters, # INTERNAL = 0  EXTERNAL = 1
                 min_radius=self.torus_minor_radius,
                 maj_radius=self.torus_major_radius, # tangential radius
-                f_torus=self.toroidal_multilayer_pole_location,
+                f_torus=self.toroidal_mirror_pole_location,
                 p_focus=self.get_focusing_p(),
                 q_focus=self.get_focusing_q(),
                 grazing_angle=self.get_focusing_grazing_angle(),
