@@ -259,19 +259,15 @@ class OWElectronBeam(GenericElement):
 
         elif self.type_of_properties == 2:
             electron_beam.set_twiss_horizontal(self.electron_beam_emittance_h,
-                                             self.electron_beam_alpha_h,
-                                             self.electron_beam_beta_h,
-                                             0.0,
-                                             0.0,
-                                               )
+                                               self.electron_beam_alpha_h,
+                                               self.electron_beam_beta_h,
+                                               eta_x=0.0,
+                                               etap_x=0.0)
             electron_beam.set_twiss_vertical(self.electron_beam_emittance_v,
                                              self.electron_beam_alpha_v,
                                              self.electron_beam_beta_v,
-                                             0.0,
-                                             0.0,
-                                             )
-
-
+                                             eta_y=0.0,
+                                             etap_y=0.0)
 
             if recalculate_fields:
                 x, xp, y, yp = electron_beam.get_sigmas_all()
