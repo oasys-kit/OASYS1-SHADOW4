@@ -38,11 +38,14 @@
 #
 # Upload to pypi (when uploading, increment the version number):
 #     python setup.py register (only once, not longer needed)
+#     # use python > 3.10, pip > 25.2 (packages needed: twine build)
+#     rm -fR dist
 #     python setup.py sdist
-#     python setup.py upload
-#          
+#     python -m build
+#     python -m twine upload dist/*
+#
 # Install from pypi:
-#     pip install <name>
+#     pip install OASYS1-shadow4
 #
 
 __authors__ = ["M Sanchez del Rio, Luca Rebuffi"]
@@ -54,7 +57,7 @@ import sys
 from setuptools import find_packages, setup
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.79'
+VERSION = '0.0.80'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
@@ -88,8 +91,8 @@ SETUP_REQUIRES = (
                   )
 
 INSTALL_REQUIRES = (
-                    'oasys1>=1.2.145',
-                    'shadow4>=0.1.60',
+                    'oasys1>=1.2.150',
+                    'shadow4>=0.1.70',
                     'xoppylib', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
                     )
 

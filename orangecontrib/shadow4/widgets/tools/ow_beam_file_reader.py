@@ -1,35 +1,19 @@
 import sys
-O2 = True if sys.version_info.minor >= 10 else False
 
 from orangewidget import gui
 from orangewidget.settings import Setting
 
-if O2:
-    from orangewidget.widget import Output
+from PyQt5.QtGui import QPalette, QColor, QFont
 
-    from oasys2.widget import gui as oasysgui
-    from oasys2.widget.widget import OWAction
-    from oasys2.widget.util import congruence
-    from oasys2.widget.util.widget_util import EmittingStream
-    from oasys2.widget.gui import Styles
-    from oasys2.canvas.util.canvas_util import add_widget_parameters_to_module
-    from oasys2.widget.util.widget_objects import TriggerIn
-
-    WidgetDecorator = object # TODO: remove? For O1-compatibility
-
-else:
-    from PyQt5.QtGui import QPalette, QColor, QFont
-
-    from syned.widget.widget_decorator import WidgetDecorator
+from syned.widget.widget_decorator import WidgetDecorator
 
 
-    from orangewidget import widget
+from orangewidget import widget
 
-    from oasys.widgets import gui as oasysgui
-    from oasys.widgets import congruence
-    from oasys.util.oasys_util import EmittingStream
+from oasys.widgets import gui as oasysgui
+from oasys.util.oasys_util import EmittingStream
 
-    from oasys.util.oasys_util import TriggerIn
+from oasys.util.oasys_util import TriggerIn
 
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
@@ -56,29 +40,21 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
     simulation_name = Setting("run001")
     beam_name       = Setting("begin")
 
-    if O2:
-        class Outputs:
-            shadow_data = Output("Shadow Data", ShadowData, default=True, auto_summary=False)
-            trigger = TriggerToolsDecorator.get_trigger_output()
-    else:
-        inputs = []
-        WidgetDecorator.append_syned_input_data(inputs)
+    inputs = []
+    WidgetDecorator.append_syned_input_data(inputs)
 
-        outputs = [{"name":"Shadow Data",
-                    "type":ShadowData,
-                    "doc":"",}]
+    outputs = [{"name":"Shadow Data",
+                "type":ShadowData,
+                "doc":"",}]
 
-        TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
-        TriggerToolsDecorator.append_trigger_output(outputs)
+    TriggerToolsDecorator.append_trigger_input_for_sources(inputs)
+    TriggerToolsDecorator.append_trigger_output(outputs)
 
 
     def __init__(self):
         super().__init__(show_automatic_box=False, has_footprint=False)
 
-        if O2:
-            self.runaction = OWAction("Read Shadow4 File", self)
-        else:
-            self.runaction = widget.OWAction("Read Shadow4 File", self)
+        self.runaction = widget.OWAction("Read Shadow4 File", self)
         self.runaction.triggered.connect(self.read_file)
         self.addAction(self.runaction)
 
@@ -86,29 +62,24 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
         button_box = oasysgui.widgetBox(self.controlArea, "", addSpace=False, orientation="horizontal")
 
         button = gui.button(button_box, self, "Read Shadow4 File", callback=self.read_file)
-        if O2:
-            button.setStyleSheet(Styles.button_blue)
-        else:
-            font = QFont(button.font())
-            font.setBold(True)
-            button.setFont(font)
-            palette = QPalette(button.palette()) # make a copy of the palette
-            palette.setColor(QPalette.ButtonText, QColor('Dark Blue'))
-            button.setPalette(palette) # assign new palette
-            button.setFixedHeight(45)
+        font = QFont(button.font())
+        font.setBold(True)
+        button.setFont(font)
+        palette = QPalette(button.palette()) # make a copy of the palette
+        palette.setColor(QPalette.ButtonText, QColor('Dark Blue'))
+        button.setPalette(palette) # assign new palette
+        button.setFixedHeight(45)
 
         button = gui.button(button_box, self, "Reset Fields", callback=self.call_reset_settings)
-        if O2:
-            button.setStyleSheet(Styles.button_red)
-        else:
-            font = QFont(button.font())
-            font.setItalic(True)
-            button.setFont(font)
-            palette = QPalette(button.palette()) # make a copy of the palette
-            palette.setColor(QPalette.ButtonText, QColor('Dark Red'))
-            button.setPalette(palette) # assign new palette
-            button.setFixedHeight(45)
-            button.setFixedWidth(150)
+
+        font = QFont(button.font())
+        font.setItalic(True)
+        button.setFont(font)
+        palette = QPalette(button.palette()) # make a copy of the palette
+        palette.setColor(QPalette.ButtonText, QColor('Dark Red'))
+        button.setPalette(palette) # assign new palette
+        button.setFixedHeight(45)
+        button.setFixedWidth(150)
 
         self.controlArea.setFixedWidth(self.CONTROL_AREA_WIDTH)
 
@@ -171,14 +142,8 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
                                      number_of_rays=output_beam.N,
                                      beamline=S4Beamline(light_source=light_source))
 
-
-            if O2:
-                output_data.scanning_data = scanning_data
-                self.Outputs.shadow_data.send(output_data)
-                self.Outputs.trigger.send(TriggerIn(new_object=True))
-            else:
-                self.send("Shadow Data", output_data)
-                self.send("Trigger", TriggerIn(new_object=True))
+            self.send("Shadow Data", output_data)
+            self.send("Trigger", TriggerIn(new_object=True))
         except Exception as exception:
             try:    self._initialize_tabs()
             except: pass
@@ -191,13 +156,8 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
             simulation_name=self.simulation_name,
             beam_name=self.beam_name)
 
-if O2: add_widget_parameters_to_module(__name__)
-
 if __name__ == "__main__":
-    if O2:
-        from AnyQt.QtWidgets import QApplication
-    else:
-        from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtWidgets import QApplication
     a = QApplication(sys.argv)
     ow = BeamFileReader()
     ow.file_name = "/nobackup/gurb1/srio/Oasys/tmp4.h5"
