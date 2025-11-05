@@ -8,9 +8,6 @@ from orangewidget import gui
 from orangewidget.settings import Setting
 
 if O2:
-
-    import pickle
-
     from AnyQt.QtWidgets import QMessageBox
 
     from orangewidget.widget import Input, Output
@@ -100,8 +97,8 @@ class BeamFileWriter(OWWidget):
 
     def selectFile(self):
         self.le_shadow_data_file_name.setText(
-            oasysgui.selectSaveFileFromDialog(self, self.shadow_data_file_name, default_file_name="s4_data.pkl",
-                                              file_extension_filter="Pickle Files (*.pkl)"))
+            oasysgui.selectSaveFileFromDialog(self, self.shadow_data_file_name, default_file_name="s4_data.h5",
+                                              file_extension_filter="HDF5 Files (*.h5 *.hdf5 *.hdf)"))
 
     if O2:
         @Inputs.shadow_data
@@ -129,31 +126,17 @@ class BeamFileWriter(OWWidget):
 
             if self.is_automatic_run: self.write_file()
 
+
     def write_file(self):
         self.setStatusMessage("")
 
-        # try:
-        #     if ShadowCongruence.check_empty_data(self.input_data):
-        #         if congruence.checkFileName(self.shadow_data_file_name):
-        #             with open(self.shadow_data_file_name, "wb") as f:  pickle.dump(self.input_data, f)
-        #
-        #             _, file_name = os.path.split(self.shadow_data_file_name)
-        #
-        #             self.setStatusMessage("Current: " + file_name)
-        #
-        #             self.Outputs.shadow_data.send(self.input_data)
-        #     else:
-        #         QMessageBox.critical(self, "Error", "Empty input data or empty beam", QMessageBox.Ok)
-        # except Exception as exception:
-        #     QMessageBox.critical(self, "Error", str(exception), QMessageBox.Ok)
         try:
             if ShadowCongruence.check_empty_data(self.input_data):
                 if congruence.checkFileName(self.shadow_data_file_name):
-                    # with open(self.shadow_data_file_name, "wb") as f:  pickle.dump(self.input_data, f)
-                    wf = self.input_data.beam.write_h5(self.shadow_data_file_name,
-                                                       overwrite=True,
-                                                       simulation_name='run001',
-                                                       beam_name='begin')
+                    _ = self.input_data.beam.write_h5(self.shadow_data_file_name,
+                                                      overwrite=True,
+                                                      simulation_name='run001',
+                                                      beam_name='begin')
 
                     _, file_name = os.path.split(self.shadow_data_file_name)
 

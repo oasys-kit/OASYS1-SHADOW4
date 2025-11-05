@@ -52,9 +52,9 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
 
     want_main_area = 1
 
-    file_name = Setting("")
+    file_name       = Setting("")
     simulation_name = Setting("run001")
-    beam_name = Setting("begin")
+    beam_name       = Setting("begin")
 
     if O2:
         class Outputs:
@@ -113,7 +113,7 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
         self.controlArea.setFixedWidth(self.CONTROL_AREA_WIDTH)
 
         tabs_setting = oasysgui.tabWidget(self.controlArea)
-        tabs_setting.setFixedHeight(self.TABS_AREA_HEIGHT + 60)
+        tabs_setting.setFixedHeight(self.TABS_AREA_HEIGHT)
         tabs_setting.setFixedWidth(self.CONTROL_AREA_WIDTH - 5)
 
         tab_basic = oasysgui.createTabPage(tabs_setting, "General")
@@ -131,7 +131,7 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
         gui.rubber(self.mainArea)
 
     def select_file(self):
-        self.le_file_name.setText(oasysgui.selectFileFromDialog(self, self.file_name, "Open Shadow4 File", file_extension_filter="hdf5 Files (*.h5 *.hdf5 *.hdf)"))
+        self.le_file_name.setText(oasysgui.selectFileFromDialog(self, self.file_name, "Open Shadow4 File", file_extension_filter="HDF5 Files (*.h5 *.hdf5 *.hdf)"))
 
     def read_file(self, scanning_data: ShadowData.ScanningData = None):
         self.setStatusMessage("")
@@ -154,9 +154,7 @@ class BeamFileReader(GenericElement, TriggerToolsDecorator, WidgetDecorator):
             script += "\nplot_scatter(1e6 * rays[:, 0], 1e6 * rays[:, 2], title='(X,Z) in microns')"
             self.shadow4_script.set_code(script)
 
-
             print(light_source.info())
-
             print(light_source.get_info())
 
             self.progressBarSet(5)
