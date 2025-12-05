@@ -27,18 +27,15 @@ else:
     from orangewidget import widget
     from orangewidget import gui
 
-
-
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
-from orangecontrib.shadow4.util.shadow4_util import TriggerToolsDecorator
 
 from shadow4.tools.logger import set_verbose
 from shadow4.sources.s4_light_source_from_beamlines import S4LightSourceFromBeamlines
 from shadow4.beamline.s4_beamline import S4Beamline
 
-class MergeBeams(GenericElement, TriggerToolsDecorator):
+class MergeBeams(GenericElement):
     name = "Merge Shadow4 Beam"
     description = "Tools: Merge Shadow4 Beam"
     icon = "icons/merge.png"
@@ -78,10 +75,9 @@ class MergeBeams(GenericElement, TriggerToolsDecorator):
                   ("Input Beam # 9", ShadowData,  "set_shadow_data9"),
                   ("Input Beam # 10", ShadowData, "set_shadow_data10"), ]
 
-        outputs = [{"name": "Beam",
+        outputs = [{"name": "Shadow Data",
                     "type": ShadowData,
-                    "doc": "Shadow Data",
-                    "id": "beam"}]
+                    "doc": "", }]
 
     want_main_area = 1
 
@@ -499,7 +495,12 @@ class MergeBeams(GenericElement, TriggerToolsDecorator):
                     beam=merged_beam,
                     number_of_rays=merged_beam.N))
             else:
-                pass # TODO
+                output_data = ShadowData(
+                    beamline=S4Beamline(light_source=light_source),
+                    beam=merged_beam,
+                    number_of_rays=merged_beam.N)
+
+                self.send("Shadow Data", output_data)
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e), QMessageBox.Ok)
 
