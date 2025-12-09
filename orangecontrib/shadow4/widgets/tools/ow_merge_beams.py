@@ -27,6 +27,11 @@ else:
     from orangewidget import widget
     from orangewidget import gui
 
+    from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence, TriggerToolsDecorator
+    from oasys.util.oasys_util import TriggerIn, TriggerOut
+
+
+
 from orangecontrib.shadow4.util.shadow4_objects import ShadowData
 from orangecontrib.shadow4.util.shadow4_util import ShadowCongruence
 from orangecontrib.shadow4.widgets.gui.ow_generic_element import GenericElement
@@ -35,7 +40,7 @@ from shadow4.tools.logger import set_verbose
 from shadow4.sources.s4_light_source_from_beamlines import S4LightSourceFromBeamlines
 from shadow4.beamline.s4_beamline import S4Beamline
 
-class MergeBeams(GenericElement):
+class MergeBeams(GenericElement, TriggerToolsDecorator):
     name = "Merge Shadow4 Beam"
     description = "Tools: Merge Shadow4 Beam"
     icon = "icons/merge.png"
@@ -75,9 +80,8 @@ class MergeBeams(GenericElement):
                   ("Input Beam # 9", ShadowData,  "set_shadow_data9"),
                   ("Input Beam # 10", ShadowData, "set_shadow_data10"), ]
 
-        outputs = [{"name": "Shadow Data",
-                    "type": ShadowData,
-                    "doc": "", }]
+        outputs = [{"name": "Shadow Data", "type": ShadowData, "doc": "", }]
+        TriggerToolsDecorator.append_trigger_output(outputs)
 
     want_main_area = 1
 
@@ -94,33 +98,42 @@ class MergeBeams(GenericElement):
 
     use_weights = Setting(0)
 
-    weight_input_data_1 = Setting(0.0)
-    weight_input_data_2 = Setting(0.0)
-    weight_input_data_3 = Setting(0.0)
-    weight_input_data_4 = Setting(0.0)
-    weight_input_data_5 = Setting(0.0)
-    weight_input_data_6 = Setting(0.0)
-    weight_input_data_7 = Setting(0.0)
-    weight_input_data_8 = Setting(0.0)
-    weight_input_data_9 = Setting(0.0)
-    weight_input_data_10 = Setting(0.0)
+    weight_input_data_1 = Setting(1.0)
+    weight_input_data_2 = Setting(1.0)
+    weight_input_data_3 = Setting(1.0)
+    weight_input_data_4 = Setting(1.0)
+    weight_input_data_5 = Setting(1.0)
+    weight_input_data_6 = Setting(1.0)
+    weight_input_data_7 = Setting(1.0)
+    weight_input_data_8 = Setting(1.0)
+    weight_input_data_9 = Setting(1.0)
+    weight_input_data_10 = Setting(1.0)
 
-    def __init__(self, show_automatic_box=False):
-        super().__init__(show_automatic_box=show_automatic_box, has_footprint=False)
+    def __init__(self):
+        super().__init__(show_automatic_box=False, has_footprint=False)
+
+
+        button_box = oasysgui.widgetBox(self.controlArea, "", orientation="horizontal")
+        button = gui.button(button_box, self, "Merge Data and Send", callback=self.merge_data)
+        if O2: button.setStyleSheet(Styles.button_blue)
 
         if O2:
             self.runaction = OWAction("Merge Shadow4 Data", self)
-            self.runaction.triggered.connect(self.merge_data)
         else:
             self.runaction = widget.OWAction("Merge Shadow4 Data", self)
+        self.runaction.triggered.connect(self.merge_data)
         self.addAction(self.runaction)
 
-        gen_box = gui.widgetBox(self.controlArea, "Merge Shadow4 Data", orientation="vertical")
-        gui.separator(gen_box)
+        self.controlArea.setFixedWidth(self.CONTROL_AREA_WIDTH)
 
-        button_box = oasysgui.widgetBox(gen_box, "", orientation="horizontal")
-        button = gui.button(button_box, self, "Merge Data and Send", callback=self.merge_data)
-        if O2: button.setStyleSheet(Styles.button_blue)
+        tabs_setting = oasysgui.tabWidget(self.controlArea)
+        tabs_setting.setFixedHeight(self.TABS_AREA_HEIGHT)
+        tabs_setting.setFixedWidth(self.CONTROL_AREA_WIDTH - 5)
+
+        tab_basic = oasysgui.createTabPage(tabs_setting, "General")
+
+        gen_box = gui.widgetBox(tab_basic, "Merge Shadow4 Data", orientation="vertical")
+        gui.separator(gen_box)
 
         weight_box = oasysgui.widgetBox(gen_box, "Relative Weights", orientation="vertical")
 
@@ -494,6 +507,7 @@ class MergeBeams(GenericElement):
                     beamline=S4Beamline(light_source=light_source),
                     beam=merged_beam,
                     number_of_rays=merged_beam.N))
+                self.Outputs.trigger.send(TriggerIn(new_object=True))
             else:
                 output_data = ShadowData(
                     beamline=S4Beamline(light_source=light_source),
@@ -501,6 +515,7 @@ class MergeBeams(GenericElement):
                     number_of_rays=merged_beam.N)
 
                 self.send("Shadow Data", output_data)
+                self.send("Trigger", TriggerIn(new_object=True))
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e), QMessageBox.Ok)
 
