@@ -115,7 +115,9 @@ class ShadowData:
 
     def duplicate(self, copy_rays=True):
         beam = S4Beam()
-        if copy_rays: beam.rays = copy.deepcopy(self.beam.rays)
+        if copy_rays:
+            beam.rays = copy.deepcopy(self.beam.rays)
+            beam._N_cleaned = self.beam._N_cleaned
 
         new_shadow_beam = ShadowData(beam=beam)
         new_shadow_beam.scanning_data = self.__scanning_data

@@ -592,7 +592,7 @@ try:
                 self.info_box.set_flux(flux)
                 self.info_box.total_rays.setText(str(ticket['nrays']))
                 self.info_box.total_good_rays.setText(str(ticket['good_rays']))
-                self.info_box.total_lost_rays.setText(str(ticket['nrays']-ticket['good_rays']))
+                self.info_box.total_lost_rays.setText(str(ticket['lost_rays']))
                 self.info_box.fwhm_h.setText("{:5.4f}".format(ticket['fwhm']*factor))
                 self.info_box.label_h.setText("FWHM " + xum)
                 self.info_box.sigma_h.setText("{:5.4f}".format(ticket['sigma']*factor))
@@ -758,7 +758,7 @@ try:
                 self.info_box.set_flux(flux)
                 self.info_box.total_rays.setText(str(ticket['nrays']))
                 self.info_box.total_good_rays.setText(str(ticket['good_rays']))
-                self.info_box.total_lost_rays.setText(str(ticket['nrays']-ticket['good_rays']))
+                self.info_box.total_lost_rays.setText(str(ticket['lost_rays']))
                 self.info_box.fwhm_h.setText("{:5.4f}".format(ticket['fwhm_h'] * factor1))
                 self.info_box.fwhm_v.setText("{:5.4f}".format(ticket['fwhm_v'] * factor2))
                 self.info_box.label_h.setText("FWHM " + xum)
@@ -949,7 +949,7 @@ try:
                         self.last_plot.attrs["intensity"] = ticket["intensity"]
                         self.last_plot.attrs["total_rays"] = ticket["nrays"]
                         self.last_plot.attrs["good_rays"] = ticket["good_rays"]
-                        self.last_plot.attrs["lost_rays"] = ticket["nrays"]-ticket["good_rays"]
+                        self.last_plot.attrs["lost_rays"] = ticket["lost_rays"]
 
                         if not attributes is None:
                             for key in attributes.keys():
@@ -964,7 +964,7 @@ try:
                         plot.attrs["intensity"] = ticket["intensity"]
                         plot.attrs["total_rays"] = ticket["nrays"]
                         plot.attrs["good_rays"] = ticket["good_rays"]
-                        plot.attrs["lost_rays"] = ticket["nrays"]-ticket["good_rays"]
+                        plot.attrs["lost_rays"] = ticket["lost_rays"]
 
                         if not attributes is None:
                             for key in attributes.keys():
@@ -1023,7 +1023,7 @@ try:
                         self.last_plot.attrs["intensity"] = ticket["intensity"]
                         self.last_plot.attrs["total_rays"] = ticket["nrays"]
                         self.last_plot.attrs["good_rays"] = ticket["good_rays"]
-                        self.last_plot.attrs["lost_rays"] = ticket["nrays"]-ticket["good_rays"]
+                        self.last_plot.attrs["lost_rays"] = ticket["lost_rays"]
 
                         if not attributes is None:
                             for key in attributes.keys():
@@ -1035,7 +1035,7 @@ try:
                         plot.attrs["intensity"]  = ticket["intensity"]
                         plot.attrs["total_rays"] = ticket["nrays"]
                         plot.attrs["good_rays"]  = ticket["good_rays"]
-                        plot.attrs["lost_rays"]  = ticket["nrays"]-ticket["good_rays"]
+                        plot.attrs["lost_rays"]  = ticket["lost_rays"]
 
                         if not attributes is None:
                             for key in attributes.keys():
