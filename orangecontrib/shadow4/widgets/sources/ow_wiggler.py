@@ -22,6 +22,8 @@ from orangewidget.settings import Setting
 
 from shadow4.sources.wiggler.s4_wiggler import S4Wiggler
 from shadow4.sources.wiggler.s4_wiggler_light_source import S4WigglerLightSource
+from shadow4.sources.wiggler.s4_wiggler_optimized_light_source import S4WigglerOptimizedLightSource
+
 from shadow4.beamline.s4_beamline import S4Beamline
 from shadow4.tools.logger import set_verbose
 
@@ -71,12 +73,20 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
     plot_wiggler_graph = 1
 
+    optim_method = Setting(0)
+    optim_slit_d = Setting(1.0)
+    optim_slit_center_x = Setting(0.0)
+    optim_slit_center_z = Setting(0.0)
+    optim_slit_gap_x = Setting(1.0)
+    optim_slit_gap_z = Setting(1.0)
+    optim_max_iterations = Setting(10)
+
     beam_out = None
 
     def __init__(self):
         super().__init__()
 
-        tab_wiggler = oasysgui.createTabPage(self.tabs_control_area, "Wiggler Setting")
+        tab_wiggler = oasysgui.createTabPage(self.tabs_control_area, "Wiggler")
 
         # wiggler parameters box
         left_box_3 = oasysgui.widgetBox(tab_wiggler, "Wiggler Parameters", addSpace=False, orientation="vertical", height=200)
@@ -137,14 +147,26 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
 
 
         # wiggler adv settings
-        tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced Setting")
+        tab_advanced = oasysgui.createTabPage(self.tabs_control_area, "Advanced")
+
         left_box_adv = oasysgui.widgetBox(tab_advanced, "Advanced settings", addSpace=False, orientation="vertical", height=200)
         oasysgui.lineEdit(left_box_adv, self, "ng_e", "Number of Points in energy scan", labelWidth=260, tooltip="ng_e", valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_adv, self, "ng_j", "Number of Points in e trajectory (per period)", labelWidth=280, tooltip="ng_j", valueType=int, orientation="horizontal")
         oasysgui.lineEdit(left_box_adv, self, "psi_interval_number_of_points", "Number of Points in sampling vertical angle", labelWidth=280, tooltip="psi_interval_number_of_points", valueType=int, orientation="horizontal")
-
         orangegui.comboBox(left_box_adv, self, "flag_interpolation", tooltip="flag_interpolation", label="Sample psi via interpolation",
                            items=["No (accurate, exact Bessel)", "Yes (good for mono or quasi monochromatic)", "Yes (ray by ray)"], labelWidth=260, orientation="horizontal")
+
+        # adv / optimization
+        left_box_opt = oasysgui.widgetBox(tab_advanced, "Optimized source by rejection (acceptance slit)", addSpace=False, orientation="vertical", height=300)
+        orangegui.comboBox(left_box_opt, self, "optim_method", tooltip="optim_method", label="Optimize (store rays entering the slit)",
+                           items=["No", "Yes"], labelWidth=260, orientation="horizontal", callback=self.set_visibility)
+        self.optimization_box = oasysgui.widgetBox(left_box_opt, "", addSpace=False, orientation="vertical", height=250)
+        oasysgui.lineEdit(self.optimization_box, self, "optim_slit_d", "Distance to slit [m]", labelWidth=260, tooltip="optim_slit_d", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.optimization_box, self, "optim_slit_center_x", "Slit center X [m]", labelWidth=260, tooltip="optim_slit__center_x", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.optimization_box, self, "optim_slit_center_z", "Slit center Z [m]", labelWidth=260, tooltip="optim_slit__center_z", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.optimization_box, self, "optim_slit_gap_x", "Slit gap X [m]", labelWidth=260, tooltip="optim_slit_gap_x", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.optimization_box, self, "optim_slit_gap_z", "Slit gap Z [m]", labelWidth=260, tooltip="optim_slit_gap_z", valueType=float, orientation="horizontal")
+        oasysgui.lineEdit(self.optimization_box, self, "optim_max_iterations", "Maximum number of iterations", labelWidth=260, tooltip="optim_max_iterations", valueType=int, orientation="horizontal")
 
 
         # wiggler plots
@@ -203,6 +225,7 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
         self.conventional_sinusoidal_box.setVisible(self.magnetic_field_source == 0)
         self.b_from_file_box.setVisible(self.magnetic_field_source == 1)
         self.b_from_harmonics_box.setVisible(self.magnetic_field_source == 2)
+        self.optimization_box.setVisible(self.optim_method == 1)
 
     def select_file_with_B_vs_Y(self):
         self.le_file_with_b_vs_y.setText(oasysgui.selectFileFromDialog(self, self.file_with_b_vs_y, "Open File With B vs Y"))
@@ -291,11 +314,28 @@ class OWWiggler(OWElectronBeam, WidgetDecorator, TriggerToolsDecorator):
         try:    name = self.getNode().title
         except: name = "Wiggler Light Source"
 
-        lightsource = S4WigglerLightSource(name=name,
-                                           electron_beam=electron_beam,
-                                           magnetic_structure=sourcewiggler,
-                                           nrays=self.number_of_rays,
-                                           seed=self.seed)
+        if self.optim_method == 0:
+            lightsource = S4WigglerLightSource(name=name,
+                                               electron_beam=electron_beam,
+                                               magnetic_structure=sourcewiggler,
+                                               nrays=self.number_of_rays,
+                                               seed=self.seed)
+        else:
+            lightsource = S4WigglerOptimizedLightSource(name=name,
+                                               electron_beam=electron_beam,
+                                               magnetic_structure=sourcewiggler,
+                                               nrays=self.number_of_rays,
+                                               seed=self.seed,
+                                               optim_method=self.optim_method,
+                                               optim_slit_d=self.optim_slit_d,
+                                               optim_slit_center_x=self.optim_slit_center_x,
+                                               optim_slit_center_z=self.optim_slit_center_z,
+                                               optim_slit_gap_x=self.optim_slit_gap_x,
+                                               optim_slit_gap_z=self.optim_slit_gap_z,
+                                               optim_max_iterations=self.optim_max_iterations,
+                                               optim_beamline_element=None,
+                                                         )
+
 
         print("\n\n***** S4WigglerLightSource info: \n", lightsource.info())
 
