@@ -57,7 +57,7 @@ import sys
 from setuptools import find_packages, setup
 
 NAME = 'OASYS1-shadow4'
-VERSION = '0.0.88'
+VERSION = '0.0.89'
 ISRELEASED = False
 
 DESCRIPTION = 'oasys-shadow4: Oasys widgets for shadow4'
@@ -69,13 +69,13 @@ URL = 'https://github.com/oasys-kit/OASYS1-SHADOW4'
 DOWNLOAD_URL = 'https://github.com/oasys-kit/OASYS1-SHADOW4'
 LICENSE = 'MIT'
 
-KEYWORDS = (
+KEYWORDS = [
     'ray tracing',
     'x-ray optics',
     'Oasys1',
-    )
+    ]
 
-CLASSIFIERS = (
+CLASSIFIERS = [
     'Development Status :: 4 - Beta',
     'Environment :: X11 Applications :: Qt',
     'Environment :: Console',
@@ -83,17 +83,13 @@ CLASSIFIERS = (
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Intended Audience :: Science/Research',
-    )
+    ]
 
-
-SETUP_REQUIRES = (
-                  'setuptools',
-                  )
 
 INSTALL_REQUIRES = (
                     'oasys1>=1.2.150',
-                    'shadow4>=0.1.75',
-                    'xoppylib', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
+                    'shadow4>=0.1.77',
+                    'xoppylib>=1.0.51', # used in Bragg preprocessor... todo: maybe move that part to crystalpy?
                     )
 
 PACKAGES = find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests'))
@@ -137,7 +133,6 @@ if __name__ == '__main__':
           classifiers = CLASSIFIERS,
           packages = PACKAGES,
           package_data = PACKAGE_DATA,
-          setup_requires = SETUP_REQUIRES,
           install_requires = INSTALL_REQUIRES,
           entry_points = ENTRY_POINTS,
           namespace_packages=NAMESPACE_PACAKGES,
